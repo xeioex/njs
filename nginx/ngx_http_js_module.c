@@ -89,6 +89,12 @@ typedef struct {
 }  ngx_http_js_header_t;
 
 
+typedef struct {
+    ngx_str_t   name;
+    ngx_uint_t  value;
+} ngx_http_js_method_t;
+
+
 static ngx_int_t ngx_http_js_content_handler(ngx_http_request_t *r);
 static void ngx_http_js_content_event_handler(ngx_http_request_t *r);
 static void ngx_http_js_content_write_event_handler(ngx_http_request_t *r);
@@ -255,6 +261,11 @@ static njs_int_t ngx_http_js_server(njs_vm_t *vm, ngx_http_request_t *r,
     unsigned flags, njs_str_t *name, njs_value_t *setval,
     njs_value_t *retval);
 
+#ifdef NJS_HAVE_QUICKJS
+static JSValue ngx_http_qjs_ext_return(JSContext *ctx, JSValueConst this_val,
+    int argc, JSValueConst *argv);
+#endif
+
 static ngx_pool_t *ngx_http_js_pool(njs_vm_t *vm, ngx_http_request_t *r);
 static ngx_resolver_t *ngx_http_js_resolver(njs_vm_t *vm,
     ngx_http_request_t *r);
@@ -303,6 +314,7 @@ static ngx_int_t ngx_http_js_parse_unsafe_uri(ngx_http_request_t *r,
 
 static ngx_conf_bitmask_t  ngx_http_js_engines[] = {
     { ngx_string("njs"), NGX_ENGINE_NJS },
+    { ngx_string("qjs"), NGX_ENGINE_QJS },
     { ngx_null_string, 0 }
 };
 
@@ -326,6 +338,13 @@ static ngx_command_t  ngx_http_js_commands[] = {
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_js_loc_conf_t, type),
       &ngx_http_js_engines },
+
+    { ngx_string("js_context_reuse"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_size_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_js_loc_conf_t, reuse),
+      NULL },
 
     { ngx_string("js_import"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE13,
@@ -904,6 +923,36 @@ njs_module_t *njs_http_js_addon_modules[] = {
 };
 
 
+static ngx_http_js_method_t ngx_http_methods[] = {
+    { ngx_string("GET"),       NGX_HTTP_GET },
+    { ngx_string("POST"),      NGX_HTTP_POST },
+    { ngx_string("HEAD"),      NGX_HTTP_HEAD },
+    { ngx_string("OPTIONS"),   NGX_HTTP_OPTIONS },
+    { ngx_string("PROPFIND"),  NGX_HTTP_PROPFIND },
+    { ngx_string("PUT"),       NGX_HTTP_PUT },
+    { ngx_string("MKCOL"),     NGX_HTTP_MKCOL },
+    { ngx_string("DELETE"),    NGX_HTTP_DELETE },
+    { ngx_string("COPY"),      NGX_HTTP_COPY },
+    { ngx_string("MOVE"),      NGX_HTTP_MOVE },
+    { ngx_string("PROPPATCH"), NGX_HTTP_PROPPATCH },
+    { ngx_string("LOCK"),      NGX_HTTP_LOCK },
+    { ngx_string("UNLOCK"),    NGX_HTTP_UNLOCK },
+    { ngx_string("PATCH"),     NGX_HTTP_PATCH },
+    { ngx_string("TRACE"),     NGX_HTTP_TRACE },
+};
+
+
+#ifdef NJS_HAVE_QUICKJS
+
+static JSClassID ngx_http_qjs_request_class_id;
+
+static const JSCFunctionListEntry ngx_http_qjs_ext_request[] = {
+    JS_CFUNC_DEF("return", 2, ngx_http_qjs_ext_return),
+};
+
+#endif
+
+
 static ngx_int_t
 ngx_http_js_content_handler(ngx_http_request_t *r)
 {
@@ -1382,7 +1431,10 @@ ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id)
 static void
 ngx_http_js_cleanup_ctx(void *data)
 {
-    ngx_http_js_ctx_t *ctx = data;
+    ngx_http_request_t      *r;
+    ngx_http_js_loc_conf_t  *jlcf;
+
+    ngx_http_js_ctx_t        *ctx = data;
 
     if (ngx_js_ctx_pending(ctx)) {
         ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "pending events");
@@ -1391,7 +1443,10 @@ ngx_http_js_cleanup_ctx(void *data)
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ctx->log, 0, "http js vm destroy: %p",
                    ctx->engine);
 
-    ngx_js_ctx_destroy((ngx_js_ctx_t *) ctx);
+    r = ngx_js_ctx_external(ctx);
+    jlcf = ngx_http_get_module_loc_conf(r, ngx_http_js_module);
+
+    ngx_js_ctx_destroy((ngx_js_ctx_t *) ctx, (ngx_js_loc_conf_t *) jlcf);
 }
 
 
@@ -3035,27 +3090,6 @@ ngx_http_js_ext_subrequest(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     ngx_http_request_body_t     *rb;
     ngx_http_post_subrequest_t  *ps;
 
-    static const struct {
-        ngx_str_t   name;
-        ngx_uint_t  value;
-    } methods[] = {
-        { ngx_string("GET"),       NGX_HTTP_GET },
-        { ngx_string("POST"),      NGX_HTTP_POST },
-        { ngx_string("HEAD"),      NGX_HTTP_HEAD },
-        { ngx_string("OPTIONS"),   NGX_HTTP_OPTIONS },
-        { ngx_string("PROPFIND"),  NGX_HTTP_PROPFIND },
-        { ngx_string("PUT"),       NGX_HTTP_PUT },
-        { ngx_string("MKCOL"),     NGX_HTTP_MKCOL },
-        { ngx_string("DELETE"),    NGX_HTTP_DELETE },
-        { ngx_string("COPY"),      NGX_HTTP_COPY },
-        { ngx_string("MOVE"),      NGX_HTTP_MOVE },
-        { ngx_string("PROPPATCH"), NGX_HTTP_PROPPATCH },
-        { ngx_string("LOCK"),      NGX_HTTP_LOCK },
-        { ngx_string("UNLOCK"),    NGX_HTTP_UNLOCK },
-        { ngx_string("PATCH"),     NGX_HTTP_PATCH },
-        { ngx_string("TRACE"),     NGX_HTTP_TRACE },
-    };
-
     static const njs_str_t args_key   = njs_str("args");
     static const njs_str_t method_key = njs_str("method");
     static const njs_str_t body_key = njs_str("body");
@@ -3090,7 +3124,7 @@ ngx_http_js_ext_subrequest(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     callback = NULL;
 
     method = 0;
-    methods_max = sizeof(methods) / sizeof(methods[0]);
+    methods_max = sizeof(ngx_http_methods) / sizeof(ngx_http_methods[0]);
 
     args_arg.length = 0;
     args_arg.start = NULL;
@@ -3138,8 +3172,9 @@ ngx_http_js_ext_subrequest(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
 
             while (method < methods_max) {
-                if (method_name.length == methods[method].name.len
-                    && ngx_memcmp(method_name.start, methods[method].name.data,
+                if (method_name.length == ngx_http_methods[method].name.len
+                    && ngx_memcmp(method_name.start,
+                                  ngx_http_methods[method].name.data,
                                   method_name.length)
                        == 0)
                 {
@@ -3247,8 +3282,8 @@ ngx_http_js_ext_subrequest(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (method != methods_max) {
-        sr->method = methods[method].value;
-        sr->method_name = methods[method].name;
+        sr->method = ngx_http_methods[method].value;
+        sr->method_name = ngx_http_methods[method].name;
 
     } else {
         sr->method = NGX_HTTP_UNKNOWN;
@@ -4029,6 +4064,65 @@ ngx_http_js_server(njs_vm_t *vm, ngx_http_request_t *r, unsigned flags,
 }
 
 
+#ifdef NJS_HAVE_QUICKJS
+
+static JSValue
+ngx_http_qjs_ext_return(JSContext *cx, JSValueConst this_val,
+    int argc, JSValueConst *argv)
+{
+    size_t                     len;
+    ngx_int_t                  status;
+    const char                *body;
+    ngx_http_js_ctx_t         *ctx;
+    ngx_http_request_t        *r;
+    ngx_http_complex_value_t   cv;
+
+    r = JS_GetOpaque(this_val, ngx_http_qjs_request_class_id);
+    if (r == NULL) {
+        return JS_ThrowInternalError(cx, "\"this\" is not a request object");
+    }
+
+    if (ngx_qjs_integer(cx, argv[0], &status) != NGX_OK) {
+        return JS_EXCEPTION;
+    }
+
+    if (status < 0 || status > 999) {
+        return JS_ThrowRangeError(cx, "code is out of range");
+    }
+
+    body = JS_ToCString(cx, argv[1]);
+    if (body == NULL) {
+        return JS_ThrowOutOfMemory(cx);
+    }
+
+    len = ngx_strlen(body);
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_js_module);
+
+    if (status < NGX_HTTP_BAD_REQUEST || len) {
+        ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
+
+        cv.value.data = (u_char *) body;
+        cv.value.len = len;
+
+        ctx->status = ngx_http_send_response(r, status, NULL, &cv);
+        JS_FreeCString(cx, body);
+
+        if (ctx->status == NGX_ERROR) {
+            return JS_ThrowTypeError(cx, "failed to send response");
+        }
+
+    } else {
+        JS_FreeCString(cx, body);
+        ctx->status = status;
+    }
+
+    return JS_UNDEFINED;
+}
+
+#endif
+
+
 static void
 ngx_http_js_periodic_handler(ngx_event_t *ev)
 {
@@ -4388,6 +4482,43 @@ ngx_engine_njs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
 }
 
 
+#if (NJS_HAVE_QUICKJS)
+
+static ngx_engine_t *
+ngx_engine_qjs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
+    njs_int_t proto_id, void *external)
+{
+    JSValue        proto;
+    JSContext     *cx;
+    ngx_engine_t  *engine;
+
+    engine = ngx_qjs_clone(ctx, cf, external);
+    if (engine == NULL) {
+        return NULL;
+    }
+
+    cx = engine->u.qjs.ctx;
+
+    proto = JS_NewObject(cx);
+    JS_SetPropertyFunctionList(cx, proto, ngx_http_qjs_ext_request,
+                               njs_nitems(ngx_http_qjs_ext_request));
+
+    JS_SetClassProto(cx, ngx_http_qjs_request_class_id, proto);
+
+    ngx_qjs_arg(ctx->args[0]) = JS_NewObjectClass(cx,
+                                                ngx_http_qjs_request_class_id);
+    if (JS_IsException(ngx_qjs_arg(ctx->args[0]))) {
+        return NULL;
+    }
+
+    JS_SetOpaque(ngx_qjs_arg(ctx->args[0]), external);
+
+    return engine;
+}
+
+#endif
+
+
 static ngx_int_t
 ngx_http_js_init_conf_vm(ngx_conf_t *cf, ngx_js_loc_conf_t *conf)
 {
@@ -4405,6 +4536,12 @@ ngx_http_js_init_conf_vm(ngx_conf_t *cf, ngx_js_loc_conf_t *conf)
         options.clone = ngx_engine_njs_clone;
     }
 
+#if (NJS_HAVE_QUICKJS)
+    else if (conf->type == NGX_ENGINE_QJS) {
+        options.clone = ngx_engine_qjs_clone;
+    }
+#endif
+
     return ngx_js_init_conf_vm(cf, conf, &options);
 }
 
@@ -4417,6 +4554,10 @@ ngx_http_js_init(ngx_conf_t *cf)
 
     ngx_http_next_body_filter = ngx_http_top_body_filter;
     ngx_http_top_body_filter = ngx_http_js_body_filter;
+
+#ifdef NJS_HAVE_QUICKJS
+    JS_NewClassID(&ngx_http_qjs_request_class_id);
+#endif
 
     return NGX_OK;
 }

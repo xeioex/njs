@@ -19,8 +19,12 @@
 #include "ngx_js_fetch.h"
 #include "ngx_js_shared_dict.h"
 
+#if (NJS_HAVE_QUICKJS)
+#include <qjs.h>
+#endif
 
 #define NGX_ENGINE_NJS      1
+#define NGX_ENGINE_QJS      2
 
 #define NGX_JS_UNSET        0
 #define NGX_JS_DEPRECATED   1
@@ -80,6 +84,15 @@ struct ngx_js_event_s {
 };
 
 
+typedef struct {
+    void               **data;
+    ngx_uint_t           head;
+    ngx_uint_t           tail;
+    ngx_uint_t           size;
+    ngx_uint_t           capacity;
+} ngx_js_queue_t;
+
+
 #define NGX_JS_COMMON_MAIN_CONF                                               \
     ngx_js_dict_t         *dicts;                                             \
     ngx_array_t           *periodics                                          \
@@ -88,6 +101,8 @@ struct ngx_js_event_s {
 #define _NGX_JS_COMMON_LOC_CONF                                               \
     ngx_uint_t             type;                                              \
     ngx_engine_t          *engine;                                            \
+    ngx_uint_t             reuse;                                             \
+    ngx_js_queue_t        *reuse_queue;                                       \
     ngx_str_t              cwd;                                               \
     ngx_array_t           *imports;                                           \
     ngx_array_t           *paths;                                             \
@@ -172,11 +187,22 @@ typedef struct ngx_engine_opts_s {
 } ngx_engine_opts_t;
 
 
+typedef struct {
+    u_char                     *code;
+    size_t                      code_size;
+} ngx_js_code_entry_t;
+
+
 struct ngx_engine_s {
     union {
         struct {
             njs_vm_t           *vm;
         }                       njs;
+#if (NJS_HAVE_QUICKJS)
+        struct {
+            JSContext          *ctx;
+        }                       qjs;
+#endif
     }                           u;
 
     ngx_int_t                 (*compile)(ngx_js_loc_conf_t *conf, ngx_log_t *lg,
@@ -191,10 +217,12 @@ struct ngx_engine_s {
     ngx_int_t                 (*string)(ngx_engine_t *e,
                                         njs_opaque_value_t *value,
                                         ngx_str_t *str);
-    void                      (*destroy)(ngx_engine_t *e, ngx_js_ctx_t *ctx);
+    void                      (*destroy)(ngx_engine_t *e, ngx_js_ctx_t *ctx,
+                                         ngx_js_loc_conf_t *conf);
 
     unsigned                    type;
     njs_mp_t                   *pool;
+    njs_arr_t                  *precompiled;
 };
 
 
@@ -236,12 +264,31 @@ void ngx_js_ctx_init(ngx_js_ctx_t *ctx, ngx_log_t *log);
     ((ctx)->engine->pending(ctx->engine)                                      \
      || !njs_rbtree_is_empty(&(ctx)->waiting_events))
 
-void ngx_js_ctx_destroy(ngx_js_ctx_t *ctx);
+#define ngx_js_ctx_external(ctx)                                              \
+    (((ctx)->engine->type == NGX_ENGINE_NJS)                                  \
+        ? njs_vm_external_ptr(ctx->engine->u.njs.vm)                          \
+        : JS_GetContextOpaque(ctx->engine->u.qjs.ctx))
+
+void ngx_js_ctx_destroy(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *conf);
 ngx_int_t ngx_js_call(njs_vm_t *vm, njs_function_t *func,
     njs_opaque_value_t *args, njs_uint_t nargs);
 ngx_int_t ngx_js_exception(njs_vm_t *vm, ngx_str_t *s);
 ngx_engine_t *ngx_njs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
     void *external);
+
+#if (NJS_HAVE_QUICKJS)
+
+typedef union {
+    njs_opaque_value_t opaque;
+    JSValue            value;
+} ngx_qjs_value_t;
+
+#define ngx_qjs_arg(val) (((ngx_qjs_value_t *) &(val))->value)
+ngx_engine_t *ngx_qjs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
+    void *external);
+ngx_int_t ngx_qjs_exception(ngx_engine_t *e, ngx_str_t *s);
+ngx_int_t ngx_qjs_integer(JSContext *cx, JSValueConst val, ngx_int_t *n);
+#endif
 
 njs_int_t ngx_js_ext_log(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t level, njs_value_t *retval);
@@ -274,6 +321,10 @@ njs_int_t ngx_js_ext_flags(njs_vm_t *vm, njs_object_prop_t *prop,
 
 ngx_int_t ngx_js_string(njs_vm_t *vm, njs_value_t *value, njs_str_t *str);
 ngx_int_t ngx_js_integer(njs_vm_t *vm, njs_value_t *value, ngx_int_t *n);
+
+ngx_js_queue_t *ngx_js_queue_create(ngx_pool_t *pool, ngx_uint_t capacity);
+ngx_int_t ngx_js_queue_push(ngx_js_queue_t *queue, void *item);
+void *ngx_js_queue_pop(ngx_js_queue_t *queue);
 
 
 extern njs_module_t  ngx_js_ngx_module;
