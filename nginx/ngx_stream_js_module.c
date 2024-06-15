@@ -156,6 +156,7 @@ static ngx_flag_t ngx_stream_js_ssl_verify(ngx_stream_session_t *s);
 
 static ngx_conf_bitmask_t  ngx_stream_js_engines[] = {
     { ngx_string("njs"), NGX_ENGINE_NJS },
+    { ngx_string("qjs"), NGX_ENGINE_QJS },
     { ngx_null_string, 0 }
 };
 
@@ -179,6 +180,13 @@ static ngx_command_t  ngx_stream_js_commands[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_js_srv_conf_t, type),
       &ngx_stream_js_engines },
+
+    { ngx_string("js_context_reuse"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_size_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_js_srv_conf_t, reuse),
+      NULL },
 
     { ngx_string("js_import"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE13,

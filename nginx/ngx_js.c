@@ -8,6 +8,7 @@
 
 #include <ngx_config.h>
 #include <ngx_core.h>
+#include <math.h>
 #include "ngx_js.h"
 
 
@@ -55,6 +56,37 @@ static ngx_int_t ngx_engine_njs_string(ngx_engine_t *e,
     njs_opaque_value_t *value, ngx_str_t *str);
 static void ngx_engine_njs_destroy(ngx_engine_t *e, ngx_js_ctx_t *ctx,
     ngx_js_loc_conf_t *conf);
+
+#if (NJS_HAVE_QUICKJS)
+static ngx_int_t ngx_engine_qjs_init(ngx_engine_t *engine,
+    ngx_engine_opts_t *opts);
+static ngx_int_t ngx_engine_qjs_compile(ngx_js_loc_conf_t *conf, ngx_log_t *log,
+    u_char *start, size_t size);
+static ngx_int_t ngx_engine_qjs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
+    njs_opaque_value_t *args, njs_uint_t nargs);
+static void *ngx_engine_qjs_external(ngx_engine_t *engine);
+static ngx_int_t ngx_engine_qjs_pending(ngx_engine_t *engine);
+static ngx_int_t ngx_engine_qjs_string(ngx_engine_t *e,
+    njs_opaque_value_t *value, ngx_str_t *str);
+
+static JSValue ngx_qjs_ext_set_timeout(JSContext *cx, JSValueConst this_val,
+    int argc, JSValueConst *argv, int immediate);
+static JSValue ngx_qjs_ext_clear_timeout(JSContext *cx, JSValueConst this_val,
+    int argc, JSValueConst *argv);
+
+static JSValue ngx_qjs_ext_build(JSContext *cx, JSValueConst this_val);
+static JSValue ngx_qjs_ext_conf_file_path(JSContext *cx, JSValueConst this_val);
+static JSValue ngx_qjs_ext_prefix(JSContext *cx, JSValueConst this_val);
+
+static JSModuleDef *ngx_qjs_module_loader(JSContext *ctx,
+    const char *module_name, void *opaque);
+
+static JSValue ngx_qjs_value(JSContext *cx, const ngx_str_t *path);
+static ngx_int_t ngx_qjs_dump_obj(ngx_engine_t *e, JSValueConst val,
+    ngx_str_t *dst);
+
+static JSModuleDef *ngx_qjs_core_init(JSContext *cx, const char *name);
+#endif
 
 static njs_int_t ngx_js_ext_build(njs_vm_t *vm, njs_object_prop_t *prop,
     njs_value_t *value, njs_value_t *setval, njs_value_t *retval);
@@ -376,6 +408,28 @@ njs_module_t *njs_js_addon_modules_shared[] = {
 static njs_int_t      ngx_js_console_proto_id;
 
 
+#if (NJS_HAVE_QUICKJS)
+
+static const JSCFunctionListEntry ngx_qjs_ngx_ext[] = {
+    JS_CGETSET_DEF("build", ngx_qjs_ext_build, NULL),
+    JS_CGETSET_DEF("conf_file_path", ngx_qjs_ext_conf_file_path, NULL),
+    JS_CGETSET_DEF("prefix", ngx_qjs_ext_prefix, NULL),
+};
+
+static const JSCFunctionListEntry ngx_qjs_ext_global[] = {
+    JS_CFUNC_MAGIC_DEF("setTimeout", 1, ngx_qjs_ext_set_timeout, 0),
+    JS_CFUNC_MAGIC_DEF("setImmediate", 1, ngx_qjs_ext_set_timeout, 1),
+    JS_CFUNC_DEF("clearTimeout", 1, ngx_qjs_ext_clear_timeout),
+};
+
+
+qjs_module_t  ngx_qjs_ngx_module = {
+    .name = "ngx",
+    .init = ngx_qjs_core_init,
+};
+
+#endif
+
 static ngx_engine_t *
 ngx_create_engine(ngx_engine_opts_t *opts)
 {
@@ -412,6 +466,24 @@ ngx_create_engine(ngx_engine_opts_t *opts)
         engine->destroy = opts->destroy ? opts->destroy
                                         : ngx_engine_njs_destroy;
         break;
+
+#if (NJS_HAVE_QUICKJS)
+    case NGX_ENGINE_QJS:
+        rc = ngx_engine_qjs_init(engine, opts);
+        if (rc != NGX_OK) {
+            return NULL;
+        }
+
+        engine->type = NGX_ENGINE_QJS;
+        engine->compile = ngx_engine_qjs_compile;
+        engine->call = ngx_engine_qjs_call;
+        engine->external = ngx_engine_qjs_external;
+        engine->pending = ngx_engine_qjs_pending;
+        engine->string = ngx_engine_qjs_string;
+        engine->destroy = opts->destroy ? opts->destroy
+                                        : ngx_qjs_destroy;
+        break;
+#endif
 
     default:
         return NULL;
@@ -696,6 +768,992 @@ ngx_engine_njs_destroy(ngx_engine_t *e, ngx_js_ctx_t *ctx,
         njs_mp_destroy(e->pool);
     }
 }
+
+
+#if (NJS_HAVE_QUICKJS)
+
+static ngx_int_t
+ngx_engine_qjs_init(ngx_engine_t *engine, ngx_engine_opts_t *opts)
+{
+    JSRuntime  *rt;
+
+    rt = JS_NewRuntime();
+    if (rt == NULL) {
+        return NGX_ERROR;
+    }
+
+    engine->u.qjs.ctx = qjs_new_context(rt, opts->u.qjs.addons);
+    if (engine->u.qjs.ctx == NULL) {
+        return NGX_ERROR;
+    }
+
+    JS_SetRuntimeOpaque(rt, opts->u.qjs.metas);
+    JS_SetContextOpaque(engine->u.qjs.ctx, opts->u.qjs.addons);
+
+    JS_SetModuleLoaderFunc(rt, NULL, ngx_qjs_module_loader, opts->conf);
+
+    return NGX_OK;
+}
+
+
+static ngx_int_t
+ngx_engine_qjs_compile(ngx_js_loc_conf_t *conf, ngx_log_t *log, u_char *start,
+    size_t size)
+{
+    JSValue               code;
+    ngx_str_t             text;
+    JSContext            *cx;
+    ngx_engine_t         *engine;
+    ngx_js_code_entry_t  *pc;
+
+    engine = conf->engine;
+    cx = engine->u.qjs.ctx;
+
+    code = JS_Eval(cx, (char *) start, size, "<main>",
+                   JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+
+    if (JS_IsException(code)) {
+#if 0 /* TODO */
+        njs_vm_exception_get(vm, njs_value_arg(&exception));
+        njs_vm_value_string(vm, &text, njs_value_arg(&exception));
+
+        value = njs_vm_object_prop(vm, njs_value_arg(&exception),
+                                   &file_name_key, &lvalue);
+        if (value == NULL) {
+            value = njs_vm_object_prop(vm, njs_value_arg(&exception),
+                                       &line_number_key, &lvalue);
+
+            if (value != NULL) {
+                i = njs_value_number(value) - 1;
+
+                if (i < conf->imports->nelts) {
+                    import = conf->imports->elts;
+                    ngx_log_error(NGX_LOG_EMERG, log, 0,
+                                  "%*s, included in %s:%ui", text.length,
+                                  text.start, import[i].file, import[i].line);
+
+                    return NGX_ERROR;
+                }
+            }
+        }
+#endif
+
+        ngx_qjs_exception(engine, &text);
+
+        ngx_log_error(NGX_LOG_EMERG, log, 0, "js compile %V", &text);
+        return NGX_ERROR;
+    }
+
+    pc = njs_arr_add(engine->precompiled);
+    if (pc == NULL) {
+        JS_FreeValue(cx, code);
+        ngx_log_error(NGX_LOG_EMERG, log, 0, "njs_arr_add() failed");
+        return NGX_ERROR;
+    }
+
+    pc->code = JS_WriteObject(cx, &pc->code_size, code, JS_WRITE_OBJ_BYTECODE);
+    if (pc->code == NULL) {
+        JS_FreeValue(cx, code);
+        ngx_log_error(NGX_LOG_EMERG, log, 0, "JS_WriteObject() failed");
+        return NGX_ERROR;
+    }
+
+    JS_FreeValue(cx, code);
+
+    return NGX_OK;
+}
+
+
+static JSValue
+js_std_await(JSContext *ctx, JSValue obj)
+{
+    int         state, err;
+    JSValue     ret;
+    JSContext  *ctx1;
+
+    for (;;) {
+        state = JS_PromiseState(ctx, obj);
+        if (state == JS_PROMISE_FULFILLED) {
+            ret = JS_PromiseResult(ctx, obj);
+            JS_FreeValue(ctx, obj);
+            break;
+
+        } else if (state == JS_PROMISE_REJECTED) {
+            ret = JS_Throw(ctx, JS_PromiseResult(ctx, obj));
+            JS_FreeValue(ctx, obj);
+            break;
+
+        } else if (state == JS_PROMISE_PENDING) {
+            err = JS_ExecutePendingJob(JS_GetRuntime(ctx), &ctx1);
+            if (err < 0) {
+               /* js_std_dump_error(ctx1); */
+            }
+
+        } else {
+            /* not a promise */
+            ret = obj;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+
+ngx_engine_t *
+ngx_qjs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf, void *external)
+{
+    JSValue               rv;
+    njs_mp_t             *mp;
+    uint32_t              i, length;
+    JSRuntime            *rt;
+    ngx_str_t             exception;
+    JSContext            *cx;
+    ngx_engine_t         *engine;
+    ngx_js_code_entry_t  *pc;
+
+    mp = njs_mp_fast_create(2 * getpagesize(), 128, 512, 16);
+    if (mp == NULL) {
+        return NULL;
+    }
+
+    engine = njs_mp_alloc(mp, sizeof(ngx_engine_t));
+    if (engine == NULL) {
+        return NULL;
+    }
+
+    memcpy(engine, cf->engine, sizeof(ngx_engine_t));
+    engine->pool = mp;
+
+    if (cf->reuse_queue != NULL) {
+        engine->u.qjs.ctx = ngx_js_queue_pop(cf->reuse_queue);
+        if (engine->u.qjs.ctx != NULL) {
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ctx->log, 0,
+                           "js reused context: %p", engine->u.qjs.ctx);
+            JS_SetContextOpaque(engine->u.qjs.ctx, external);
+            return engine;
+        }
+    }
+
+    rt = JS_NewRuntime();
+    if (rt == NULL) {
+        return NULL;
+    }
+
+    JS_SetRuntimeOpaque(rt, JS_GetRuntimeOpaque(
+                                 JS_GetRuntime(cf->engine->u.qjs.ctx)));
+
+    cx = qjs_new_context(rt, JS_GetContextOpaque(cf->engine->u.qjs.ctx));
+    if (cx == NULL) {
+        return NULL;
+    }
+
+    engine->u.qjs.ctx = cx;
+    JS_SetContextOpaque(cx, external);
+
+    /*
+    JS_SetHostPromiseRejectionTracker(rt,
+                                     njs_qjs_rejection_tracker,
+                                     JS_GetRuntimeOpaque(rt));
+    */
+
+
+    /* TODO: bind objects from preload vm */
+
+    rv = JS_UNDEFINED;
+    pc = engine->precompiled->start;
+    length = engine->precompiled->items;
+
+    for (i = 0; i < length; i++) {
+        rv = JS_ReadObject(cx, pc[i].code, pc[i].code_size,
+                           JS_READ_OBJ_BYTECODE);
+        if (JS_IsException(rv)) {
+            ngx_qjs_exception(engine, &exception);
+
+            ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                          "js load module exception: %V", &exception);
+            return NULL;
+        }
+    }
+
+    if (JS_ResolveModule(cx, rv) < 0) {
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "js resolve module failed");
+        return NULL;
+    }
+
+    rv = JS_EvalFunction(cx, rv);
+
+    if (JS_IsException(rv)) {
+        ngx_qjs_exception(engine, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "js eval exception: %V",
+                      &exception);
+        return NULL;
+    }
+
+    rv = js_std_await(cx, rv);
+    if (JS_IsException(rv)) {
+        ngx_qjs_exception(engine, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "js await exception: %V",
+                      &exception);
+        return NULL;
+    }
+
+    JS_FreeValue(cx, rv);
+
+    return engine;
+}
+
+
+static ngx_int_t
+ngx_engine_qjs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
+    njs_opaque_value_t *args, njs_uint_t nargs)
+{
+    int         rc;
+    JSValue     fn, val;
+    ngx_str_t   exception;
+    JSRuntime  *rt;
+    JSContext  *cx, *cx1;
+
+    cx = ctx->engine->u.qjs.ctx;
+
+    fn = ngx_qjs_value(cx, fname);
+    if (JS_IsException(fn)) {
+        ngx_qjs_exception(ctx->engine, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                      "js value lookup exception: %V", &exception);
+
+        return NGX_ERROR;
+    }
+
+    val = JS_Call(cx, fn, JS_UNDEFINED, nargs, &ngx_qjs_arg(ctx->args[0]));
+    JS_FreeValue(cx, fn);
+    if (JS_IsException(val)) {
+        ngx_qjs_exception(ctx->engine, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                      "js call exception: %V", &exception);
+
+        return NGX_ERROR;
+    }
+
+    JS_FreeValue(cx, ngx_qjs_arg(ctx->retval));
+    ngx_qjs_arg(ctx->retval) = val;
+
+    rt = JS_GetRuntime(cx);
+
+    for ( ;; ) {
+        rc = JS_ExecutePendingJob(rt, &cx1);
+        if (rc <= 0) {
+            if (rc == -1) {
+                ngx_qjs_exception(ctx->engine, &exception);
+
+                ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                              "js job exception: %V", &exception);
+
+                return NGX_ERROR;
+            }
+
+            break;
+        }
+    }
+
+/*
+    if (ngx_js_unhandled_rejection(ctx)) {
+        ngx_js_exception(vm, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "js exception: %V", &exception);
+        return NGX_ERROR;
+    }
+*/
+
+    return njs_rbtree_is_empty(&ctx->waiting_events) ? NGX_OK : NGX_AGAIN;
+}
+
+
+static void *
+ngx_engine_qjs_external(ngx_engine_t *e)
+{
+    return JS_GetContextOpaque(e->u.qjs.ctx);
+}
+
+
+static ngx_int_t
+ngx_engine_qjs_pending(ngx_engine_t *e)
+{
+    return JS_IsJobPending(JS_GetRuntime(e->u.qjs.ctx));
+}
+
+
+static ngx_int_t
+ngx_engine_qjs_string(ngx_engine_t *e, njs_opaque_value_t *value,
+    ngx_str_t *str)
+{
+    return ngx_qjs_dump_obj(e, ngx_qjs_arg(*value), str);
+}
+
+
+static void
+ngx_js_cleanup_reuse_ctx(void *data)
+{
+    JSRuntime  *rt;
+    JSContext  *cx;
+
+    ngx_js_queue_t  *reuse = data;
+
+    for ( ;; ) {
+        cx = ngx_js_queue_pop(reuse);
+        if (cx == NULL) {
+            break;
+        }
+
+        rt = JS_GetRuntime(cx);
+        JS_FreeContext(cx);
+        JS_FreeRuntime(rt);
+    }
+}
+
+
+void
+ngx_qjs_destroy(ngx_engine_t *e, ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *conf)
+{
+    uint32_t              i, length;
+    JSRuntime            *rt;
+    JSContext            *cx;
+    ngx_js_event_t       *event;
+    njs_rbtree_node_t    *node;
+    ngx_pool_cleanup_t   *cln;
+    ngx_js_code_entry_t  *pc;
+
+    cx = e->u.qjs.ctx;
+
+    if (ctx != NULL) {
+        node = njs_rbtree_min(&ctx->waiting_events);
+
+        while (njs_rbtree_is_there_successor(&ctx->waiting_events, node)) {
+            event = (ngx_js_event_t *) ((u_char *) node
+                                        - offsetof(ngx_js_event_t, node));
+
+            if (event->destructor != NULL) {
+                event->destructor(event);
+            }
+
+            node = njs_rbtree_node_successor(&ctx->waiting_events, node);
+        }
+
+        JS_FreeValue(cx, ngx_qjs_arg(ctx->args[0]));
+        JS_FreeValue(cx, ngx_qjs_arg(ctx->retval));
+
+    } else if (e->precompiled != NULL) {
+        pc = e->precompiled->start;
+        length = e->precompiled->items;
+
+        for (i = 0; i < length; i++) {
+            js_free(cx, pc[i].code);
+        }
+    }
+
+    njs_mp_destroy(e->pool);
+
+    if (conf != NULL && conf->reuse != 0) {
+        if (conf->reuse_queue == NULL) {
+            conf->reuse_queue = ngx_js_queue_create(ngx_cycle->pool,
+                                                    conf->reuse);
+            if (conf->reuse_queue == NULL) {
+                goto free_ctx;
+            }
+
+            cln = ngx_pool_cleanup_add(ngx_cycle->pool, 0);
+            if (cln == NULL) {
+                goto free_ctx;
+            }
+
+            cln->handler = ngx_js_cleanup_reuse_ctx;
+            cln->data = conf->reuse_queue;
+        }
+
+        if (ngx_js_queue_push(conf->reuse_queue, cx) != NGX_OK) {
+            goto free_ctx;
+        }
+
+        return;
+    }
+
+free_ctx:
+
+    rt = JS_GetRuntime(cx);
+    JS_FreeContext(cx);
+    JS_FreeRuntime(rt);
+}
+
+
+static JSValue
+ngx_qjs_value(JSContext *cx, const ngx_str_t *path)
+{
+    u_char   *start, *p, *end;
+    JSAtom    key;
+    size_t    size;
+    JSValue   value, rv;
+
+    start = path->data;
+    end = start + path->len;
+
+    value = JS_GetGlobalObject(cx);
+
+    for ( ;; ) {
+        p = njs_strlchr(start, end, '.');
+
+        size = ((p != NULL) ? p : end) - start;
+        if (size == 0) {
+            JS_FreeValue(cx, value);
+            return JS_ThrowTypeError(cx, "empty path element");
+        }
+
+        key = JS_NewAtomLen(cx, (char *) start, size);
+        if (key == JS_ATOM_NULL) {
+            JS_FreeValue(cx, value);
+            return JS_ThrowInternalError(cx, "could not create atom");
+        }
+
+        rv = JS_GetProperty(cx, value, key);
+        JS_FreeAtom(cx, key);
+        if (JS_IsException(rv)) {
+            JS_FreeValue(cx, value);
+            return JS_EXCEPTION;
+        }
+
+        JS_FreeValue(cx, value);
+
+        if (p == NULL) {
+            break;
+        }
+
+        start = p + 1;
+        value = rv;
+    }
+
+    return rv;
+}
+
+
+static ngx_int_t
+ngx_qjs_dump_obj(ngx_engine_t *e, JSValueConst val, ngx_str_t *dst)
+{
+    size_t       len, byte_offset, byte_length;
+    u_char      *start, *p;
+    JSValue      buffer, stack;
+    ngx_str_t    str, stack_str;
+    JSContext    *cx;
+
+    if (JS_IsNullOrUndefined(val)) {
+        dst->data = NULL;
+        dst->len = 0;
+        return NGX_OK;
+    }
+
+    cx = e->u.qjs.ctx;
+
+    buffer = JS_GetTypedArrayBuffer(cx, val, &byte_offset, &byte_length, NULL);
+    if (!JS_IsException(buffer)) {
+        start = JS_GetArrayBuffer(cx, &dst->len, buffer);
+
+        JS_FreeValue(cx, buffer);
+
+        if (start != NULL) {
+            start += byte_offset;
+            dst->len = byte_length;
+
+            dst->data = njs_mp_alloc(e->pool, dst->len);
+            if (dst->data == NULL) {
+                return NGX_ERROR;
+            }
+
+            memcpy(dst->data, start, dst->len);
+            return NGX_OK;
+        }
+    }
+
+    str.data = (u_char *) JS_ToCString(cx, val);
+    if (str.data != NULL) {
+        str.len = ngx_strlen(str.data);
+
+        stack = JS_GetPropertyStr(cx, val, "stack");
+
+        stack_str.len = 0;
+        stack_str.data = NULL;
+
+        if (!JS_IsException(stack) && !JS_IsUndefined(stack)) {
+            stack_str.data = (u_char *) JS_ToCString(cx, stack);
+            if (stack_str.data != NULL) {
+                stack_str.len = ngx_strlen(stack_str.data);
+            }
+        }
+
+        len = str.len;
+
+        if (stack_str.len != 0) {
+            len += stack_str.len + njs_length("\n");
+        }
+
+        start = njs_mp_alloc(e->pool, len);
+        if (start == NULL) {
+            JS_FreeCString(cx, (char *) str.data);
+            JS_FreeValue(cx, stack);
+            return NGX_ERROR;
+        }
+
+        p = ngx_cpymem(start, str.data, str.len);
+
+        if (stack_str.len != 0) {
+            *p++ = '\n';
+            (void) ngx_cpymem(p, stack_str.data, stack_str.len);
+            JS_FreeCString(cx, (char *) stack_str.data);
+        }
+
+        JS_FreeCString(cx, (char *) str.data);
+        JS_FreeValue(cx, stack);
+
+    } else {
+        len = njs_length("[exception]");
+
+        start = njs_mp_alloc(e->pool, len);
+        if (start == NULL) {
+            return NGX_ERROR;
+        }
+
+        memcpy(start, "[exception]", len);
+    }
+
+    dst->data = start;
+    dst->len = len;
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_qjs_call(ngx_js_ctx_t *ctx, njs_opaque_value_t fn, JSValue *argv, int argc)
+{
+    int         rc;
+    JSValue     ret;
+    ngx_str_t   exception;
+    JSRuntime  *rt;
+    JSContext  *cx, *cx1;
+
+    cx = ctx->engine->u.qjs.ctx;
+
+    ret = JS_Call(cx, ngx_qjs_arg(fn), JS_UNDEFINED, argc, argv);
+    if (JS_IsException(ret)) {
+        ngx_qjs_exception(ctx->engine, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                      "js call exception: %V", &exception);
+
+        return NGX_ERROR;
+    }
+
+    rt = JS_GetRuntime(cx);
+
+    for ( ;; ) {
+        rc = JS_ExecutePendingJob(rt, &cx1);
+        if (rc <= 0) {
+            if (rc == -1) {
+                ngx_qjs_exception(ctx->engine, &exception);
+
+                ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                              "js job exception: %V", &exception);
+
+                return NGX_ERROR;
+            }
+
+            break;
+        }
+    }
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_qjs_exception(ngx_engine_t *e, ngx_str_t *s)
+{
+    JSValue  exception;
+
+    exception = JS_GetException(e->u.qjs.ctx);
+    if (ngx_qjs_dump_obj(e, exception, s) != NGX_OK) {
+        return NGX_ERROR;
+    }
+
+    JS_FreeValue(e->u.qjs.ctx, exception);
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_qjs_integer(JSContext *cx, JSValueConst val, ngx_int_t *n)
+{
+    double  num;
+
+    if (JS_ToFloat64(cx, &num, val)) {
+        return NGX_ERROR;
+    }
+
+    if (isinf(num) || isnan(num)) {
+        (void) JS_ThrowTypeError(cx, "invalid number");
+        return NGX_ERROR;
+    }
+
+    *n = num;
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_qjs_string(ngx_engine_t *e, JSValueConst val, ngx_str_t *dst)
+{
+    size_t       len, byte_offset, byte_length;
+    u_char      *start;
+    JSValue      buffer;
+    JSContext   *cx;
+    const char  *str;
+
+    if (JS_IsNullOrUndefined(val)) {
+        dst->data = NULL;
+        dst->len = 0;
+        return NGX_OK;
+    }
+
+    cx = e->u.qjs.ctx;
+
+    buffer = JS_GetTypedArrayBuffer(cx, val, &byte_offset, &byte_length, NULL);
+    if (!JS_IsException(buffer)) {
+        start = JS_GetArrayBuffer(cx, &dst->len, buffer);
+
+        JS_FreeValue(cx, buffer);
+
+        if (start != NULL) {
+            start += byte_offset;
+            dst->len = byte_length;
+
+            dst->data = njs_mp_alloc(e->pool, dst->len);
+            if (dst->data == NULL) {
+                return NGX_ERROR;
+            }
+
+            memcpy(dst->data, start, dst->len);
+            return NGX_OK;
+        }
+    }
+
+    str = JS_ToCString(cx, val);
+    if (str == NULL) {
+        return NGX_ERROR;
+    }
+
+    len = strlen(str);
+
+    start = njs_mp_alloc(e->pool, len);
+    if (start == NULL) {
+        JS_FreeCString(cx, str);
+        return NGX_ERROR;
+    }
+
+    memcpy(start, str, len);
+
+    JS_FreeCString(cx, str);
+
+    dst->data = start;
+    dst->len = len;
+
+    return NGX_OK;
+}
+
+
+static void
+ngx_qjs_timer_handler(ngx_event_t *ev)
+{
+    void            *external;
+    JSContext       *cx;
+    ngx_int_t        rc;
+    ngx_js_ctx_t    *ctx;
+    ngx_js_event_t  *event;
+
+    event = (ngx_js_event_t *) ((u_char *) ev - offsetof(ngx_js_event_t, ev));
+
+    cx = event->ctx;
+    external = JS_GetContextOpaque(cx);
+    ctx = ngx_qjs_external_ctx(cx, external);
+
+    rc = ngx_qjs_call((ngx_js_ctx_t *) ctx, event->function,
+                      (JSValue *) event->args, event->nargs);
+
+    ngx_js_del_event(ctx, event);
+
+    ngx_qjs_external_event_finalize(cx)(external, rc);
+}
+
+
+static void
+ngx_qjs_clear_timer(ngx_js_event_t *event)
+{
+    int         i;
+    JSContext  *cx;
+
+    cx = event->ctx;
+
+    if (event->ev.timer_set) {
+        ngx_del_timer(&event->ev);
+    }
+
+    JS_FreeValue(cx, ngx_qjs_arg(event->function));
+
+    for (i = 0; i < (int) event->nargs; i++) {
+        JS_FreeValue(cx, ngx_qjs_arg(event->args[i]));
+    }
+}
+
+
+static JSValue
+ngx_qjs_ext_set_timeout(JSContext *cx, JSValueConst this_val, int argc,
+    JSValueConst *argv, int immediate)
+{
+    int                i, n;
+    void              *external;
+    uint32_t           delay;
+    ngx_js_ctx_t      *ctx;
+    ngx_js_event_t    *event;
+    ngx_connection_t  *c;
+
+    if (!JS_IsFunction(cx, argv[0])) {
+        return JS_ThrowTypeError(cx, "first arg must be a function");
+    }
+
+    delay = 0;
+
+    if (!immediate && argc >= 2) {
+        if (JS_ToUint32(cx, &delay, argv[1]) < 0) {
+            return JS_EXCEPTION;
+        }
+    }
+
+    n = immediate ? 1 : 2;
+    argc = (argc >= n) ? argc - n : 0;
+    external = JS_GetContextOpaque(cx);
+    ctx = ngx_qjs_external_ctx(cx, external);
+
+    event = ngx_pcalloc(ngx_qjs_external_pool(cx, external),
+                        sizeof(ngx_js_event_t)
+                            + sizeof(njs_opaque_value_t) * argc);
+    if (event == NULL) {
+        return JS_ThrowOutOfMemory(cx);
+    }
+
+    event->ctx = cx;
+
+    JS_DupValue(cx, argv[0]);
+    memcpy(&event->function, &argv[0], sizeof(njs_opaque_value_t));
+
+    event->nargs = argc;
+    event->args = (njs_opaque_value_t *) &event[1];
+    event->destructor = ngx_qjs_clear_timer;
+    event->fd = ctx->event_id++;
+
+    c = ngx_qjs_external_connection(cx, external);
+
+    event->ev.log = c->log;
+    event->ev.data = event;
+    event->ev.handler = ngx_qjs_timer_handler;
+
+    if (event->nargs != 0) {
+        for (i = 0; i < argc; i++) {
+            ngx_qjs_arg(event->args[i]) = JS_DupValue(cx, argv[n + i]);
+        }
+    }
+
+    ngx_js_add_event(ctx, event);
+
+    ngx_add_timer(&event->ev, delay);
+
+    return JS_NewInt32(cx, event->fd);
+}
+
+
+static JSValue
+ngx_qjs_ext_clear_timeout(JSContext *cx, JSValueConst this_val,
+    int argc, JSValueConst *argv)
+{
+    uint32_t           id;
+    ngx_js_ctx_t       *ctx;
+    ngx_js_event_t      event_lookup, *event;
+    njs_rbtree_node_t  *rb;
+
+    if (JS_ToUint32(cx, &id, argv[0]) < 0) {
+        return JS_EXCEPTION;
+    }
+
+    ctx = ngx_qjs_external_ctx(cx, JS_GetContextOpaque(cx));
+    event_lookup.fd = id;
+
+    rb = njs_rbtree_find(&ctx->waiting_events, &event_lookup.node);
+    if (rb == NULL) {
+        return JS_ThrowReferenceError(cx, "failed to find timer");
+    }
+
+    event = (ngx_js_event_t *) ((u_char *) rb - offsetof(ngx_js_event_t, node));
+
+    ngx_js_del_event(ctx, event);
+
+    return JS_UNDEFINED;
+}
+
+
+static JSValue
+ngx_qjs_ext_build(JSContext *cx, JSValueConst this_val)
+{
+    return JS_NewStringLen(cx,
+#ifdef NGX_BUILD
+                           (char *) NGX_BUILD,
+                           njs_strlen(NGX_BUILD)
+#else
+                           (char *) "",
+                           0
+#endif
+                           );
+}
+
+
+static JSValue
+ngx_qjs_ext_conf_file_path(JSContext *cx, JSValueConst this_val)
+{
+    return JS_NewStringLen(cx, (char *) ngx_cycle->conf_file.data,
+                           ngx_cycle->conf_file.len);
+}
+
+
+static JSValue
+ngx_qjs_ext_prefix(JSContext *cx, JSValueConst this_val)
+{
+    return JS_NewStringLen(cx, (char *) ngx_cycle->prefix.data,
+                           ngx_cycle->prefix.len);
+}
+
+
+static JSModuleDef *
+ngx_qjs_module_loader(JSContext *ctx, const char *module_name, void *opaque)
+{
+    JSValue               func_val;
+    njs_int_t             ret;
+    njs_str_t             text;
+    JSModuleDef          *m;
+    njs_module_info_t     info;
+    ngx_js_loc_conf_t    *conf;
+    ngx_js_code_entry_t  *pc;
+
+    conf = opaque;
+
+    njs_memzero(&info, sizeof(njs_module_info_t));
+
+    info.name.start = (u_char *) module_name;
+    info.name.length = njs_strlen(module_name);
+
+    ret = ngx_js_module_lookup(conf, &info);
+    if (ret != NJS_OK) {
+        JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
+                               module_name);
+        return NULL;
+    }
+
+    ret = ngx_js_module_read(conf->engine->pool, info.fd, &text);
+
+    (void) close(info.fd);
+
+    if (ret != NJS_OK) {
+        JS_ThrowInternalError(ctx, "while reading \"%*s\" module",
+                              (int) info.file.length, info.file.start);
+        return NULL;
+    }
+
+    func_val = JS_Eval(ctx, (char *) text.start, text.length, module_name,
+                       JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+
+    njs_mp_free(conf->engine->pool, text.start);
+
+    if (JS_IsException(func_val)) {
+        return NULL;
+    }
+
+    if (conf->engine->precompiled == NULL) {
+        conf->engine->precompiled = njs_arr_create(conf->engine->pool, 4,
+                                                  sizeof(ngx_js_code_entry_t));
+        if (conf->engine->precompiled == NULL) {
+            JS_FreeValue(ctx, func_val);
+            JS_ThrowOutOfMemory(ctx);
+            return NULL;
+        }
+    }
+
+    pc = njs_arr_add(conf->engine->precompiled);
+    if (pc == NULL) {
+        JS_FreeValue(ctx, func_val);
+        JS_ThrowOutOfMemory(ctx);
+        return NULL;
+    }
+
+    pc->code = JS_WriteObject(ctx, &pc->code_size, func_val,
+                              JS_WRITE_OBJ_BYTECODE);
+    if (pc->code == NULL) {
+        JS_FreeValue(ctx, func_val);
+        JS_ThrowInternalError(ctx, "could not write module bytecode");
+        return NULL;
+    }
+
+    m = JS_VALUE_GET_PTR(func_val);
+    JS_FreeValue(ctx, func_val);
+
+    return m;
+}
+
+
+static JSModuleDef *
+ngx_qjs_core_init(JSContext *cx, const char *name)
+{
+    int           ret;
+    JSValue       global_obj, ngx;
+    JSModuleDef  *m;
+
+    ngx = JS_NewObject(cx);
+    if (JS_IsException(ngx)) {
+        return NULL;
+    }
+
+    JS_SetPropertyFunctionList(cx, ngx, ngx_qjs_ngx_ext,
+                               njs_nitems(ngx_qjs_ngx_ext));
+
+    global_obj = JS_GetGlobalObject(cx);
+
+    JS_SetPropertyFunctionList(cx, global_obj, ngx_qjs_ext_global,
+                               njs_nitems(ngx_qjs_ext_global));
+
+    ret = JS_SetPropertyStr(cx, global_obj, "ngx", ngx);
+    if (ret < 0) {
+        return NULL;
+    }
+
+    JS_FreeValue(cx, global_obj);
+
+    m = JS_NewCModule(cx, name, NULL);
+    if (m == NULL) {
+        return NULL;
+    }
+
+    return m;
+}
+
+#endif
 
 
 ngx_int_t
@@ -2393,10 +3451,17 @@ ngx_js_create_conf(ngx_conf_t *cf, size_t size)
         return NULL;
     }
 
+    /*
+     * set by ngx_pcalloc():
+     *
+     *     conf->reuse_queue = NULL;
+     */
+
     conf->paths = NGX_CONF_UNSET_PTR;
     conf->imports = NGX_CONF_UNSET_PTR;
     conf->preload_objects = NGX_CONF_UNSET_PTR;
 
+    conf->reuse = NGX_CONF_UNSET_SIZE;
     conf->buffer_size = NGX_CONF_UNSET_SIZE;
     conf->max_response_body_size = NGX_CONF_UNSET_SIZE;
     conf->timeout = NGX_CONF_UNSET_MSEC;
@@ -2461,6 +3526,7 @@ ngx_js_merge_conf(ngx_conf_t *cf, void *parent, void *child,
     ngx_conf_merge_bitmask_value(conf->type, prev->type,
                                  (NGX_CONF_BITMASK_SET|NGX_ENGINE_NJS));
     ngx_conf_merge_msec_value(conf->timeout, prev->timeout, 60000);
+    ngx_conf_merge_size_value(conf->reuse, prev->reuse, 128);
     ngx_conf_merge_size_value(conf->buffer_size, prev->buffer_size, 16384);
     ngx_conf_merge_size_value(conf->max_response_body_size,
                               prev->max_response_body_size, 1048576);
@@ -2515,4 +3581,60 @@ ngx_js_monotonic_time(void)
 
     return (uint64_t) tv.tv_sec * 1000000000 + tv.tv_usec * 1000;
 #endif
+}
+
+
+ngx_js_queue_t *
+ngx_js_queue_create(ngx_pool_t *pool, ngx_uint_t capacity)
+{
+    ngx_js_queue_t  *queue;
+
+    queue = ngx_pcalloc(pool, sizeof(ngx_js_queue_t));
+    if (queue == NULL) {
+        return NULL;
+    }
+
+    queue->data = ngx_pcalloc(pool, sizeof(void *) * capacity);
+    if (queue->data == NULL) {
+        return NULL;
+    }
+
+    queue->head = 0;
+    queue->tail = 0;
+    queue->size = 0;
+    queue->capacity = capacity;
+
+    return queue;
+}
+
+
+ngx_int_t
+ngx_js_queue_push(ngx_js_queue_t *queue, void *item)
+{
+    if (queue->size >= queue->capacity) {
+        return NGX_ERROR;
+    }
+
+    queue->data[queue->tail] = item;
+    queue->tail = (queue->tail + 1) % queue->capacity;
+    queue->size++;
+
+    return NGX_OK;
+}
+
+
+void *
+ngx_js_queue_pop(ngx_js_queue_t *queue)
+{
+    void *item;
+
+    if (queue->size == 0) {
+        return NULL;
+    }
+
+    item = queue->data[queue->head];
+    queue->head = (queue->head + 1) % queue->capacity;
+    queue->size--;
+
+    return item;
 }
