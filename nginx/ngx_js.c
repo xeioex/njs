@@ -1201,6 +1201,49 @@ ngx_qjs_dump_obj(ngx_engine_t *e, JSValueConst val, ngx_str_t *dst)
 
 
 ngx_int_t
+ngx_qjs_call(ngx_js_ctx_t *ctx, njs_opaque_value_t fn, JSValue *argv, int argc)
+{
+    int         rc;
+    JSValue     ret;
+    ngx_str_t   exception;
+    JSRuntime  *rt;
+    JSContext  *cx, *cx1;
+
+    cx = ctx->engine->u.qjs.ctx;
+
+    ret = JS_Call(cx, ngx_qjs_arg(fn), JS_UNDEFINED, argc, argv);
+    if (JS_IsException(ret)) {
+        ngx_qjs_exception(ctx->engine, &exception);
+
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                      "js call exception: %V", &exception);
+
+        return NGX_ERROR;
+    }
+
+    rt = JS_GetRuntime(cx);
+
+    for ( ;; ) {
+        rc = JS_ExecutePendingJob(rt, &cx1);
+        if (rc <= 0) {
+            if (rc == -1) {
+                ngx_qjs_exception(ctx->engine, &exception);
+
+                ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                              "js job exception: %V", &exception);
+
+                return NGX_ERROR;
+            }
+
+            break;
+        }
+    }
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
 ngx_qjs_exception(ngx_engine_t *e, ngx_str_t *s)
 {
     JSValue  exception;
@@ -1226,6 +1269,37 @@ ngx_qjs_integer(JSContext *cx, JSValueConst val, ngx_int_t *n)
     }
 
     *n = num;
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_qjs_string(ngx_engine_t *e, JSValueConst val, ngx_str_t *dst)
+{
+    size_t       len;
+    u_char      *start;
+    const char  *str;
+
+    str = JS_ToCString(e->u.qjs.ctx, val);
+    if (str == NULL) {
+        return NGX_ERROR;
+    }
+
+    len = strlen(str);
+
+    start = njs_mp_alloc(e->pool, len);
+    if (start == NULL) {
+        JS_FreeCString(e->u.qjs.ctx, str);
+        return NGX_ERROR;
+    }
+
+    memcpy(start, str, len);
+
+    JS_FreeCString(e->u.qjs.ctx, str);
+
+    dst->data = start;
+    dst->len = len;
 
     return NGX_OK;
 }

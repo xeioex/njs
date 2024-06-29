@@ -74,6 +74,13 @@ JSValue qjs_typed_array_data(JSContext *ctx, JSValueConst value,
     njs_str_t *data);
 
 
+static inline JS_BOOL JS_IsNullOrUndefined(JSValueConst v)
+{
+    return JS_VALUE_GET_TAG(v) == JS_TAG_NULL
+           || JS_VALUE_GET_TAG(v) == JS_TAG_UNDEFINED;
+}
+
+
 extern qjs_module_t              *qjs_modules[];
 
 #endif /* _QJS_H_INCLUDED_ */

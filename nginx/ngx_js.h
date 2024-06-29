@@ -148,7 +148,7 @@ typedef struct {
 #define ngx_js_del_event(ctx, event)                                          \
     do {                                                                      \
         if ((event)->destructor) {                                            \
-            (event)->destructor(njs_vm_external_ptr((event)->ctx), event);    \
+            (event)->destructor(ngx_js_ctx_external(ctx), event);             \
         }                                                                     \
                                                                               \
         njs_rbtree_delete(&(ctx)->waiting_events, &(event)->node);            \
@@ -286,8 +286,11 @@ typedef union {
 #define ngx_qjs_arg(val) (((ngx_qjs_value_t *) &(val))->value)
 ngx_engine_t *ngx_qjs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
     void *external);
+ngx_int_t ngx_qjs_call(ngx_js_ctx_t *ctx, njs_opaque_value_t function,
+    JSValue *argv, int argc);
 ngx_int_t ngx_qjs_exception(ngx_engine_t *e, ngx_str_t *s);
 ngx_int_t ngx_qjs_integer(JSContext *cx, JSValueConst val, ngx_int_t *n);
+ngx_int_t ngx_qjs_string(ngx_engine_t *e, JSValueConst val, ngx_str_t *str);
 #endif
 
 njs_int_t ngx_js_ext_log(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,

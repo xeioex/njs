@@ -264,6 +264,8 @@ static njs_int_t ngx_http_js_server(njs_vm_t *vm, ngx_http_request_t *r,
 #ifdef NJS_HAVE_QUICKJS
 static JSValue ngx_http_qjs_ext_return(JSContext *ctx, JSValueConst this_val,
     int argc, JSValueConst *argv);
+static JSValue ngx_http_qjs_ext_subrequest(JSContext *cx, JSValueConst this_val,
+    int argc, JSValueConst *argv);
 #endif
 
 static ngx_pool_t *ngx_http_js_pool(njs_vm_t *vm, ngx_http_request_t *r);
@@ -948,6 +950,7 @@ static JSClassID ngx_http_qjs_request_class_id;
 
 static const JSCFunctionListEntry ngx_http_qjs_ext_request[] = {
     JS_CFUNC_DEF("return", 2, ngx_http_qjs_ext_return),
+    JS_CFUNC_DEF("subrequest", 3, ngx_http_qjs_ext_subrequest),
 };
 
 #endif
@@ -4118,6 +4121,341 @@ ngx_http_qjs_ext_return(JSContext *cx, JSValueConst this_val,
     }
 
     return JS_UNDEFINED;
+}
+
+
+static ngx_int_t
+ngx_http_qjs_subrequest_done(ngx_http_request_t *r, void *data, ngx_int_t rc)
+{
+    ngx_js_event_t  *event = data;
+
+    JSValue              proto, reply;
+    JSContext           *cx;
+    ngx_http_js_ctx_t   *ctx;
+
+    if (rc != NGX_OK || r->connection->error || r->buffered) {
+        return rc;
+    }
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_js_module);
+
+    if (ctx && ctx->done) {
+        return NGX_OK;
+    }
+
+    if (ctx == NULL) {
+        ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_js_ctx_t));
+        if (ctx == NULL) {
+            return NGX_ERROR;
+        }
+
+        ngx_http_set_ctx(r, ctx, ngx_http_js_module);
+    }
+
+    ctx->done = 1;
+
+    ctx = ngx_http_get_module_ctx(r->parent, ngx_http_js_module);
+
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "js subrequest done s: %ui parent ctx: %p",
+                   r->headers_out.status, ctx);
+
+    if (ctx == NULL) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "js subrequest: failed to get the parent context");
+
+        return NGX_ERROR;
+    }
+
+    cx = ctx->engine->u.qjs.ctx;
+
+    proto = JS_NewObject(cx);
+    JS_SetPropertyFunctionList(cx, proto, ngx_http_qjs_ext_request,
+                               njs_nitems(ngx_http_qjs_ext_request));
+
+    JS_SetClassProto(cx, ngx_http_qjs_request_class_id, proto);
+
+    reply = JS_NewObjectClass(cx, ngx_http_qjs_request_class_id);
+    if (JS_IsException(reply)) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "js subrequest reply creation failed");
+        return NGX_ERROR;
+    }
+
+    JS_SetOpaque(reply, r);
+
+    rc = ngx_qjs_call((ngx_js_ctx_t *) ctx, event->function,
+                      &ngx_qjs_arg(reply), 1);
+
+    JS_FreeValue(cx, reply);
+    JS_FreeValue(cx, ngx_qjs_arg(event->function));
+    JS_FreeValue(cx, ngx_qjs_arg(event->args[0]));
+    JS_FreeValue(cx, ngx_qjs_arg(event->args[1]));
+    ngx_js_del_event(ctx, event);
+
+    ngx_http_js_event_finalize(r->parent, rc);
+
+    return NGX_OK;
+}
+
+
+static JSValue
+ngx_http_qjs_ext_subrequest(JSContext *cx, JSValueConst this_val,
+    int argc, JSValueConst *argv)
+{
+    JSValue                      arg, options, callback, value, retval;
+    ngx_int_t                    rc;
+    ngx_str_t                    uri, args, method_name, body_arg;
+    ngx_uint_t                   method, methods_max, has_body, detached, flags,
+                                 promise;
+    ngx_js_event_t              *event;
+    ngx_http_js_ctx_t           *ctx;
+    ngx_http_request_t          *r, *sr;
+    ngx_http_request_body_t     *rb;
+    ngx_http_post_subrequest_t  *ps;
+
+    r = JS_GetOpaque(this_val, ngx_http_qjs_request_class_id);
+    if (r == NULL) {
+        return JS_ThrowInternalError(cx, "\"this\" is not a request object");
+    }
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_js_module);
+
+    if (r->main != r) {
+        return JS_ThrowTypeError(cx, "subrequest can only be created for "
+                                     "the primary request");
+    }
+
+    if (ngx_qjs_string(ctx->engine, argv[0], &uri) != NGX_OK) {
+        return JS_ThrowTypeError(cx, "failed to convert uri arg");
+    }
+
+    if (uri.len == 0) {
+        return JS_ThrowTypeError(cx, "uri is empty");
+    }
+
+    options = JS_UNDEFINED;
+    callback = JS_UNDEFINED;
+
+    method = 0;
+    methods_max = sizeof(ngx_http_methods) / sizeof(ngx_http_methods[0]);
+
+    args.len = 0;
+    args.data = NULL;
+
+    method_name.len = 0;
+    method_name.data = NULL;
+
+    has_body = 0;
+    detached = 0;
+
+    arg = argv[1];
+
+    if (JS_IsString(arg)) {
+        if (ngx_qjs_string(ctx->engine, arg, &args) != NGX_OK) {
+            return JS_ThrowTypeError(cx, "failed to convert args");
+        }
+
+    } else if (JS_IsFunction(cx, arg)) {
+        callback = arg;
+
+    } else if (JS_IsObject(arg)) {
+        options = arg;
+
+    } else if (!JS_IsNullOrUndefined(arg)) {
+        return JS_ThrowTypeError(cx, "failed to convert args");
+    }
+
+    if (!JS_IsUndefined(options)) {
+        value = JS_GetPropertyStr(cx, options, "args");
+        if (JS_IsException(value)) {
+            return JS_EXCEPTION;
+        }
+
+        if (!JS_IsUndefined(value)) {
+            rc = ngx_qjs_string(ctx->engine, value, &args);
+            JS_FreeValue(cx, value);
+
+            if (rc != NGX_OK) {
+                return JS_ThrowTypeError(cx, "failed to convert option.args");
+            }
+        }
+
+        value = JS_GetPropertyStr(cx, options, "detached");
+        if (JS_IsException(value)) {
+            return JS_EXCEPTION;
+        }
+
+        if (!JS_IsUndefined(value)) {
+            detached = JS_ToBool(cx, value);
+            JS_FreeValue(cx, value);
+        }
+
+        value = JS_GetPropertyStr(cx, options, "method");
+        if (JS_IsException(value)) {
+            return JS_EXCEPTION;
+        }
+
+        if (!JS_IsUndefined(value)) {
+            rc = ngx_qjs_string(ctx->engine, value, &method_name);
+            JS_FreeValue(cx, value);
+
+            if (rc != NGX_OK) {
+                return JS_ThrowTypeError(cx, "failed to convert option.method");
+            }
+
+            while (method < methods_max) {
+                if (method_name.len == ngx_http_methods[method].name.len
+                    && ngx_memcmp(method_name.data,
+                                  ngx_http_methods[method].name.data,
+                                  method_name.len)
+                       == 0)
+                {
+                    break;
+                }
+
+                method++;
+            }
+        }
+
+        value = JS_GetPropertyStr(cx, options, "body");
+        if (JS_IsException(value)) {
+            return JS_EXCEPTION;
+        }
+
+        if (!JS_IsUndefined(value)) {
+            rc = ngx_qjs_string(ctx->engine, value, &body_arg);
+            JS_FreeValue(cx, value);
+
+            if (rc != NGX_OK) {
+                return JS_ThrowTypeError(cx, "failed to convert option.body");
+            }
+
+            has_body = 1;
+        }
+    }
+
+    flags = NGX_HTTP_LOG_UNSAFE;
+
+    if (ngx_http_parse_unsafe_uri(r, &uri, &args, &flags) != NGX_OK) {
+        return JS_ThrowTypeError(cx, "unsafe uri");
+    }
+
+    arg = argv[2];
+
+    if (JS_IsUndefined(callback) && !JS_IsNullOrUndefined(arg)) {
+        if (!JS_IsFunction(cx, arg)) {
+            return JS_ThrowTypeError(cx, "callback is not a function");
+        }
+
+        callback = arg;
+    }
+
+    if (detached && !JS_IsUndefined(callback)) {
+        return JS_ThrowTypeError(cx, "detached flag and callback are mutually "
+                                     "exclusive");
+    }
+
+    promise = 0;
+    retval = JS_UNDEFINED;
+    flags = NGX_HTTP_SUBREQUEST_BACKGROUND;
+
+    if (!detached) {
+        ps = ngx_palloc(r->pool, sizeof(ngx_http_post_subrequest_t));
+        if (ps == NULL) {
+            return JS_ThrowOutOfMemory(cx);
+        }
+
+        promise = !!JS_IsUndefined(callback);
+
+        event = ngx_pcalloc(r->pool, sizeof(ngx_js_event_t)
+                            + promise * (sizeof(njs_opaque_value_t) * 2));
+        if (event == NULL) {
+            return JS_ThrowOutOfMemory(cx);
+        }
+
+        event->fd = ctx->event_id++;
+
+        if (promise) {
+            event->args = (njs_opaque_value_t *) &event[1];
+            retval = JS_NewPromiseCapability(cx, &ngx_qjs_arg(event->args[0]));
+            if (JS_IsException(retval)) {
+                return JS_EXCEPTION;
+            }
+
+            callback = ngx_qjs_arg(event->args[0]);
+        }
+
+        JS_DupValue(cx, callback);
+        memcpy(&event->function, &callback, sizeof(njs_opaque_value_t));
+
+        ps->handler = ngx_http_qjs_subrequest_done;
+        ps->data = event;
+
+        flags |= NGX_HTTP_SUBREQUEST_IN_MEMORY;
+
+    } else {
+        ps = NULL;
+        event = NULL;
+    }
+
+    if (ngx_http_subrequest(r, &uri, args.len ? &args : NULL, &sr, ps, flags)
+        != NGX_OK)
+    {
+        return JS_ThrowInternalError(cx, "subrequest creation failed");
+    }
+
+    if (event != NULL) {
+        ngx_js_add_event(ctx, event);
+    }
+
+    if (method != methods_max) {
+        sr->method = ngx_http_methods[method].value;
+        sr->method_name = ngx_http_methods[method].name;
+
+    } else {
+        sr->method = NGX_HTTP_UNKNOWN;
+        sr->method_name = method_name;
+    }
+
+    sr->header_only = (sr->method == NGX_HTTP_HEAD) || JS_IsUndefined(callback);
+
+    if (has_body) {
+        rb = ngx_pcalloc(r->pool, sizeof(ngx_http_request_body_t));
+        if (rb == NULL) {
+            goto memory_error;
+        }
+
+        if (body_arg.len != 0) {
+            rb->bufs = ngx_alloc_chain_link(r->pool);
+            if (rb->bufs == NULL) {
+                goto memory_error;
+            }
+
+            rb->bufs->next = NULL;
+
+            rb->bufs->buf = ngx_calloc_buf(r->pool);
+            if (rb->bufs->buf == NULL) {
+                goto memory_error;
+            }
+
+            rb->bufs->buf->memory = 1;
+            rb->bufs->buf->last_buf = 1;
+
+            rb->bufs->buf->pos = body_arg.data;
+            rb->bufs->buf->last = body_arg.data + body_arg.len;
+        }
+
+        sr->request_body = rb;
+        sr->headers_in.content_length_n = body_arg.len;
+        sr->headers_in.chunked = 0;
+    }
+
+    return retval;
+
+memory_error:
+
+    return JS_ThrowOutOfMemory(cx);
 }
 
 #endif
