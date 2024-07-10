@@ -1020,6 +1020,28 @@ qjs_buffer_alloc(JSContext *ctx, size_t size)
 
 
 JSValue
+qjs_buffer_create(JSContext *ctx, u_char *start, size_t size)
+{
+    JSValue    buffer, ret;
+    njs_str_t  dst;
+
+    buffer = qjs_buffer_alloc(ctx, size);
+    if (JS_IsException(buffer)) {
+        return buffer;
+    }
+
+    ret = qjs_typed_array_data(ctx, buffer, &dst);
+    if (JS_IsException(ret)) {
+        return ret;
+    }
+
+    memcpy(dst.start, start, size);
+
+    return buffer;
+}
+
+
+JSValue
 qjs_buffer_chb_alloc(JSContext *ctx, njs_chb_t *chain)
 {
     ssize_t      size;
