@@ -48,7 +48,9 @@ typedef struct {
 #define NJS_HEADER_ARRAY       0x4
 
 
-typedef struct {
+typedef struct ngx_http_js_ctx_s  ngx_http_js_ctx_t;
+
+struct ngx_http_js_ctx_s {
     NGX_JS_COMMON_CTX;
     ngx_uint_t             done;
     ngx_int_t              status;
@@ -62,9 +64,13 @@ typedef struct {
     ngx_chain_t          **last_out;
     ngx_chain_t           *free;
     ngx_chain_t           *busy;
+    ngx_int_t            (*body_filter)(ngx_http_request_t *r,
+                                        ngx_http_js_loc_conf_t *jlcf,
+                                        ngx_http_js_ctx_t *ctx,
+                                        ngx_chain_t *in);
 
     ngx_js_periodic_t     *periodic;
-} ngx_http_js_ctx_t;
+};
 
 
 typedef struct {
@@ -1119,19 +1125,19 @@ ngx_http_js_header_filter(ngx_http_request_t *r)
 
 
 static ngx_int_t
-ngx_http_njs_body_filter(ngx_http_request_t *r,
-    ngx_http_js_loc_conf_t *jlcf, ngx_http_js_ctx_t *ctx, ngx_chain_t *in)
+ngx_http_njs_body_filter(ngx_http_request_t *r, ngx_http_js_loc_conf_t *jlcf,
+    ngx_http_js_ctx_t *ctx, ngx_chain_t *in)
 {
-    size_t                   len;
-    u_char                  *p;
-    njs_vm_t                *vm;
-    ngx_int_t                rc;
-    njs_int_t                ret, pending;
-    ngx_buf_t               *b;
-    ngx_chain_t             *cl;
-    ngx_connection_t        *c;
-    njs_opaque_value_t       last_key, last;
-    njs_opaque_value_t       arguments[3];
+    size_t               len;
+    u_char              *p;
+    njs_vm_t            *vm;
+    ngx_int_t            rc;
+    njs_int_t            ret, pending;
+    ngx_buf_t           *b;
+    ngx_chain_t         *cl;
+    ngx_connection_t    *c;
+    njs_opaque_value_t   last_key, last;
+    njs_opaque_value_t   arguments[3];
 
     static const njs_str_t last_str = njs_str("last");
 
@@ -1247,7 +1253,7 @@ ngx_http_js_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ctx->filter = 1;
     ctx->last_out = &out;
 
-    rc = ngx_http_njs_body_filter(r, jlcf, ctx, in);
+    rc = ctx->body_filter(r, jlcf, ctx, in);
     if (rc != NGX_OK) {
         return NGX_ERROR;
     }
@@ -4390,8 +4396,9 @@ static ngx_engine_t *
 ngx_engine_njs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
     njs_int_t proto_id, void *external)
 {
-    njs_int_t      rc;
-    ngx_engine_t  *engine;
+    njs_int_t           rc;
+    ngx_engine_t       *engine;
+    ngx_http_js_ctx_t  *hctx;
 
     engine = ngx_njs_clone(ctx, cf, external);
     if (engine == NULL) {
@@ -4404,6 +4411,9 @@ ngx_engine_njs_clone(ngx_js_ctx_t *ctx, ngx_js_loc_conf_t *cf,
     if (rc != NJS_OK) {
         return NULL;
     }
+
+    hctx = (ngx_http_js_ctx_t *) ctx;
+    hctx->body_filter = ngx_http_njs_body_filter;
 
     return engine;
 }
