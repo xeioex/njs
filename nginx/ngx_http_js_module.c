@@ -1119,7 +1119,8 @@ ngx_http_js_header_filter(ngx_http_request_t *r)
 
 
 static ngx_int_t
-ngx_http_js_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
+ngx_http_njs_body_filter(ngx_http_request_t *r,
+    ngx_http_js_loc_conf_t *jlcf, ngx_http_js_ctx_t *ctx, ngx_chain_t *in)
 {
     size_t                   len;
     u_char                  *p;
@@ -1127,41 +1128,14 @@ ngx_http_js_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ngx_int_t                rc;
     njs_int_t                ret, pending;
     ngx_buf_t               *b;
-    ngx_chain_t             *out, *cl;
+    ngx_chain_t             *cl;
     ngx_connection_t        *c;
-    ngx_http_js_ctx_t       *ctx;
     njs_opaque_value_t       last_key, last;
-    ngx_http_js_loc_conf_t  *jlcf;
     njs_opaque_value_t       arguments[3];
 
     static const njs_str_t last_str = njs_str("last");
 
-    jlcf = ngx_http_get_module_loc_conf(r, ngx_http_js_module);
-
-    if (jlcf->body_filter.len == 0 || in == NULL) {
-        return ngx_http_next_body_filter(r, in);
-    }
-
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http js body filter");
-
-    rc = ngx_http_js_init_vm(r, ngx_http_js_request_proto_id);
-
-    if (rc == NGX_ERROR || rc == NGX_DECLINED) {
-        return NGX_ERROR;
-    }
-
-    ctx = ngx_http_get_module_ctx(r, ngx_http_js_module);
-
-    if (ctx->done) {
-        return ngx_http_next_body_filter(r, in);
-    }
-
     c = r->connection;
-
-    ctx->filter = 1;
-    ctx->last_out = &out;
-
     vm = ctx->engine->u.njs.vm;
 
     njs_value_assign(&arguments[0], &ctx->args[0]);
@@ -1237,13 +1211,54 @@ ngx_http_js_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         in = in->next;
     }
 
+    return NGX_OK;
+}
+
+
+static ngx_int_t
+ngx_http_js_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
+{
+    ngx_int_t                rc;
+    ngx_chain_t             *out;
+    ngx_http_js_ctx_t       *ctx;
+    ngx_http_js_loc_conf_t  *jlcf;
+
+    jlcf = ngx_http_get_module_loc_conf(r, ngx_http_js_module);
+
+    if (jlcf->body_filter.len == 0 || in == NULL) {
+        return ngx_http_next_body_filter(r, in);
+    }
+
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "http js body filter");
+
+    rc = ngx_http_js_init_vm(r, ngx_http_js_request_proto_id);
+
+    if (rc == NGX_ERROR || rc == NGX_DECLINED) {
+        return NGX_ERROR;
+    }
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_js_module);
+
+    if (ctx->done) {
+        return ngx_http_next_body_filter(r, in);
+    }
+
+    ctx->filter = 1;
+    ctx->last_out = &out;
+
+    rc = ngx_http_njs_body_filter(r, jlcf, ctx, in);
+    if (rc != NGX_OK) {
+        return NGX_ERROR;
+    }
+
     *ctx->last_out = NULL;
 
-    if (out != NULL || c->buffered) {
+    if (out != NULL || r->connection->buffered) {
         rc = ngx_http_next_body_filter(r, out);
 
-        ngx_chain_update_chains(c->pool, &ctx->free, &ctx->busy, &out,
-                                (ngx_buf_tag_t) &ngx_http_js_module);
+        ngx_chain_update_chains(r->connection->pool, &ctx->free, &ctx->busy,
+                                &out, (ngx_buf_tag_t) &ngx_http_js_module);
 
     } else {
         rc = NGX_OK;
