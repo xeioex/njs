@@ -1028,7 +1028,7 @@ ngx_engine_qjs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
         return NGX_ERROR;
     }
 
-    val = JS_Call(cx, fn, JS_UNDEFINED, nargs, &ngx_qjs_arg(ctx->args[0]));
+    val = JS_Call(cx, fn, JS_UNDEFINED, nargs, &ngx_qjs_arg(args[0]));
     JS_FreeValue(cx, fn);
     if (JS_IsException(val)) {
         ngx_qjs_exception(ctx->engine, &exception);
