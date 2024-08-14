@@ -54,11 +54,8 @@ EOF
 
 $t->write_file('test.js', <<EOF);
     function variables(r) {
-        let content = "";
-        for (let i=0; i<4; i++) {
-            content += `\\\$\${i} is "\${r.variables[i.toString()]}"\n`; 
-        }
-        return r.return(200, content);
+        var index = Number(r.args.index);
+        return r.return(200, `"\${r.variables[index.toString()]}"`);
     }
 
     function test_njs(r) {
@@ -76,10 +73,10 @@ $t->try_run('no njs capture variables')->plan(4);
 TODO: {
 local $TODO = 'not yet' unless has_version('0.8.6');
 
-like(http_get('/test/hello'), qr/\$0 is "\/test\/hello"/, 'global capture var');
-like(http_get('/test/hello'), qr/\$1 is "test"/, 'local capture var 1');
-like(http_get('/test/hello'), qr/\$2 is "hello"/, 'local capture var 2');
-like(http_get('/test/hello'), qr/\$3 is "undefined"/, 'undefined capture var');
+like(http_get('/test/hello?index=0'), qr/"\/test\/hello"/, 'global capture');
+like(http_get('/test/hello?index=1'), qr/"test"/, 'local capture 1');
+like(http_get('/test/hello?index=2'), qr/"hello"/, 'local capture 2');
+like(http_get('/test/hello?index=3'), qr/"undefined"/, 'undefined capture');
 
 }
 
