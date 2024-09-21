@@ -128,8 +128,10 @@ union njs_value_s {
         njs_value_type_t              type:8;  /* 5 bits */
         uint8_t                       truth;
 
-        uint8_t                       _spare1_;
-        uint8_t                       _spare2_;
+        /* token_type is mask: string=0, keyword=2, keyword_reserved=1 */
+        uint8_t                       token_type;
+        /* if token_type != 0 then token_id is token id, else not used. */
+        uint8_t                       token_id;
 
         njs_string_t                  *data;
     } string;
@@ -390,6 +392,23 @@ typedef struct {
     .string = {                                                               \
         .type = NJS_STRING,                                                   \
         .truth = njs_length(s) ? 1 : 0,                                       \
+        .token_type = 0,                                                      \
+        .token_id = 0,                                                        \
+        .data = &(njs_string_t) {                                             \
+            .start = (u_char *) s,                                            \
+            .length = njs_length(s),                                          \
+            .size = njs_length(s),                                            \
+        },                                                                    \
+    }                                                                         \
+}
+
+
+#define njs_string_kw(s, _token_type, _token_id) {                            \
+    .string = {                                                               \
+        .type = NJS_STRING,                                                   \
+        .truth = njs_length(s) ? 1 : 0,                                       \
+        .token_type = _token_type,                                            \
+        .token_id = _token_id,                                                \
         .data = &(njs_string_t) {                                             \
             .start = (u_char *) s,                                            \
             .length = njs_length(s),                                          \

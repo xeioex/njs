@@ -205,6 +205,7 @@ typedef struct {
 struct njs_vm_shared_s {
     njs_lvlhsh_t             keywords_hash;
     njs_lvlhsh_t             values_hash;
+    njs_flathsh_t            predefined_hash;
 
     njs_lvlhsh_t             array_instance_hash;
     njs_lvlhsh_t             string_instance_hash;
