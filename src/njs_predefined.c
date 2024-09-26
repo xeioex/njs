@@ -595,10 +595,11 @@ static const njs_flathsh_proto_t  njs_predefined_hash_proto
 
 
 njs_int_t
-njs_predefined_hash_init(njs_flathsh_t *hash)
+njs_predefined_hash_init()
 {
     u_char               *start;
     size_t               len;
+    uint32_t             atom_id;
     njs_int_t            ret;
     njs_uint_t           n;
     njs_value_t          *value;
@@ -613,10 +614,12 @@ njs_predefined_hash_init(njs_flathsh_t *hash)
     lhq.proto = &njs_predefined_hash_proto;
     lhq.pool = NULL; /* Not used. */
 
+    atom_id = NJS_SYMBOL_KNOWN_MAX;
+
     for (n = 0; n < NJS_PREDEFINED_SIZE; n++) {
         value = &njs_predefined.value[n];
 
-        value->string.atom_id = njs_predefined_atom_id++;
+        value->string.atom_id = atom_id++;
 
         start = value->string.data->start;
         len = value->string.data->length;

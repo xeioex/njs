@@ -129,7 +129,7 @@ njs_builtin_objects_create(njs_vm_t *vm)
     njs_lvlhsh_init(&shared->keywords_hash);
     njs_lvlhsh_init(&shared->values_hash);
 
-    ret = njs_predefined_hash_init(&shared->predefined_hash);
+    ret = njs_predefined_hash_init();
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }

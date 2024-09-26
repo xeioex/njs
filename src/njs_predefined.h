@@ -530,7 +530,11 @@ typedef union {
 } njs_predefined_values_t;
 
 
-njs_int_t njs_predefined_hash_init(njs_flathsh_t *hash);
+#define njs_predef(name) (njs_predefined.vs._ ## name)
+#define njs_predef_empty (njs_predefined.vs._)
+
+
+njs_int_t njs_predefined_hash_init();
 
 
 extern njs_predefined_values_t     njs_predefined;
