@@ -335,7 +335,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
             symbol = 1;
             key = *njs_symbol_description(&key);
             if (njs_is_undefined(&key)) {
-                key = njs_string_empty;
+                key = njs_predefined.vs._;
             }
         }
 
@@ -476,7 +476,8 @@ njs_builtin_match_native_function(njs_vm_t *vm, njs_function_t *function,
     for (i = NJS_OBJ_TYPE_HIDDEN_MIN; i < NJS_OBJ_TYPE_HIDDEN_MAX; i++) {
         njs_set_object(&value, &njs_vm_ctor(vm, i).object);
 
-        ret = njs_value_property(vm, &value, njs_value_arg(&njs_string_name),
+        ret = njs_value_property(vm, &value,
+                                 njs_value_arg(&njs_predefined.vs._name),
                                  &tag);
 
         if (ret == NJS_OK && njs_is_string(&tag)) {
@@ -655,12 +656,6 @@ njs_ext_on(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_value_t  size_string = njs_string("size");
-static const njs_value_t  nblocks_string = njs_string("nblocks");
-static const njs_value_t  page_string = njs_string("page_size");
-static const njs_value_t  cluster_string = njs_string("cluster_size");
-
-
 static njs_int_t
 njs_ext_memory_stats(njs_vm_t *vm, njs_object_prop_t *prop,
     njs_value_t *unused, njs_value_t *unused2, njs_value_t *retval)
@@ -681,7 +676,8 @@ njs_ext_memory_stats(njs_vm_t *vm, njs_object_prop_t *prop,
 
     njs_set_number(&value, mp_stat.size);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&size_string),
+    ret = njs_value_property_set(vm, &object,
+                                 njs_value_arg(&njs_predefined.vs._size),
                                  &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
@@ -689,7 +685,8 @@ njs_ext_memory_stats(njs_vm_t *vm, njs_object_prop_t *prop,
 
     njs_set_number(&value, mp_stat.nblocks);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&nblocks_string),
+    ret = njs_value_property_set(vm, &object,
+                                 njs_value_arg(&njs_predefined.vs._nblocks),
                                  &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
@@ -697,15 +694,17 @@ njs_ext_memory_stats(njs_vm_t *vm, njs_object_prop_t *prop,
 
     njs_set_number(&value, mp_stat.cluster_size);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&cluster_string),
-                                 &value);
+    ret = njs_value_property_set(vm, &object,
+                                njs_value_arg(&njs_predefined.vs._cluster_size),
+                                &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.page_size);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&page_string),
+    ret = njs_value_property_set(vm, &object,
+                                 njs_value_arg(&njs_predefined.vs._page_size),
                                  &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
@@ -1187,9 +1186,6 @@ static const njs_object_init_t  njs_njs_object_init = {
 };
 
 
-static const njs_value_t  argv_string = njs_string("argv");
-
-
 static njs_int_t
 njs_process_object_argv(njs_vm_t *vm, njs_object_prop_t *pr,
     njs_value_t *process, njs_value_t *unused, njs_value_t *retval)
@@ -1213,7 +1209,8 @@ njs_process_object_argv(njs_vm_t *vm, njs_object_prop_t *pr,
                           njs_strlen(*arg));
     }
 
-    prop = njs_object_prop_alloc(vm, &argv_string, &njs_value_undefined, 1);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._argv,
+                                 &njs_value_undefined, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
     }
@@ -1322,9 +1319,6 @@ njs_env_hash_init(njs_vm_t *vm, njs_lvlhsh_t *hash, char **environment)
 }
 
 
-static const njs_value_t  env_string = njs_string("env");
-
-
 static njs_int_t
 njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr,
     njs_value_t *process, njs_value_t *unused, njs_value_t *retval)
@@ -1341,7 +1335,8 @@ njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr,
 
     env->shared_hash = vm->shared->env_hash;
 
-    prop = njs_object_prop_alloc(vm, &env_string, &njs_value_undefined, 1);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._env,
+                                 &njs_value_undefined, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
     }

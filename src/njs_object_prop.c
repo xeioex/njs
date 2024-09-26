@@ -719,9 +719,6 @@ njs_prop_private_copy(njs_vm_t *vm, njs_property_query_t *pq,
 }
 
 
-static const njs_value_t  get_string = njs_string("get");
-
-
 static njs_object_prop_t *
 njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *name,
     const njs_value_t *desc)
@@ -751,7 +748,7 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *name,
     setter = NJS_PROP_PTR_UNSET;
     desc_object = njs_object(desc);
 
-    njs_object_property_init(&lhq, &get_string, NJS_GET_HASH);
+    njs_object_property_init(&lhq, &njs_predefined.vs._get, NJS_GET_HASH);
 
     ret = njs_object_property(vm, desc_object, &lhq, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
@@ -852,17 +849,6 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *name,
 }
 
 
-static const njs_value_t  njs_object_value_string = njs_string("value");
-static const njs_value_t  njs_object_get_string = njs_string("get");
-static const njs_value_t  njs_object_set_string = njs_string("set");
-static const njs_value_t  njs_object_writable_string =
-                                                    njs_string("writable");
-static const njs_value_t  njs_object_enumerable_string =
-                                                    njs_string("enumerable");
-static const njs_value_t  njs_object_configurable_string =
-                                                    njs_string("configurable");
-
-
 njs_int_t
 njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
     njs_value_t *value, njs_value_t *key)
@@ -936,7 +922,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         lhq.key = njs_str_value("value");
         lhq.key_hash = NJS_VALUE_HASH;
 
-        pr = njs_object_prop_alloc(vm, &njs_object_value_string,
+        pr = njs_object_prop_alloc(vm, &njs_predefined.vs._value,
                                    njs_prop_value(prop), 1);
         if (njs_slow_path(pr == NULL)) {
             return NJS_ERROR;
@@ -955,7 +941,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
 
         setval = (prop->writable == 1) ? &njs_value_true : &njs_value_false;
 
-        pr = njs_object_prop_alloc(vm, &njs_object_writable_string, setval, 1);
+        pr = njs_object_prop_alloc(vm, &njs_predefined.vs._writable, setval, 1);
         if (njs_slow_path(pr == NULL)) {
             return NJS_ERROR;
         }
@@ -973,7 +959,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         lhq.key = njs_str_value("get");
         lhq.key_hash = NJS_GET_HASH;
 
-        pr = njs_object_prop_alloc(vm, &njs_object_get_string,
+        pr = njs_object_prop_alloc(vm, &njs_predefined.vs._get,
                                    &njs_value_undefined, 1);
         if (njs_slow_path(pr == NULL)) {
             return NJS_ERROR;
@@ -994,7 +980,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         lhq.key = njs_str_value("set");
         lhq.key_hash = NJS_SET_HASH;
 
-        pr = njs_object_prop_alloc(vm, &njs_object_set_string,
+        pr = njs_object_prop_alloc(vm, &njs_predefined.vs._set,
                                    &njs_value_undefined, 1);
         if (njs_slow_path(pr == NULL)) {
             return NJS_ERROR;
@@ -1018,7 +1004,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
 
     setval = (prop->enumerable == 1) ? &njs_value_true : &njs_value_false;
 
-    pr = njs_object_prop_alloc(vm, &njs_object_enumerable_string, setval, 1);
+    pr = njs_object_prop_alloc(vm, &njs_predefined.vs._enumerable, setval, 1);
     if (njs_slow_path(pr == NULL)) {
         return NJS_ERROR;
     }
@@ -1036,7 +1022,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
 
     setval = (prop->configurable == 1) ? &njs_value_true : &njs_value_false;
 
-    pr = njs_object_prop_alloc(vm, &njs_object_configurable_string, setval, 1);
+    pr = njs_object_prop_alloc(vm, &njs_predefined.vs._configurable, setval, 1);
     if (njs_slow_path(pr == NULL)) {
         return NJS_ERROR;
     }

@@ -361,7 +361,7 @@ next:
     }
 
     if (ret == NJS_DECLINED) {
-        ret = njs_value_property(vm, value, njs_value_arg(&njs_string_type),
+        ret = njs_value_property(vm, value, njs_value_arg(&njs_predefined.vs._type),
                                  &val);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
@@ -378,7 +378,7 @@ next:
             return NJS_DECLINED;
         }
 
-        ret = njs_value_property(vm, value, njs_value_arg(&njs_string_data),
+        ret = njs_value_property(vm, value, njs_value_arg(&njs_predefined.vs._data),
                                  &val);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
@@ -1992,7 +1992,7 @@ njs_buffer_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     str.length = end - start;
 
     if (njs_slow_path(str.length == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -2358,9 +2358,6 @@ njs_buffer_prototype_swap(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_value_t  string_buffer = njs_string("Buffer");
-
-
 static njs_int_t
 njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
@@ -2386,8 +2383,9 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     njs_set_object(&object, obj);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&njs_string_type),
-                                 njs_value_arg(&string_buffer));
+    ret = njs_value_property_set(vm, &object,
+                                 njs_value_arg(&njs_predefined.vs._type),
+                                 njs_value_arg(&njs_predefined.vs._Buffer));
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -2413,7 +2411,8 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     njs_set_array(&array, arr);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&njs_string_data),
+    ret = njs_value_property_set(vm, &object,
+                                 njs_value_arg(&njs_predefined.vs._data),
                                  &array);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;

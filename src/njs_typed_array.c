@@ -433,21 +433,6 @@ njs_typed_array_writable(njs_vm_t *vm, njs_typed_array_t *array)
 }
 
 
-static const njs_value_t  njs_typed_array_uint8_tag = njs_string("Uint8Array");
-static const njs_value_t  njs_typed_array_uint8_clamped_tag =
-                                               njs_string("Uint8ClampedArray");
-static const njs_value_t  njs_typed_array_int8_tag = njs_string("Int8Array");
-static const njs_value_t  njs_typed_array_uint16_tag =
-                                                    njs_string("Uint16Array");
-static const njs_value_t  njs_typed_array_int16_tag = njs_string("Int16Array");
-static const njs_value_t  njs_typed_array_uint32_tag =
-                                                    njs_string("Uint32Array");
-static const njs_value_t  njs_typed_array_int32_tag = njs_string("Int32Array");
-static const njs_value_t  njs_typed_array_float32_tag =
-                                                    njs_string("Float32Array");
-static const njs_value_t  njs_typed_array_float64_tag =
-                                                    njs_string("Float64Array");
-
 static njs_int_t
 njs_typed_array_get_string_tag(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
@@ -455,15 +440,15 @@ njs_typed_array_get_string_tag(njs_vm_t *vm, njs_value_t *args,
     njs_value_t  *this;
 
     static const njs_value_t  *tags[NJS_OBJ_TYPE_TYPED_ARRAY_SIZE] = {
-        &njs_typed_array_uint8_tag,
-        &njs_typed_array_uint8_clamped_tag,
-        &njs_typed_array_int8_tag,
-        &njs_typed_array_uint16_tag,
-        &njs_typed_array_int16_tag,
-        &njs_typed_array_uint32_tag,
-        &njs_typed_array_int32_tag,
-        &njs_typed_array_float32_tag,
-        &njs_typed_array_float64_tag,
+        &njs_predefined.vs._Uint8Array,
+        &njs_predefined.vs._Uint8ClampedArray,
+        &njs_predefined.vs._Int8Array,
+        &njs_predefined.vs._Uint16Array,
+        &njs_predefined.vs._Int16Array,
+        &njs_predefined.vs._Uint32Array,
+        &njs_predefined.vs._Int32Array,
+        &njs_predefined.vs._Float32Array,
+        &njs_predefined.vs._Float64Array,
     };
 
     this = njs_argument(args, 0);
@@ -2063,7 +2048,7 @@ njs_typed_array_to_chain(njs_vm_t *vm, njs_chb_t *chain,
     njs_string_prop_t  separator;
 
     if (sep == NULL) {
-        sep = njs_value_arg(&njs_string_comma);
+        sep = njs_value_arg(&njs_predefined.vs._spec_COMMA);
     }
 
     (void) njs_string_prop(&separator, sep);
@@ -2111,7 +2096,7 @@ njs_typed_array_prototype_join(njs_vm_t *vm, njs_value_t *args,
 
     if (njs_slow_path(!njs_is_string(separator))) {
         if (njs_is_undefined(separator)) {
-            separator = njs_value_arg(&njs_string_comma);
+            separator = njs_value_arg(&njs_predefined.vs._spec_COMMA);
 
         } else {
             ret = njs_value_to_string(vm, separator, separator);
@@ -2122,7 +2107,7 @@ njs_typed_array_prototype_join(njs_vm_t *vm, njs_value_t *args,
     }
 
     if (length == 0) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 

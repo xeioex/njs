@@ -1609,9 +1609,6 @@ njs_array_prototype_to_reversed(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_value_t  join_string = njs_string("join");
-
-
 njs_int_t
 njs_array_prototype_to_string(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
@@ -1621,7 +1618,7 @@ njs_array_prototype_to_string(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_lvlhsh_query_t  lhq;
 
     if (njs_is_object(njs_argument(args, 0))) {
-        njs_object_property_init(&lhq, &join_string, NJS_JOIN_HASH);
+        njs_object_property_init(&lhq, &njs_predefined.vs._join, NJS_JOIN_HASH);
 
         ret = njs_object_property(vm, njs_object(njs_argument(args, 0)), &lhq,
                                   &value);
@@ -1662,7 +1659,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     if (njs_slow_path(!njs_is_string(value))) {
         if (njs_is_undefined(value)) {
-            value = njs_value_arg(&njs_string_comma);
+            value = njs_value_arg(&njs_predefined.vs._spec_COMMA);
 
         } else {
             ret = njs_value_to_string(vm, value, value);
@@ -1675,7 +1672,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     (void) njs_string_prop(&separator, value);
 
     if (njs_slow_path(!njs_is_object(this))) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -1687,7 +1684,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (njs_slow_path(len == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 

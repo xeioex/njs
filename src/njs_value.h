@@ -775,6 +775,7 @@ extern const njs_value_t  njs_value_zero;
 extern const njs_value_t  njs_value_nan;
 extern const njs_value_t  njs_value_invalid;
 
+/**
 extern const njs_value_t  njs_string_empty;
 extern const njs_value_t  njs_string_empty_regexp;
 extern const njs_value_t  njs_string_comma;
@@ -802,7 +803,7 @@ extern const njs_value_t  njs_string_memory_error;
 extern const njs_value_t  njs_string_value_of;
 extern const njs_value_t  njs_string_ctor;
 extern const njs_value_t  njs_string_prototype;
-
+**/
 
 njs_inline void
 njs_set_boolean(njs_value_t *value, unsigned yn)

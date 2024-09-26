@@ -8,49 +8,21 @@
 #include <njs_main.h>
 
 
-static const njs_value_t  njs_symbol_async_iterator_name =
-                            njs_string("Symbol.asyncIterator");
-static const njs_value_t  njs_symbol_has_instance_name =
-                            njs_string("Symbol.hasInstance");
-static const njs_value_t  njs_symbol_is_concat_spreadable_name =
-                            njs_string("Symbol.isConcatSpreadable");
-static const njs_value_t  njs_symbol_iterator_name =
-                            njs_string("Symbol.iterator");
-static const njs_value_t  njs_symbol_match_name =
-                            njs_string("Symbol.match");
-static const njs_value_t  njs_symbol_match_all_name =
-                            njs_string("Symbol.matchAll");
-static const njs_value_t  njs_symbol_replace_name =
-                            njs_string("Symbol.replace");
-static const njs_value_t  njs_symbol_search_name =
-                            njs_string("Symbol.search");
-static const njs_value_t  njs_symbol_species_name =
-                            njs_string("Symbol.species");
-static const njs_value_t  njs_symbol_split_name =
-                            njs_string("Symbol.split");
-static const njs_value_t  njs_symbol_to_primitive_name =
-                            njs_string("Symbol.toPrimitive");
-static const njs_value_t  njs_symbol_to_string_tag_name =
-                            njs_string("Symbol.toStringTag");
-static const njs_value_t  njs_symbol_unscopables_name =
-                            njs_string("Symbol.unscopables");
-
-
 static const njs_value_t  *njs_symbol_names[NJS_SYMBOL_KNOWN_MAX] = {
-    &njs_string_invalid,
-    &njs_symbol_async_iterator_name,
-    &njs_symbol_has_instance_name,
-    &njs_symbol_is_concat_spreadable_name,
-    &njs_symbol_iterator_name,
-    &njs_symbol_match_name,
-    &njs_symbol_match_all_name,
-    &njs_symbol_replace_name,
-    &njs_symbol_search_name,
-    &njs_symbol_species_name,
-    &njs_symbol_split_name,
-    &njs_symbol_to_primitive_name,
-    &njs_symbol_to_string_tag_name,
-    &njs_symbol_unscopables_name,
+    &njs_predefined.vs._invalid,
+    &njs_predefined.vs._Symbol_asyncIterator,
+    &njs_predefined.vs._Symbol_hasInstance,
+    &njs_predefined.vs._Symbol_isConcatSpreadable,
+    &njs_predefined.vs._Symbol_iterator,
+    &njs_predefined.vs._Symbol_match,
+    &njs_predefined.vs._Symbol_matchAll,
+    &njs_predefined.vs._Symbol_replace,
+    &njs_predefined.vs._Symbol_search,
+    &njs_predefined.vs._Symbol_species,
+    &njs_predefined.vs._Symbol_split,
+    &njs_predefined.vs._Symbol_toPrimitive,
+    &njs_predefined.vs._Symbol_toStringTag,
+    &njs_predefined.vs._Symbol_unscopables,
 };
 
 
@@ -81,7 +53,7 @@ njs_symbol_descriptive_string(njs_vm_t *vm, njs_value_t *dst,
     description = njs_symbol_description(value);
 
     if (njs_is_undefined(description)) {
-        description = &njs_string_empty;
+        description = &njs_predefined.vs._;
     }
 
     (void) njs_string_prop(&string, description);

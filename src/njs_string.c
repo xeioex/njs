@@ -402,7 +402,7 @@ njs_string_base64(njs_vm_t *vm, njs_value_t *retval, const njs_str_t *src)
     length = njs_encode_base64_length(src, &dst.length);
 
     if (njs_slow_path(dst.length == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -424,7 +424,7 @@ njs_string_base64url(njs_vm_t *vm, njs_value_t *retval, const njs_str_t *src)
     njs_str_t  dst;
 
     if (njs_slow_path(src->length == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -464,7 +464,7 @@ njs_string_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_object_value_t  *object;
 
     if (nargs == 1) {
-        value = njs_value_arg(&njs_string_empty);
+        value = njs_value_arg(&njs_predefined.vs._);
 
     } else {
         value = &args[1];
@@ -1067,7 +1067,7 @@ njs_string_slice(njs_vm_t *vm, njs_value_t *retval,
         return njs_string_new(vm, retval, prop.start, prop.size, prop.length);
     }
 
-    njs_value_assign(retval, &njs_string_empty);
+    njs_value_assign(retval, &njs_predefined.vs._);
 
     return NJS_OK;
 }
@@ -1220,7 +1220,7 @@ njs_string_decode_hex(njs_vm_t *vm, njs_value_t *retval, const njs_str_t *src)
     length = njs_decode_hex_length(src, &size);
 
     if (njs_slow_path(size == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -1343,7 +1343,7 @@ njs_string_decode_base64_core(njs_vm_t *vm, njs_value_t *retval,
     length = njs_decode_base64_length_core(src, basis, &dst.length);
 
     if (njs_slow_path(dst.length == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -2248,7 +2248,7 @@ njs_string_prototype_trim(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (string.size == 0) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -2294,7 +2294,7 @@ njs_string_prototype_repeat(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     (void) njs_string_prop(&string, this);
 
     if (njs_slow_path(n == 0 || string.size == 0)) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 
@@ -2321,9 +2321,6 @@ njs_string_prototype_repeat(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     return NJS_OK;
 }
-
-
-static const njs_value_t  string_space = njs_string(" ");
 
 
 static njs_int_t
@@ -2382,7 +2379,7 @@ njs_string_prototype_pad(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     if (njs_slow_path(!njs_is_string(pad))) {
         if (njs_is_undefined(pad)) {
-            pad = njs_value_arg(&string_space);
+            pad = njs_value_arg(&njs_predefined.vs.__);
 
         } else {
             ret = njs_value_to_string(vm, pad, pad);
@@ -3008,9 +3005,6 @@ exception:
 }
 
 
-static const njs_value_t  string_flags = njs_string("flags");
-
-
 static njs_int_t
 njs_string_prototype_replace(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t replaceAll, njs_value_t *retval)
@@ -3058,7 +3052,8 @@ njs_string_prototype_replace(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 njs_regexp_prototype_symbol_replace)
             {
                 ret = njs_value_property(vm, search,
-                                         njs_value_arg(&string_flags), &value);
+                                       njs_value_arg(&njs_predefined.vs._flags),
+                                       &value);
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     return NJS_ERROR;
                 }
@@ -3563,7 +3558,7 @@ njs_string_encode_uri(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     };
 
     if (nargs < 2) {
-        njs_value_assign(retval, &njs_string_undefined);
+        njs_value_assign(retval, &njs_predefined.vs._undefined);
         return NJS_OK;
     }
 
@@ -3792,7 +3787,7 @@ njs_string_decode_uri(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     };
 
     if (nargs < 2) {
-        njs_value_assign(retval, &njs_string_undefined);
+        njs_value_assign(retval, &njs_predefined.vs._undefined);
         return NJS_OK;
     }
 
@@ -4122,7 +4117,7 @@ njs_string_atob(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (size == 0) {
-        njs_value_assign(retval, &njs_string_empty);
+        njs_value_assign(retval, &njs_predefined.vs._);
         return NJS_OK;
     }
 

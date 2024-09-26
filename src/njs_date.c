@@ -69,9 +69,6 @@ static njs_int_t njs_date_string(njs_vm_t *vm, njs_value_t *retval,
     njs_date_fmt_t fmt, double time);
 
 
-static const njs_value_t  njs_string_invalid_date = njs_string("Invalid Date");
-
-
 njs_inline int64_t
 njs_mod(int64_t a, int64_t b)
 {
@@ -1206,7 +1203,7 @@ njs_date_string(njs_vm_t *vm, njs_value_t *retval, njs_date_fmt_t fmt,
                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     if (njs_slow_path(isnan(time))) {
-        *retval = njs_string_invalid_date;
+        *retval = njs_predefined.vs._Invalid_Date;
         return NJS_OK;
     }
 
@@ -1439,9 +1436,6 @@ done:
 }
 
 
-static const njs_value_t  to_iso_string = njs_string("toISOString");
-
-
 static njs_int_t
 njs_date_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
@@ -1451,7 +1445,8 @@ njs_date_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_lvlhsh_query_t  lhq;
 
     if (njs_is_object(njs_argument(args, 0))) {
-        njs_object_property_init(&lhq, &to_iso_string, NJS_TO_ISO_STRING_HASH);
+        njs_object_property_init(&lhq, &njs_predefined.vs._toISOString,
+                                 NJS_TO_ISO_STRING_HASH);
 
         ret = njs_object_property(vm, njs_object(njs_argument(args, 0)), &lhq,
                                   &value);

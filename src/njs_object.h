@@ -182,15 +182,16 @@ njs_primitive_value_to_key(njs_vm_t *vm, njs_value_t *dst,
     switch (src->type) {
 
     case NJS_NULL:
-        value = &njs_string_null;
+        value = &njs_predefined.vs._null;
         break;
 
     case NJS_UNDEFINED:
-        value = &njs_string_undefined;
+        value = &njs_predefined.vs._undefined;
         break;
 
     case NJS_BOOLEAN:
-        value = njs_is_true(src) ? &njs_string_true : &njs_string_false;
+        value = njs_is_true(src) ? &njs_predefined.vs._true
+                                 : &njs_predefined.vs._false;
         break;
 
     case NJS_NUMBER:

@@ -57,7 +57,7 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
             continue;
         }
 
-        prop = njs_object_prop_alloc(vm, &njs_string_empty,
+        prop = njs_object_prop_alloc(vm, &njs_predefined.vs._,
                                      &njs_value_invalid, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;

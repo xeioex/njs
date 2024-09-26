@@ -921,7 +921,7 @@ njs_vm_bind_handler(njs_vm_t *vm, const njs_str_t *var_name,
 {
     njs_object_prop_t  *prop;
 
-    prop = njs_object_prop_alloc(vm, &njs_string_empty,
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._,
                                  &njs_value_invalid, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
@@ -1059,7 +1059,7 @@ njs_vm_value_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
                       && njs_number(src) == 0
                       && signbit(njs_number(src))))
     {
-        njs_string_get(&njs_string_minus_zero, dst);
+        njs_string_get(&njs_predefined.vs.__0, dst);
         return NJS_OK;
     }
 
@@ -1451,7 +1451,7 @@ njs_vm_value_to_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
 
     if (njs_is_error(src)) {
         if (njs_is_memory_error(vm, src)) {
-            njs_string_get(&njs_string_memory_error, dst);
+            njs_string_get(&njs_predefined.vs._MemoryError, dst);
             return NJS_OK;
         }
 

@@ -21,12 +21,6 @@ static njs_int_t njs_backtrace_to_string(njs_vm_t *vm, njs_arr_t *backtrace,
     njs_str_t *dst);
 
 
-static const njs_value_t  njs_error_message_string = njs_string("message");
-static const njs_value_t  njs_error_name_string = njs_string("name");
-static const njs_value_t  njs_error_stack_string = njs_string("stack");
-static const njs_value_t  njs_error_errors_string = njs_string("errors");
-
-
 void
 njs_error_new(njs_vm_t *vm, njs_value_t *dst, njs_object_t *proto,
     u_char *start, size_t size)
@@ -162,7 +156,7 @@ njs_error_stack_attach(njs_vm_t *vm, njs_value_t value)
     njs_object(&value)->stack_attached = 1;
 
     return njs_object_prop_define(vm, &value,
-                                  njs_value_arg(&njs_error_stack_string),
+                                  njs_value_arg(&njs_predefined.vs._stack),
                                   &stack, NJS_OBJECT_PROP_VALUE_CW,
                                   NJS_STACK_HASH);
 }
@@ -173,7 +167,8 @@ njs_error_stack(njs_vm_t *vm, njs_value_t *value, njs_value_t *stack)
 {
     njs_int_t  ret;
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_error_stack_string),
+    ret = njs_value_property(vm, value,
+                             njs_value_arg(&njs_predefined.vs._stack),
                              stack);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
@@ -220,7 +215,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         lhq.key = njs_str_value("name");
         lhq.key_hash = NJS_NAME_HASH;
 
-        prop = njs_object_prop_alloc(vm, &njs_error_name_string, name, 1);
+        prop = njs_object_prop_alloc(vm, &njs_predefined.vs._name, name, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
         }
@@ -238,7 +233,8 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         lhq.key = njs_str_value("message");
         lhq.key_hash = NJS_MESSAGE_HASH;
 
-        prop = njs_object_prop_alloc(vm, &njs_error_message_string, message, 1);
+        prop = njs_object_prop_alloc(vm, &njs_predefined.vs._message, message,
+                                     1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
         }
@@ -258,7 +254,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         lhq.key = njs_str_value("errors");
         lhq.key_hash = NJS_ERRORS_HASH;
 
-        prop = njs_object_prop_alloc(vm, &njs_error_errors_string, errors, 1);
+        prop = njs_object_prop_alloc(vm, &njs_predefined.vs._errors, errors, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
         }
@@ -577,10 +573,6 @@ njs_error_prototype_value_of(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_value_t  string_message = njs_string("message");
-static const njs_value_t  default_name = njs_string("Error");
-
-
 static njs_int_t
 njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
     const njs_value_t *error, njs_bool_t want_stack)
@@ -606,13 +598,14 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
     }
 
     ret = njs_value_property(vm, (njs_value_t *) error,
-                             njs_value_arg(&njs_string_name),
+                             njs_value_arg(&njs_predefined.vs._name),
                              &value1);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
-    name_value = (ret == NJS_OK) ? &value1 : njs_value_arg(&default_name);
+    name_value = (ret == NJS_OK) ? &value1
+                                 : njs_value_arg(&njs_predefined.vs._Error);
 
     if (njs_slow_path(!njs_is_string(name_value))) {
         ret = njs_value_to_string(vm, &value1, name_value);
@@ -626,13 +619,14 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
     (void) njs_string_prop(&name, name_value);
 
     ret = njs_value_property(vm,  (njs_value_t *) error,
-                             njs_value_arg(&string_message), &value2);
+                             njs_value_arg(&njs_predefined.vs._message),
+                             &value2);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
     message_value = (ret == NJS_OK) ? &value2
-                                    : njs_value_arg(&njs_string_empty);
+                                    : njs_value_arg(&njs_predefined.vs._);
 
     if (njs_slow_path(!njs_is_string(message_value))) {
         ret = njs_value_to_string(vm, &value2, message_value);
@@ -764,9 +758,6 @@ const njs_object_type_init_t  njs_eval_error_type_init = {
 };
 
 
-static const njs_value_t name = njs_string("MemoryError");
-
-
 static njs_int_t
 njs_internal_error_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
@@ -774,7 +765,7 @@ njs_internal_error_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     if (nargs >= 1 && njs_is_object(&args[0])) {
         /* MemoryError is a nonextensible internal error. */
         if (!njs_object(&args[0])->extensible) {
-            njs_value_assign(retval, &name);
+            njs_value_assign(retval, &njs_predefined.vs._MemoryError);
             return NJS_OK;
         }
     }

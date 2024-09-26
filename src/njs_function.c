@@ -126,7 +126,7 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
     njs_object_prop_t   *prop;
     njs_lvlhsh_query_t  lhq;
 
-    prop = njs_object_prop_alloc(vm, &njs_string_name, name, 0);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._name, name, 0);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
     }
@@ -168,7 +168,7 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
             }
 
         } else {
-            njs_value_assign(njs_prop_value(prop), &njs_string_empty);
+            njs_value_assign(njs_prop_value(prop), &njs_predefined.vs._);
         }
     }
 
@@ -910,7 +910,8 @@ njs_function_property_prototype_set(njs_vm_t *vm, njs_lvlhsh_t *hash,
     njs_object_prop_t   *prop;
     njs_lvlhsh_query_t  lhq;
 
-    prop = njs_object_prop_alloc(vm, &njs_string_prototype, prototype, 0);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._prototype, prototype,
+                                 0);
     if (njs_slow_path(prop == NULL)) {
         return NULL;
     }
@@ -1136,7 +1137,8 @@ njs_function_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     function->args_count = lambda->nargs - lambda->rest_parameters;
 
     ret = njs_function_name_set(vm, function,
-                                njs_value_arg(&njs_string_anonymous), NULL);
+                                njs_value_arg(&njs_predefined.vs._anonymous),
+                                NULL);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -1205,7 +1207,7 @@ njs_function_instance_name(njs_vm_t *vm, njs_object_prop_t *prop,
         return NJS_OK;
     }
 
-    njs_value_assign(retval, &njs_string_empty);
+    njs_value_assign(retval, &njs_predefined.vs._);
 
     return NJS_OK;
 }
@@ -1372,14 +1374,14 @@ njs_function_prototype_bind(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     function->context = njs_function(&args[0]);
 
-    ret = njs_value_property(vm, &args[0], njs_value_arg(&njs_string_name),
+    ret = njs_value_property(vm, &args[0], njs_value_arg(&njs_predefined.vs._name),
                              &name);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
     if (!njs_is_string(&name)) {
-        name = njs_string_empty;
+        name = njs_predefined.vs._;
     }
 
     ret = njs_function_name_set(vm, function, &name, "bound");

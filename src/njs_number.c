@@ -225,15 +225,15 @@ njs_number_to_string(njs_vm_t *vm, njs_value_t *string,
     num = njs_number(number);
 
     if (isnan(num)) {
-        value = &njs_string_nan;
+        value = &njs_predefined.vs._NaN;
 
     } else if (isinf(num)) {
 
         if (num < 0) {
-            value = &njs_string_minus_infinity;
+            value = &njs_predefined.vs.__Infinity;
 
         } else {
-            value = &njs_string_plus_infinity;
+            value = &njs_predefined.vs._Infinity;
         }
 
     } else {

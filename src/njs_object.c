@@ -1960,7 +1960,8 @@ njs_property_prototype_create(njs_vm_t *vm, njs_lvlhsh_t *hash,
     njs_object_prop_t   *prop;
     njs_lvlhsh_query_t  lhq;
 
-    prop = njs_object_prop_alloc(vm, &njs_string_prototype, &njs_value_undefined, 0);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._prototype,
+                                 &njs_value_undefined, 0);
     if (njs_slow_path(prop == NULL)) {
         return NULL;
     }
@@ -2211,7 +2212,8 @@ njs_property_constructor_set(njs_vm_t *vm, njs_lvlhsh_t *hash,
     njs_object_prop_t         *prop;
     njs_lvlhsh_query_t        lhq;
 
-    prop = njs_object_prop_alloc(vm, &njs_string_ctor, constructor, 1);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._constructor,
+                                 constructor, 1);
     if (njs_slow_path(prop == NULL)) {
         return NULL;
     }
@@ -2258,30 +2260,6 @@ njs_object_prototype_value_of(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_value_t  njs_object_null_string = njs_string("[object Null]");
-static const njs_value_t  njs_object_undefined_string =
-                                     njs_string("[object Undefined]");
-static const njs_value_t  njs_object_boolean_string =
-                                     njs_string("[object Boolean]");
-static const njs_value_t  njs_object_number_string =
-                                     njs_string("[object Number]");
-static const njs_value_t  njs_object_string_string =
-                                     njs_string("[object String]");
-static const njs_value_t  njs_object_object_string =
-                                     njs_string("[object Object]");
-static const njs_value_t  njs_object_array_string =
-                                     njs_string("[object Array]");
-static const njs_value_t  njs_object_function_string =
-                                     njs_string("[object Function]");
-static const njs_value_t  njs_object_regexp_string =
-                                     njs_string("[object RegExp]");
-static const njs_value_t  njs_object_date_string = njs_string("[object Date]");
-static const njs_value_t  njs_object_error_string =
-                                     njs_string("[object Error]");
-static const njs_value_t  njs_object_arguments_string =
-                                     njs_string("[object Arguments]");
-
-
 njs_int_t
 njs_object_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
@@ -2301,8 +2279,8 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
 
     if (njs_is_null_or_undefined(this)) {
         njs_value_assign(retval,
-                         njs_is_null(this) ? &njs_object_null_string
-                                           : &njs_object_undefined_string);
+                         njs_is_null(this) ? &njs_predefined.vs.__object_Null_
+                                      : &njs_predefined.vs.__object_Undefined_);
 
         return NJS_OK;
     }
@@ -2312,36 +2290,36 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
         return ret;
     }
 
-    name = &njs_object_object_string;
+    name = &njs_predefined.vs.__object_Object_;
 
     if (njs_is_array(this)) {
-        name = &njs_object_array_string;
+        name = &njs_predefined.vs.__object_Array_;
 
     } else if (njs_is_object(this)
         && njs_lvlhsh_eq(&njs_object(this)->shared_hash,
                          &vm->shared->arguments_object_instance_hash))
     {
-        name = &njs_object_arguments_string;
+        name = &njs_predefined.vs.__object_Arguments_;
 
     } else if (njs_is_function(this)) {
-        name = &njs_object_function_string;
+        name = &njs_predefined.vs.__object_Function_;
 
     } else if (njs_is_error(this)) {
-        name = &njs_object_error_string;
+        name = &njs_predefined.vs.__object_Error_;
 
     } else if (njs_is_object_value(this)) {
 
         switch (njs_object_value(this)->type) {
         case NJS_BOOLEAN:
-            name = &njs_object_boolean_string;
+            name = &njs_predefined.vs.__object_Boolean_;
             break;
 
         case NJS_NUMBER:
-            name = &njs_object_number_string;
+            name = &njs_predefined.vs.__object_Number_;
             break;
 
         case NJS_STRING:
-            name = &njs_object_string_string;
+            name = &njs_predefined.vs.__object_String_;
             break;
 
         default:
@@ -2349,10 +2327,10 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
         }
 
     } else if (njs_is_date(this)) {
-        name = &njs_object_date_string;
+        name = &njs_predefined.vs.__object_Date_;
 
     } else if (njs_is_regexp(this)) {
-        name = &njs_object_regexp_string;
+        name = &njs_predefined.vs.__object_RegExp_;
     }
 
     ret = njs_object_string_tag(vm, this, &tag);

@@ -18,10 +18,6 @@ struct njs_value_iterator_s {
 typedef struct njs_value_iterator_s  njs_array_iterator_t;
 
 
-static const njs_value_t  string_done = njs_string("done");
-static const njs_value_t  string_value = njs_string("value");
-
-
 static njs_int_t njs_iterator_object_handler(njs_vm_t *vm,
     njs_iterator_handler_t handler, njs_iterator_args_t *args,
     njs_value_t *key, int64_t i, njs_value_t *retval);
@@ -233,13 +229,13 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
     njs_set_object(retval, object);
 
     prop_value = njs_object_property_add(vm, retval,
-                                         njs_value_arg(&string_value), 0);
+                                    njs_value_arg(&njs_predefined.vs._value), 0);
     if (njs_slow_path(prop_value == NULL)) {
         return NJS_ERROR;
     }
 
     prop_done = njs_object_property_add(vm, retval,
-                                        njs_value_arg(&string_done), 0);
+                                      njs_value_arg(&njs_predefined.vs._done), 0);
     if (njs_slow_path(prop_done == NULL)) {
         return NJS_ERROR;
     }

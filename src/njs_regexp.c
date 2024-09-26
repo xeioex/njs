@@ -32,9 +32,6 @@ static njs_array_t *njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r,
     njs_utf8_t utf8, njs_string_prop_t *string, njs_regex_match_data_t *data);
 
 
-const njs_value_t  njs_string_lindex = njs_string("lastIndex");
-
-
 njs_int_t
 njs_regexp_init(njs_vm_t *vm)
 {
@@ -136,7 +133,7 @@ njs_regexp_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
 
         } else {
-            pattern = njs_value_arg(&njs_string_empty);
+            pattern = njs_value_arg(&njs_predefined.vs._);
         }
 
         re_flags = 0;
@@ -513,7 +510,7 @@ njs_regexp_alloc(njs_vm_t *vm, njs_regexp_pattern_t *pattern)
         regexp->object.error_data = 0;
         njs_set_number(&regexp->last_index, 0);
         regexp->pattern = pattern;
-        regexp->string = njs_string_empty;
+        regexp->string = njs_predefined.vs._;
         return regexp;
     }
 
@@ -548,12 +545,6 @@ njs_regexp_prototype_last_index(njs_vm_t *vm, njs_object_prop_t *unused,
 }
 
 
-static const njs_value_t  string_global = njs_string("global");
-static const njs_value_t  string_ignore_case = njs_string("ignoreCase");
-static const njs_value_t  string_multiline = njs_string("multiline");
-static const njs_value_t  string_sticky = njs_string("sticky");
-
-
 static njs_int_t
 njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
@@ -571,7 +562,8 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
 
     p = &dst[0];
 
-    ret = njs_value_property(vm, this, njs_value_arg(&string_global),
+    ret = njs_value_property(vm, this,
+                             njs_value_arg(&njs_predefined.vs._global),
                              &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -581,7 +573,8 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'g';
     }
 
-    ret = njs_value_property(vm, this, njs_value_arg(&string_ignore_case),
+    ret = njs_value_property(vm, this,
+                             njs_value_arg(&njs_predefined.vs._ignoreCase),
                              &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -591,7 +584,8 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'i';
     }
 
-    ret = njs_value_property(vm, this, njs_value_arg(&string_multiline),
+    ret = njs_value_property(vm, this,
+                             njs_value_arg(&njs_predefined.vs._multiline),
                              &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -601,7 +595,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'm';
     }
 
-    ret = njs_value_property(vm, this, njs_value_arg(&string_sticky),
+    ret = njs_value_property(vm, this, njs_value_arg(&njs_predefined.vs._sticky),
                              &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -682,7 +676,7 @@ njs_regexp_prototype_source(njs_vm_t *vm, njs_value_t *args,
 
     if (njs_slow_path(!njs_is_regexp(this))) {
         if (njs_object(this) == njs_vm_proto(vm, NJS_OBJ_TYPE_REGEXP)) {
-            njs_value_assign(retval, &njs_string_empty_regexp);
+            njs_value_assign(retval, &njs_predefined.vs._spec_EMPTY_REGEXP);
             return NJS_OK;
         }
 
@@ -697,10 +691,6 @@ njs_regexp_prototype_source(njs_vm_t *vm, njs_value_t *args,
 
     return njs_string_decode_utf8(vm, retval, &src);
 }
-
-
-static const njs_value_t  string_source = njs_string("source");
-static const njs_value_t  string_flags = njs_string("flags");
 
 
 static njs_int_t
@@ -720,7 +710,7 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, r, njs_value_arg(&string_source),
+    ret = njs_value_property(vm, r, njs_value_arg(&njs_predefined.vs._source),
                              &source);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -731,7 +721,7 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, r, njs_value_arg(&string_flags),
+    ret = njs_value_property(vm, r, njs_value_arg(&njs_predefined.vs._flags),
                              &flags);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -881,7 +871,8 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
     regexp->string = *s;
     pattern = regexp->pattern;
 
-    ret = njs_value_property(vm, r, njs_value_arg(&njs_string_lindex),
+    ret = njs_value_property(vm, r,
+                             njs_value_arg(&njs_predefined.vs._lastIndex),
                              &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -955,8 +946,8 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
 
             njs_set_number(&value, index);
             ret = njs_value_property_set(vm, r,
-                                         njs_value_arg(&njs_string_lindex),
-                                         &value);
+                                   njs_value_arg(&njs_predefined.vs._lastIndex),
+                                   &value);
             if (njs_slow_path(ret != NJS_OK)) {
                 njs_regex_match_data_free(match_data, vm->regex_generic_ctx);
                 return NJS_ERROR;
@@ -991,8 +982,9 @@ not_found:
 
     if (pattern->global || pattern->sticky) {
         njs_set_number(&value, 0);
-        ret = njs_value_property_set(vm, r, njs_value_arg(&njs_string_lindex),
-                                     &value);
+        ret = njs_value_property_set(vm, r,
+                                   njs_value_arg(&njs_predefined.vs._lastIndex),
+                                   &value);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1008,11 +1000,6 @@ static njs_exotic_slots_t njs_regexp_prototype_exotic_slots = {
     .prop_handler = NULL,
     .keys = NULL,
 };
-
-
-static const njs_value_t  string_index = njs_string("index");
-static const njs_value_t  string_input = njs_string("input");
-static const njs_value_t  string_groups = njs_string("groups");
 
 
 static njs_array_t *
@@ -1062,7 +1049,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
     }
 
     /* FIXME: implement fast CreateDataPropertyOrThrow(). */
-    prop = njs_object_prop_alloc(vm, &string_index, &njs_value_undefined, 1);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._index,
+                                 &njs_value_undefined, 1);
     if (njs_slow_path(prop == NULL)) {
         goto fail;
     }
@@ -1090,7 +1078,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto insert_fail;
     }
 
-    prop = njs_object_prop_alloc(vm, &string_input, &regexp->string, 1);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._input, &regexp->string,
+                                 1);
     if (njs_slow_path(prop == NULL)) {
         goto fail;
     }
@@ -1104,7 +1093,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto insert_fail;
     }
 
-    prop = njs_object_prop_alloc(vm, &string_groups, &njs_value_undefined, 1);
+    prop = njs_object_prop_alloc(vm, &njs_predefined.vs._groups, &njs_value_undefined, 1);
     if (njs_slow_path(prop == NULL)) {
         goto fail;
     }
@@ -1252,9 +1241,6 @@ njs_regexp_prototype_exec(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_value_t  string_exec = njs_string("exec");
-
-
 static njs_int_t
 njs_regexp_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s, unsigned flags,
     njs_value_t *retval)
@@ -1263,7 +1249,8 @@ njs_regexp_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s, unsigned flags,
     njs_value_t  exec;
     njs_value_t  arguments[2];
 
-    ret = njs_value_property(vm, r, njs_value_arg(&string_exec), &exec);
+    ret = njs_value_property(vm, r, njs_value_arg(&njs_predefined.vs._exec),
+                             &exec);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1357,7 +1344,8 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         }
     }
 
-    ret = njs_value_property(vm, rx, njs_value_arg(&string_global), &value);
+    ret = njs_value_property(vm, rx,
+                             njs_value_arg(&njs_predefined.vs._global), &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1366,8 +1354,9 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
 
     if (global) {
         njs_set_number(&value, 0);
-        ret = njs_value_property_set(vm, rx, njs_value_arg(&njs_string_lindex),
-                                     &value);
+        ret = njs_value_property_set(vm, rx,
+                                   njs_value_arg(&njs_predefined.vs._lastIndex),
+                                   &value);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1422,7 +1411,8 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             continue;
         }
 
-        ret = njs_value_property(vm, rx, njs_value_arg(&njs_string_lindex),
+        ret = njs_value_property(vm, rx,
+                                 njs_value_arg(&njs_predefined.vs._lastIndex),
                                  &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
@@ -1434,8 +1424,9 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         }
 
         njs_set_number(&value, last_index + 1);
-        ret = njs_value_property_set(vm, rx, njs_value_arg(&njs_string_lindex),
-                                     &value);
+        ret = njs_value_property_set(vm, rx,
+                                   njs_value_arg(&njs_predefined.vs._lastIndex),
+                                   &value);
         if (njs_slow_path(ret != NJS_OK)) {
             goto exception;
         }
@@ -1462,7 +1453,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             goto exception;
         }
 
-        ret = njs_value_property(vm, r, njs_value_arg(&string_index), &value);
+        ret = njs_value_property(vm, r, njs_value_arg(&njs_predefined.vs._index), &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1505,7 +1496,9 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             }
         }
 
-        ret = njs_value_property(vm, r, njs_value_arg(&string_groups), &groups);
+        ret = njs_value_property(vm, r,
+                                 njs_value_arg(&njs_predefined.vs._groups),
+                                 &groups);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1597,9 +1590,6 @@ exception:
 }
 
 
-static const njs_value_t  string_lindex = njs_string("lastIndex");
-
-
 static njs_int_t
 njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
@@ -1640,7 +1630,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
         return ret;
     }
 
-    ret = njs_value_property(vm, rx, njs_value_arg(&string_flags), retval);
+    ret = njs_value_property(vm, rx, njs_value_arg(&njs_predefined.vs._flags), retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1731,8 +1721,9 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
 
     while (q < length) {
         njs_set_number(&setval, q);
-        ret = njs_value_property_set(vm, rx, njs_value_arg(&string_lindex),
-                                     &setval);
+        ret = njs_value_property_set(vm, rx,
+                                   njs_value_arg(&njs_predefined.vs._lastIndex),
+                                   &setval);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1747,7 +1738,8 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
             continue;
         }
 
-        ret = njs_value_property(vm, rx, njs_value_arg(&string_lindex),
+        ret = njs_value_property(vm, rx,
+                                 njs_value_arg(&njs_predefined.vs._lastIndex),
                                  retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return NJS_ERROR;
