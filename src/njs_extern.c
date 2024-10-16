@@ -19,6 +19,7 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
 {
     size_t                size;
     njs_int_t             ret;
+    njs_value_t           prop_name;
     njs_lvlhsh_t          *hash;
     const u_char          *start;
     njs_function_t        *function;
@@ -66,62 +67,25 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
         prop->enumerable = external->enumerable;
 
         if (external->flags & NJS_EXTERN_SYMBOL) {
-            switch (external->name.symbol) {
-            case NJS_SYMBOL_ASYNC_ITERATOR:
-                prop->name = njs_atom.vw_asyncIterator;
-                break;
-            case NJS_SYMBOL_HAS_INSTANCE:
-                prop->name = njs_atom.vw_hasInstance;
-                break;
-            case NJS_SYMBOL_IS_CONCAT_SPREADABLE:
-                prop->name = njs_atom.vw_isConcatSpreadable;
-                break;
-            case NJS_SYMBOL_ITERATOR:
-                prop->name = njs_atom.vw_iterator;
-                break;
-            case NJS_SYMBOL_MATCH:
-                prop->name = njs_atom.vw_match;
-                break;
-            case NJS_SYMBOL_MATCH_ALL:
-                prop->name = njs_atom.vw_matchAll;
-                break;
-            case NJS_SYMBOL_REPLACE:
-                prop->name = njs_atom.vw_replace;
-                break;
-            case NJS_SYMBOL_SEARCH:
-                prop->name = njs_atom.vw_search;
-                break;
-            case NJS_SYMBOL_SPECIES:
-                prop->name = njs_atom.vw_species;
-                break;
-            case NJS_SYMBOL_SPLIT:
-                prop->name = njs_atom.vw_split;
-                break;
-            case NJS_SYMBOL_TO_PRIMITIVE:
-                prop->name = njs_atom.vw_toPrimitive;
-                break;
-            case NJS_SYMBOL_TO_STRING_TAG:
-                prop->name = njs_atom.vw_toStringTag;
-                break;
-            case NJS_SYMBOL_UNSCOPABLES:
-                prop->name = njs_atom.vw_unscopables;
-                break;
-            default:
-                return NJS_ERROR;
-            };
+            prop->atom_id = external->name.symbol;
 
             lhq.key_hash = external->name.symbol;
 
         } else {
-            ret = njs_string_create(vm, &prop->name,
+            ret = njs_string_create(vm, &prop_name,
                                     external->name.string.start,
                                     external->name.string.length);
             if (njs_slow_path(ret != NJS_OK)) {
                 return NJS_ERROR;
             }
 
-            lhq.key = external->name.string;
-            lhq.key_hash = njs_djb_hash(lhq.key.start, lhq.key.length);
+            ret = njs_atom_atomize_key(vm, &prop_name);
+            if (ret != NJS_OK) {
+                return ret;
+            }
+
+            prop->atom_id = prop_name.atom_id;
+            lhq.key_hash = prop_name.atom_id;
         }
 
         lhq.value = prop;
@@ -234,6 +198,7 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
     njs_value_t *value, njs_value_t *setval, njs_value_t *retval)
 {
     njs_int_t           ret;
+    njs_value_t         self_name;
     njs_object_prop_t   *prop;
     njs_external_ptr_t  external;
     njs_object_value_t  *ov;
@@ -266,7 +231,12 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
         njs_set_object_value(retval, ov);
     }
 
-    prop = njs_object_prop_alloc(vm, &self->name, retval, 1);
+    ret = njs_get_prop_name_by_atom_id(vm, &self_name, self->atom_id);
+    if (ret != NJS_OK) {
+        return NJS_ERROR;
+    }
+
+    prop = njs_object_prop_alloc(vm, &self_name, retval, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
     }
@@ -276,8 +246,9 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
     prop->enumerable = self->enumerable;
 
     lhq.value = prop;
-    njs_string_get(&self->name, &lhq.key);
-    lhq.key_hash = njs_prop_magic32(self);
+
+    lhq.key_hash = prop->atom_id;
+
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

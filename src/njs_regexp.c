@@ -1060,8 +1060,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
 
     njs_set_number(&prop->u.value, index);
 
-    lhq.key_hash = NJS_INDEX_HASH;
-    lhq.key = njs_str_value("index");
+    lhq.key_hash = njs_atom.vs_index.atom_id;
+
     lhq.replace = 0;
     lhq.value = prop;
     lhq.pool = vm->mem_pool;
@@ -1077,8 +1077,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto fail;
     }
 
-    lhq.key_hash = NJS_INPUT_HASH;
-    lhq.key = njs_str_value("input");
+    lhq.key_hash = njs_atom.vs_input.atom_id;
+
     lhq.value = prop;
 
     ret = njs_lvlhsh_insert(&array->object.hash, &lhq);
@@ -1092,8 +1092,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto fail;
     }
 
-    lhq.key_hash = NJS_GROUPS_HASH;
-    lhq.key = njs_str_value("groups");
+    lhq.key_hash = njs_atom.vs_groups.atom_id;
+
     lhq.value = prop;
 
     ret = njs_lvlhsh_insert(&array->object.hash, &lhq);
@@ -1120,14 +1120,19 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
                 goto fail;
             }
 
+            ret = njs_atom_atomize_key(vm, &name);
+            if (njs_slow_path(ret != NJS_OK)) {
+                goto fail;
+            }
+
             prop = njs_object_prop_alloc(vm, &name,
                                          &array->start[group->capture], 1);
             if (njs_slow_path(prop == NULL)) {
                 goto fail;
             }
 
-            lhq.key_hash = group->hash;
-            lhq.key = group->name;
+            lhq.key_hash = prop->atom_id;
+
             lhq.value = prop;
 
             ret = njs_lvlhsh_insert(&groups->hash, &lhq);
@@ -1855,10 +1860,10 @@ static njs_object_prop_t  njs_regexp_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(2),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_RegExp),
+    NJS_DECLARE_PROP_NAME(vs_RegExp),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -1870,46 +1875,46 @@ static const njs_object_init_t  njs_regexp_constructor_init = {
 
 static njs_object_prop_t  njs_regexp_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_flags, njs_regexp_prototype_flags, 0),
+    NJS_DECLARE_PROP_GETTER(vs_flags, njs_regexp_prototype_flags, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_global, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(vs_global, njs_regexp_prototype_flag,
                             NJS_REGEX_GLOBAL),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_ignoreCase, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(vs_ignoreCase, njs_regexp_prototype_flag,
                             NJS_REGEX_IGNORE_CASE),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_multiline, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(vs_multiline, njs_regexp_prototype_flag,
                             NJS_REGEX_MULTILINE),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_source, njs_regexp_prototype_source, 0),
+    NJS_DECLARE_PROP_GETTER(vs_source, njs_regexp_prototype_source, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_sticky, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(vs_sticky, njs_regexp_prototype_flag,
                             NJS_REGEX_STICKY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString,
+    NJS_DECLARE_PROP_NATIVE(vs_toString,
                             njs_regexp_prototype_to_string, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_test, njs_regexp_prototype_test, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_test, njs_regexp_prototype_test, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_exec, njs_regexp_prototype_exec, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_exec, njs_regexp_prototype_exec, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vw_replace,
+    NJS_DECLARE_PROP_NATIVE(vw_replace,
                             njs_regexp_prototype_symbol_replace, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vw_split,
+    NJS_DECLARE_PROP_NATIVE(vw_split,
                             njs_regexp_prototype_symbol_split, 2, 0),
 };
 
 
 njs_object_prop_t  njs_regexp_instance_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_lastIndex,
-                             njs_regexp_prototype_last_index,
-                             0, 0, NJS_OBJECT_PROP_VALUE_W),
+    NJS_DECLARE_PROP_HANDLER(vs_lastIndex,
+                             njs_regexp_prototype_last_index, 0,
+                             NJS_OBJECT_PROP_VALUE_W),
 };
 
 

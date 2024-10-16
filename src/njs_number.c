@@ -431,47 +431,47 @@ static njs_object_prop_t  njs_number_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Number),
+    NJS_DECLARE_PROP_NAME(vs_Number),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_EPSILON,
+    NJS_DECLARE_PROP_VALUE(vs_EPSILON,
                            njs_value(NJS_NUMBER, 1, DBL_EPSILON), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_MAX_SAFE_INTEGER,
+    NJS_DECLARE_PROP_VALUE(vs_MAX_SAFE_INTEGER,
                            njs_value(NJS_NUMBER, 1, NJS_MAX_SAFE_INTEGER), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_MIN_SAFE_INTEGER,
+    NJS_DECLARE_PROP_VALUE(vs_MIN_SAFE_INTEGER,
                            njs_value(NJS_NUMBER, 1, -NJS_MAX_SAFE_INTEGER), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_MAX_VALUE,
+    NJS_DECLARE_PROP_VALUE(vs_MAX_VALUE,
                            njs_value(NJS_NUMBER, 1, DBL_MAX), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_MIN_VALUE,
+    NJS_DECLARE_PROP_VALUE(vs_MIN_VALUE,
                            njs_value(NJS_NUMBER, 1, DBL_MIN), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_NaN, njs_value(NJS_NUMBER, 0, NAN), 0),
+    NJS_DECLARE_PROP_VALUE(vs_NaN, njs_value(NJS_NUMBER, 0, NAN), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_POSITIVE_INFINITY,
+    NJS_DECLARE_PROP_VALUE(vs_POSITIVE_INFINITY,
                            njs_value(NJS_NUMBER, 1, INFINITY), 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_NEGATIVE_INFINITY,
+    NJS_DECLARE_PROP_VALUE(vs_NEGATIVE_INFINITY,
                            njs_value(NJS_NUMBER, 1, -INFINITY), 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isFinite, njs_number_is_finite, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_isFinite, njs_number_is_finite, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isInteger, njs_number_is_integer, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_isInteger, njs_number_is_integer, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isSafeInteger,
+    NJS_DECLARE_PROP_NATIVE(vs_isSafeInteger,
                             njs_number_is_safe_integer, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isNaN, njs_number_is_nan, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_isNaN, njs_number_is_nan, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_parseFloat, njs_number_parse_float, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_parseFloat, njs_number_parse_float, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_parseInt, njs_number_parse_int, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_parseInt, njs_number_parse_int, 2, 0),
 };
 
 
@@ -880,27 +880,27 @@ njs_number_to_string_radix(njs_vm_t *vm, njs_value_t *string,
 
 static njs_object_prop_t  njs_number_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs___proto__,
-                             njs_primitive_prototype_get_proto, 0, 0,
+    NJS_DECLARE_PROP_HANDLER(vs___proto__,
+                             njs_primitive_prototype_get_proto, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor, 0, 0,
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_valueOf, njs_number_prototype_value_of,
+    NJS_DECLARE_PROP_NATIVE(vs_valueOf, njs_number_prototype_value_of,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString,
+    NJS_DECLARE_PROP_NATIVE(vs_toString,
                             njs_number_prototype_to_string, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toFixed, njs_number_prototype_to_fixed,
+    NJS_DECLARE_PROP_NATIVE(vs_toFixed, njs_number_prototype_to_fixed,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toPrecision,
+    NJS_DECLARE_PROP_NATIVE(vs_toPrecision,
                             njs_number_prototype_to_precision, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toExponential,
+    NJS_DECLARE_PROP_NATIVE(vs_toExponential,
                             njs_number_prototype_to_exponential, 1, 0),
 };
 

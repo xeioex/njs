@@ -1736,28 +1736,28 @@ static njs_object_prop_t  njs_promise_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Promise),
+    NJS_DECLARE_PROP_NAME(vs_Promise),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_resolve, njs_promise_object_resolve, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_resolve, njs_promise_object_resolve, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_reject, njs_promise_object_reject, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_reject, njs_promise_object_reject, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_all, njs_promise_all, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_all, njs_promise_all, 1,
                             NJS_PROMISE_ALL),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_allSettled, njs_promise_all, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_allSettled, njs_promise_all, 1,
                              NJS_PROMISE_ALL_SETTLED),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_any, njs_promise_all, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_any, njs_promise_all, 1,
                             NJS_PROMISE_ANY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_race, njs_promise_race, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_race, njs_promise_race, 1, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vw_species, njs_promise_species, 0),
+    NJS_DECLARE_PROP_GETTER(vw_species, njs_promise_species, 0),
 };
 
 
@@ -1769,19 +1769,19 @@ static const njs_object_init_t  njs_promise_constructor_init = {
 
 static njs_object_prop_t  njs_promise_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vw_toStringTag, njs_atom.vs_Promise,
+    NJS_DECLARE_PROP_VALUE(vw_toStringTag, njs_atom.vs_Promise,
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_then, njs_promise_prototype_then, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_then, njs_promise_prototype_then, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_catch, njs_promise_prototype_catch, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_catch, njs_promise_prototype_catch, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_finally, njs_promise_prototype_finally,
+    NJS_DECLARE_PROP_NATIVE(vs_finally, njs_promise_prototype_finally,
                             1, 0),
 };
 

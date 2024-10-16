@@ -162,6 +162,8 @@ njs_string_alloc(njs_vm_t *vm, njs_value_t *value, uint64_t size,
     value->type = NJS_STRING;
     value->truth = size != 0;
 
+    value->atom_id = 0;
+
     if (size != length && length > NJS_STRING_MAP_STRIDE) {
         map_offset = njs_string_map_offset(size);
         total = map_offset + njs_string_map_size(length);
@@ -476,15 +478,15 @@ static njs_object_prop_t  njs_string_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_String),
+    NJS_DECLARE_PROP_NAME(vs_String),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_fromCharCode, njs_string_from_char_code,
+    NJS_DECLARE_PROP_NATIVE(vs_fromCharCode, njs_string_from_char_code,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_fromCodePoint,
+    NJS_DECLARE_PROP_NATIVE(vs_fromCodePoint,
                             njs_string_from_char_code, 1, 1),
 };
 
@@ -3376,95 +3378,95 @@ njs_string_to_index(const njs_value_t *value)
 
 static njs_object_prop_t  njs_string_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs___proto__,
-                             njs_primitive_prototype_get_proto, 0, 0,
+    NJS_DECLARE_PROP_HANDLER(vs___proto__,
+                             njs_primitive_prototype_get_proto, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
     NJS_DECLARE_PROP_LENGTH(0),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_valueOf, njs_string_prototype_value_of,
+    NJS_DECLARE_PROP_NATIVE(vs_valueOf, njs_string_prototype_value_of,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString,
+    NJS_DECLARE_PROP_NATIVE(vs_toString,
                             njs_string_prototype_to_string, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_concat,
+    NJS_DECLARE_PROP_NATIVE(vs_concat,
                             njs_string_prototype_concat, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_slice, njs_string_prototype_slice, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_slice, njs_string_prototype_slice, 2,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_substring,
+    NJS_DECLARE_PROP_NATIVE(vs_substring,
                             njs_string_prototype_substring, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_substr, njs_string_prototype_substr, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_substr, njs_string_prototype_substr, 2,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_charAt, njs_string_prototype_char_at, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_charAt, njs_string_prototype_char_at, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_charCodeAt,
+    NJS_DECLARE_PROP_NATIVE(vs_charCodeAt,
                             njs_string_prototype_char_code_at, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_codePointAt,
+    NJS_DECLARE_PROP_NATIVE(vs_codePointAt,
                             njs_string_prototype_char_code_at, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_indexOf, njs_string_prototype_index_of,
+    NJS_DECLARE_PROP_NATIVE(vs_indexOf, njs_string_prototype_index_of,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_lastIndexOf,
+    NJS_DECLARE_PROP_NATIVE(vs_lastIndexOf,
                             njs_string_prototype_last_index_of, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_includes, njs_string_prototype_includes,
+    NJS_DECLARE_PROP_NATIVE(vs_includes, njs_string_prototype_includes,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_startsWith,
+    NJS_DECLARE_PROP_NATIVE(vs_startsWith,
                             njs_string_prototype_starts_or_ends_with, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_endsWith,
+    NJS_DECLARE_PROP_NATIVE(vs_endsWith,
                             njs_string_prototype_starts_or_ends_with, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toLowerCase,
+    NJS_DECLARE_PROP_NATIVE(vs_toLowerCase,
                             njs_string_prototype_to_lower_case, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toUpperCase,
+    NJS_DECLARE_PROP_NATIVE(vs_toUpperCase,
                             njs_string_prototype_to_upper_case, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_trim, njs_string_prototype_trim, 0,
+    NJS_DECLARE_PROP_NATIVE(vs_trim, njs_string_prototype_trim, 0,
                             NJS_TRIM_START | NJS_TRIM_END),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_trimStart, njs_string_prototype_trim, 0,
+    NJS_DECLARE_PROP_NATIVE(vs_trimStart, njs_string_prototype_trim, 0,
                             NJS_TRIM_START),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_trimEnd, njs_string_prototype_trim, 0,
+    NJS_DECLARE_PROP_NATIVE(vs_trimEnd, njs_string_prototype_trim, 0,
                             NJS_TRIM_END),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_repeat, njs_string_prototype_repeat, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_repeat, njs_string_prototype_repeat, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_padStart, njs_string_prototype_pad, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_padStart, njs_string_prototype_pad, 1,
                             1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_padEnd, njs_string_prototype_pad, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_padEnd, njs_string_prototype_pad, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_search, njs_string_prototype_search, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_search, njs_string_prototype_search, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_match, njs_string_prototype_match, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_match, njs_string_prototype_match, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_split, njs_string_prototype_split, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_split, njs_string_prototype_split, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_replace, njs_string_prototype_replace, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_replace, njs_string_prototype_replace, 2,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_replaceAll, njs_string_prototype_replace,
+    NJS_DECLARE_PROP_NATIVE(vs_replaceAll, njs_string_prototype_replace,
                             2, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vw_iterator,
+    NJS_DECLARE_PROP_NATIVE(vw_iterator,
                             njs_string_prototype_iterator_obj, 0, NJS_ENUM_VALUES),
 };
 
@@ -3477,8 +3479,8 @@ static const njs_object_init_t  njs_string_prototype_init = {
 
 static njs_object_prop_t  njs_string_instance_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_length, njs_string_instance_length, 0,
-                             0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_length, njs_string_instance_length, 0,
+                             0),
 };
 
 

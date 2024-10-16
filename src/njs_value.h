@@ -325,6 +325,38 @@ typedef enum {
 
 
 struct njs_object_prop_s {
+    uint32_t                    atom_id;
+
+    union {
+        union {
+            njs_value_t         *pvalue;
+            njs_value_t         value;
+        };
+        struct {
+            njs_function_t      *getter;
+            njs_function_t      *setter;
+        } accessor;
+    } u;
+
+#define njs_prop_value(_p)      (&(_p)->u.value)
+#define njs_prop_handler(_p)    (_p)->u.value.data.u.prop_handler
+#define njs_prop_ref(_p)        (_p)->u.value.data.u.value
+#define njs_prop_typed_ref(_p)  (_p)->u.value.data.u.typed_array
+#define njs_prop_magic16(_p)    (_p)->u.value.data.magic16
+#define njs_prop_magic32(_p)    (_p)->u.value.data.magic32
+#define NJS_PROP_PTR_UNSET      ((void *) (uintptr_t) -1)
+#define njs_prop_getter(_p)     (_p)->u.accessor.getter
+#define njs_prop_setter(_p)     (_p)->u.accessor.setter
+
+    njs_object_prop_type_t      type:8;          /* 3 bits */
+    njs_object_prop_type_t      enum_in_object_hash:8; /* 3 bits */
+
+    njs_object_attribute_t      writable:8;      /* 2 bits */
+    njs_object_attribute_t      enumerable:8;    /* 2 bits */
+    njs_object_attribute_t      configurable:8;  /* 2 bits */
+};
+
+struct njs_object_prop_old_s {
     union {
         njs_value_t             *pname;
         njs_value_t             name;
@@ -400,6 +432,7 @@ typedef struct {
     .string = {                                                               \
         .type = NJS_STRING,                                                   \
         .truth = njs_length(s) ? 1 : 0,                                       \
+        .atom_id = 0,                                                         \
         .token_type = _token_type,                                            \
         .token_id = _token_id,                                                \
         .data = &(njs_string_t) {                                             \
@@ -457,12 +490,12 @@ typedef struct {
     _njs_function(_function, _args_count, 1, _magic)
 
 
-#define njs_prop_handler2(_handler, _magic16, _magic32) (njs_value_t) {       \
+#define njs_prop_handler2(_handler, _magic16) (njs_value_t) {                 \
     .data = {                                                                 \
         .type = NJS_INVALID,                                                  \
         .truth = 1,                                                           \
         .magic16 = _magic16,                                                  \
-        .magic32 = _magic32,                                                  \
+        .magic32 = 2,                                                         \
         .u = { .prop_handler = _handler }                                     \
     }                                                                         \
 }
@@ -785,6 +818,7 @@ njs_set_number(njs_value_t *value, double num)
     value->data.u.number = num;
     value->type = NJS_NUMBER;
     value->data.truth = njs_is_number_true(num);
+    value->atom_id = 0;
 }
 
 
@@ -794,6 +828,7 @@ njs_set_int32(njs_value_t *value, int32_t num)
     value->data.u.number = num;
     value->type = NJS_NUMBER;
     value->data.truth = (num != 0);
+    value->atom_id = 0;
 }
 
 
@@ -803,6 +838,7 @@ njs_set_uint32(njs_value_t *value, uint32_t num)
     value->data.u.number = num;
     value->type = NJS_NUMBER;
     value->data.truth = (num != 0);
+    value->atom_id = 0;
 }
 
 

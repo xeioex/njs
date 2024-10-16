@@ -29,7 +29,7 @@ njs_vm_opt_init(njs_vm_opt_t *options)
 
 
 njs_vm_t *
-njs_vm_create_parent(njs_vm_opt_t *options, njs_vm_t *vm_parent)
+njs_vm_create(njs_vm_opt_t *options)
 {
     njs_mp_t      *mp;
     njs_vm_t      *vm;
@@ -62,7 +62,7 @@ njs_vm_create_parent(njs_vm_opt_t *options, njs_vm_t *vm_parent)
         vm->shared = options->shared;
 
     } else {
-        ret = njs_builtin_objects_create(vm, vm_parent);
+        ret = njs_builtin_objects_create(vm);
         if (njs_slow_path(ret != NJS_OK)) {
             return NULL;
         }
@@ -138,20 +138,11 @@ njs_vm_create_parent(njs_vm_opt_t *options, njs_vm_t *vm_parent)
         }
     }
 
-    vm->symbol_generator = NJS_ATOM_SYMBOL_KNOWN_MAX;
-
     if (njs_scope_undefined_index(vm, 0) == NJS_INDEX_ERROR) {
         return NULL;
     }
 
     return vm;
-}
-
-
-njs_vm_t *
-njs_vm_create(njs_vm_opt_t *options)
-{
-    return njs_vm_create_parent(options, NULL);
 }
 
 
@@ -426,11 +417,16 @@ njs_vm_clone(njs_vm_t *vm, njs_external_ptr_t external)
     nvm->trace.data = nvm;
     nvm->external = external;
 
-    nvm->atom_hash_shared = vm->atom_hash;
+    nvm->atom_hash_shared_cell = *vm->atom_hash;
+    nvm->atom_hash_atom_id_shared_cell = *(vm->atom_hash_atom_id);
 
-    njs_lvlhsh_init(&nvm->atom_hash);
+    njs_lvlhsh_init(&nvm->atom_hash_cell);
+    nvm->atom_hash = &nvm->atom_hash_cell;
+
     nvm->atom_hash_mem_pool = nvm->mem_pool;
-    /* nvm->atom_hash_atom_id = vm->atom_hash_atom_id; already there. */
+
+    nvm->atom_hash_atom_id_cell = *vm->atom_hash_atom_id;
+    nvm->atom_hash_atom_id = &nvm->atom_hash_atom_id_cell;
 
     ret = njs_vm_runtime_init(nvm);
     if (njs_slow_path(ret != NJS_OK)) {
@@ -914,18 +910,26 @@ njs_vm_bind2(njs_vm_t *vm, const njs_str_t *var_name, njs_object_prop_t *prop,
     njs_bool_t shared)
 {
     njs_int_t           ret;
+    njs_value_t         prop_name;
     njs_object_t        *global;
     njs_lvlhsh_t        *hash;
     njs_lvlhsh_query_t  lhq;
 
-    ret = njs_string_create(vm, &prop->name, var_name->start, var_name->length);
+    ret = njs_string_create(vm, &prop_name, var_name->start, var_name->length);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
+    ret = njs_atom_atomize_key(vm, &prop_name);
+    if (ret != NJS_OK) {
+        return ret;
+    }
+    prop->atom_id = prop_name.atom_id;
+
     lhq.value = prop;
-    lhq.key = *var_name;
-    lhq.key_hash = njs_djb_hash(lhq.key.start, lhq.key.length);
+
+    lhq.key_hash = prop_name.atom_id;
+
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
@@ -1064,11 +1068,19 @@ njs_vm_prop_magic32(njs_object_prop_t *prop)
 njs_int_t
 njs_vm_prop_name(njs_vm_t *vm, njs_object_prop_t *prop, njs_str_t *dst)
 {
-    if (njs_slow_path(!njs_is_string(&prop->name))) {
+    njs_int_t      ret;
+    njs_value_t    prop_name;
+
+    ret = njs_get_prop_name_by_atom_id(vm, &prop_name, prop->atom_id);
+    if (ret != NJS_OK) {
         return NJS_ERROR;
     }
 
-    njs_string_get(&prop->name, dst);
+    if (njs_slow_path(!njs_is_string(&prop_name))) {
+        return NJS_ERROR;
+    }
+
+    njs_string_get(&prop_name, dst);
 
     return NJS_OK;
 }
@@ -1102,7 +1114,7 @@ njs_vm_value_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
                       && njs_number(src) == 0
                       && signbit(njs_number(src))))
     {
-        njs_string_get(&njs_atom.vs__0, dst);
+        njs_string_get(&njs_atom.vs__0, dst); /* minus zero */
         return NJS_OK;
     }
 
@@ -1261,12 +1273,12 @@ njs_vm_object_alloc(njs_vm_t *vm, njs_value_t *retval, ...)
             goto done;
         }
 
-        lhq.replace = 0;
-        lhq.pool = vm->mem_pool;
-        lhq.proto = &njs_object_hash_proto;
-
-        njs_string_get(name, &lhq.key);
-        lhq.key_hash = njs_djb_hash(lhq.key.start, lhq.key.length);
+        if (!name->atom_id) {
+            ret = njs_atom_atomize_key(vm, name);
+            if (ret != NJS_OK) {
+                goto done;
+            }
+        }
 
         prop = njs_object_prop_alloc(vm, name, value, 1);
         if (njs_slow_path(prop == NULL)) {
@@ -1274,6 +1286,12 @@ njs_vm_object_alloc(njs_vm_t *vm, njs_value_t *retval, ...)
         }
 
         lhq.value = prop;
+
+        lhq.key_hash =  name->atom_id;
+
+        lhq.replace = 0;
+        lhq.pool = vm->mem_pool;
+        lhq.proto = &njs_object_hash_proto;
 
         ret = njs_lvlhsh_insert(&object->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {

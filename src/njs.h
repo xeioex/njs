@@ -34,6 +34,7 @@ typedef struct njs_function_s         njs_function_t;
 typedef struct njs_vm_shared_s        njs_vm_shared_t;
 typedef struct njs_object_init_s      njs_object_init_t;
 typedef struct njs_object_prop_s      njs_object_prop_t;
+typedef struct njs_object_prop_old_s  njs_object_prop_old_t;
 typedef struct njs_object_type_init_s njs_object_type_init_t;
 typedef struct njs_external_s         njs_external_t;
 
@@ -126,7 +127,6 @@ enum {
     NJS_SYMBOL_TO_PRIMITIVE,
     NJS_SYMBOL_TO_STRING_TAG,
     NJS_SYMBOL_UNSCOPABLES,
-    NJS_SYMBOL_KNOWN_MAX,
 };
 
 
@@ -293,8 +293,6 @@ typedef njs_int_t (*njs_iterator_handler_t)(njs_vm_t *vm,
 
 
 NJS_EXPORT void njs_vm_opt_init(njs_vm_opt_t *options);
-NJS_EXPORT njs_vm_t *njs_vm_create_parent(njs_vm_opt_t *options,
-    njs_vm_t *vm_parent);
 NJS_EXPORT njs_vm_t *njs_vm_create(njs_vm_opt_t *options);
 NJS_EXPORT void njs_vm_destroy(njs_vm_t *vm);
 

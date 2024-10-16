@@ -16,7 +16,7 @@ typedef struct {
         uint32_t     elts_count;
         uint32_t     elts_deleted_count;
     } descr;
-    njs_flathsh_elt_t elts[NJS_ATOM_SIZE];
+    njs_flathsh_elt_t elts[NJS_ATOM_SIZE+NJS_ATOM_SYMBOL_KNOWN_MAX];
 } njs_atom_hash_chunk_t;
 
 
@@ -39,7 +39,7 @@ njs_atom_values_t njs_atom = {
 static njs_atom_hash_chunk_t njs_atom_hash_chunk = {
     .descr = {
         .hash_mask = NJS_ATOM_HASH_MASK,
-        .elts_size = NJS_ATOM_SIZE,
+        .elts_size = NJS_ATOM_SIZE+NJS_ATOM_SYMBOL_KNOWN_MAX,
         .elts_count = 0,
         .elts_deleted_count = 0,
     }
@@ -63,16 +63,28 @@ njs_atom_hash_test(njs_flathsh_query_t *lhq, void *data)
 
     name = data;
 
-    size = name->string.data->length;
+    if (name->type == NJS_STRING && ((njs_value_t *)lhq->value)->type ==
+        NJS_STRING) {
 
-    if (lhq->key.length != size) {
-        return NJS_DECLINED;
+        size = name->string.data->length;
+
+        if (lhq->key.length != size) {
+            return NJS_DECLINED;
+        }
+
+        start = (u_char *) name->string.data->start;
+
+        if (memcmp(start, lhq->key.start, lhq->key.length) == 0) {
+           return NJS_OK;
+        } 
     }
 
-    start = (u_char *) name->string.data->start;
+    if (name->type == NJS_SYMBOL && ((njs_value_t *)lhq->value)->type ==
+        NJS_SYMBOL) {
 
-    if (memcmp(start, lhq->key.start, lhq->key.length) == 0) {
-        return NJS_OK;
+        if (name->atom_id == lhq->key_hash) {
+            return NJS_OK;
+        }
     }
 
     return NJS_DECLINED;
@@ -85,7 +97,7 @@ njs_atom_hash_test(njs_flathsh_query_t *lhq, void *data)
  *  So, alloc/free are never used here.
  */
 
-static const njs_flathsh_proto_t  njs_atom_hash_proto
+const njs_flathsh_proto_t  njs_atom_hash_proto
     njs_aligned(64) =
 {
     0,
@@ -118,6 +130,16 @@ njs_atom_hash_init()
         value = &values[n];
 
         value->string.atom_id = njs_atom_hash_atom_id++;
+
+        if (value->type == NJS_SYMBOL) {
+            lhq.key_hash = value->string.atom_id;
+
+            lhq.value = (void *) value;
+
+            /* never failed. */
+            njs_flathsh_insert(&njs_atom_hash, &lhq);
+        }
+
 
         if (value->type == NJS_STRING) {
             start = value->string.data->start;
@@ -217,6 +239,35 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
         break;
     default:
         /* NJS_SYMBOL: do nothing. */
+    }
+
+    return NJS_OK;
+}
+
+
+njs_int_t
+njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value)
+{
+    njs_int_t            ret;
+    njs_flathsh_query_t  lhq;
+
+    lhq.replace = 0;
+    lhq.proto = &njs_lexer_hash_proto;
+    lhq.pool = vm->atom_hash_mem_pool;
+
+
+    value->string.atom_id = (*vm->atom_hash_atom_id)++;
+
+    if (value->type == NJS_SYMBOL) {
+        lhq.key_hash = value->string.atom_id;
+
+        lhq.value = (void *) value;
+
+        ret = njs_flathsh_insert(vm->atom_hash, &lhq);
+        if (njs_slow_path(ret != NJS_OK)) {
+            njs_internal_error(vm, "flathsh insert/replace failed");
+            return NJS_ERROR;
+        }
     }
 
     return NJS_OK;

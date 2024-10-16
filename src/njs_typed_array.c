@@ -2165,16 +2165,16 @@ static njs_object_prop_t  njs_typed_array_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_TypedArray),
+    NJS_DECLARE_PROP_NAME(vs_TypedArray),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vw_species, njs_typed_array_get_this, 0),
+    NJS_DECLARE_PROP_GETTER(vw_species, njs_typed_array_get_this, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_of, njs_typed_array_of, 0, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_of, njs_typed_array_of, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_from, njs_typed_array_from, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_from, njs_typed_array_from, 1, 0),
 };
 
 
@@ -2186,114 +2186,114 @@ static const njs_object_init_t  njs_typed_array_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_GETTER(njs_atom.vw_toStringTag,
+    NJS_DECLARE_PROP_GETTER(vw_toStringTag,
                             njs_typed_array_get_string_tag, 0),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_buffer, njs_typed_array_prototype_buffer,
+    NJS_DECLARE_PROP_GETTER(vs_buffer, njs_typed_array_prototype_buffer,
                             0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_byteLength,
+    NJS_DECLARE_PROP_GETTER(vs_byteLength,
                             njs_typed_array_prototype_byte_length, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_byteOffset,
+    NJS_DECLARE_PROP_GETTER(vs_byteOffset,
                             njs_typed_array_prototype_byte_offset, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_length, njs_typed_array_prototype_length,
+    NJS_DECLARE_PROP_GETTER(vs_length, njs_typed_array_prototype_length,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_copyWithin,
+    NJS_DECLARE_PROP_NATIVE(vs_copyWithin,
                             njs_typed_array_prototype_copy_within, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_entries,
+    NJS_DECLARE_PROP_NATIVE(vs_entries,
                             njs_typed_array_prototype_iterator_obj, 0,
                             NJS_ENUM_BOTH),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_every,
+    NJS_DECLARE_PROP_NATIVE(vs_every,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_EVERY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_filter,
+    NJS_DECLARE_PROP_NATIVE(vs_filter,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_FILTER),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_find,
+    NJS_DECLARE_PROP_NATIVE(vs_find,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_FIND),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_findIndex,
+    NJS_DECLARE_PROP_NATIVE(vs_findIndex,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_FIND_INDEX),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_forEach,
+    NJS_DECLARE_PROP_NATIVE(vs_forEach,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_FOR_EACH),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_includes,
+    NJS_DECLARE_PROP_NATIVE(vs_includes,
                              njs_typed_array_prototype_index_of, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_indexOf,
+    NJS_DECLARE_PROP_NATIVE(vs_indexOf,
                              njs_typed_array_prototype_index_of, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_join, njs_typed_array_prototype_join, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_join, njs_typed_array_prototype_join, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_fill, njs_typed_array_prototype_fill, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_fill, njs_typed_array_prototype_fill, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_keys,
+    NJS_DECLARE_PROP_NATIVE(vs_keys,
                             njs_typed_array_prototype_iterator_obj, 0,
                             NJS_ENUM_KEYS),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_lastIndexOf,
+    NJS_DECLARE_PROP_NATIVE(vs_lastIndexOf,
                             njs_typed_array_prototype_index_of, 1, 2),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_map,
+    NJS_DECLARE_PROP_NATIVE(vs_map,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_MAP),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_reduce, njs_typed_array_prototype_reduce,
+    NJS_DECLARE_PROP_NATIVE(vs_reduce, njs_typed_array_prototype_reduce,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_reduceRight,
+    NJS_DECLARE_PROP_NATIVE(vs_reduceRight,
                             njs_typed_array_prototype_reduce, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_reverse,
+    NJS_DECLARE_PROP_NATIVE(vs_reverse,
                             njs_typed_array_prototype_reverse, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_set, njs_typed_array_prototype_set, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_set, njs_typed_array_prototype_set, 2,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_slice, njs_typed_array_prototype_slice,
+    NJS_DECLARE_PROP_NATIVE(vs_slice, njs_typed_array_prototype_slice,
                             2, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_some,
+    NJS_DECLARE_PROP_NATIVE(vs_some,
                             njs_typed_array_prototype_iterator, 1,
                             NJS_ARRAY_SOME),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_sort, njs_typed_array_prototype_sort, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_sort, njs_typed_array_prototype_sort, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_subarray,
+    NJS_DECLARE_PROP_NATIVE(vs_subarray,
                             njs_typed_array_prototype_slice, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toReversed,
+    NJS_DECLARE_PROP_NATIVE(vs_toReversed,
                             njs_typed_array_prototype_reverse, 0, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toSorted,
+    NJS_DECLARE_PROP_NATIVE(vs_toSorted,
                             njs_typed_array_prototype_sort, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString, njs_array_prototype_to_string,
+    NJS_DECLARE_PROP_NATIVE(vs_toString, njs_array_prototype_to_string,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_values,
+    NJS_DECLARE_PROP_NATIVE(vs_values,
                             njs_typed_array_prototype_iterator_obj, 0,
                             NJS_ENUM_VALUES),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vw_iterator,
+    NJS_DECLARE_PROP_NATIVE(vw_iterator,
                              njs_typed_array_prototype_iterator_obj, 0,
                              NJS_ENUM_VALUES),
 };
@@ -2398,10 +2398,10 @@ static njs_object_prop_t  njs_data_view_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_DataView),
+    NJS_DECLARE_PROP_NAME(vs_DataView),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -2642,68 +2642,68 @@ njs_data_view_prototype_set(njs_vm_t *vm, njs_value_t *args,
 
 static njs_object_prop_t  njs_data_view_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(njs_atom.vw_toStringTag, njs_atom.vs_DataView,
+    NJS_DECLARE_PROP_VALUE(vw_toStringTag, njs_atom.vs_DataView,
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_buffer, njs_typed_array_prototype_buffer,
+    NJS_DECLARE_PROP_GETTER(vs_buffer, njs_typed_array_prototype_buffer,
                             0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_byteLength,
+    NJS_DECLARE_PROP_GETTER(vs_byteLength,
                             njs_typed_array_prototype_byte_length, 0),
 
-    NJS_DECLARE_PROP_GETTER(njs_atom.vs_byteOffset,
+    NJS_DECLARE_PROP_GETTER(vs_byteOffset,
                             njs_typed_array_prototype_byte_offset, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getUint8, njs_data_view_prototype_get, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_getUint8, njs_data_view_prototype_get, 1,
                             NJS_OBJ_TYPE_UINT8_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getInt8, njs_data_view_prototype_get, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_getInt8, njs_data_view_prototype_get, 1,
                             NJS_OBJ_TYPE_INT8_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getUint16, njs_data_view_prototype_get,
+    NJS_DECLARE_PROP_NATIVE(vs_getUint16, njs_data_view_prototype_get,
                             1, NJS_OBJ_TYPE_UINT16_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getInt16, njs_data_view_prototype_get, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_getInt16, njs_data_view_prototype_get, 1,
                             NJS_OBJ_TYPE_INT16_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getUint32, njs_data_view_prototype_get,
+    NJS_DECLARE_PROP_NATIVE(vs_getUint32, njs_data_view_prototype_get,
                             1, NJS_OBJ_TYPE_UINT32_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getInt32, njs_data_view_prototype_get, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_getInt32, njs_data_view_prototype_get, 1,
                             NJS_OBJ_TYPE_INT32_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getFloat32, njs_data_view_prototype_get,
+    NJS_DECLARE_PROP_NATIVE(vs_getFloat32, njs_data_view_prototype_get,
                             1, NJS_OBJ_TYPE_FLOAT32_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getFloat64, njs_data_view_prototype_get,
+    NJS_DECLARE_PROP_NATIVE(vs_getFloat64, njs_data_view_prototype_get,
                             1, NJS_OBJ_TYPE_FLOAT64_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setUint8, njs_data_view_prototype_set, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_setUint8, njs_data_view_prototype_set, 2,
                             NJS_OBJ_TYPE_UINT8_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setInt8, njs_data_view_prototype_set, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_setInt8, njs_data_view_prototype_set, 2,
                             NJS_OBJ_TYPE_INT8_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setUint16, njs_data_view_prototype_set,
+    NJS_DECLARE_PROP_NATIVE(vs_setUint16, njs_data_view_prototype_set,
                             2, NJS_OBJ_TYPE_UINT16_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setInt16, njs_data_view_prototype_set, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_setInt16, njs_data_view_prototype_set, 2,
                             NJS_OBJ_TYPE_INT16_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setUint32, njs_data_view_prototype_set,
+    NJS_DECLARE_PROP_NATIVE(vs_setUint32, njs_data_view_prototype_set,
                             2, NJS_OBJ_TYPE_UINT32_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setInt32, njs_data_view_prototype_set, 2,
+    NJS_DECLARE_PROP_NATIVE(vs_setInt32, njs_data_view_prototype_set, 2,
                             NJS_OBJ_TYPE_INT32_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setFloat32, njs_data_view_prototype_set,
+    NJS_DECLARE_PROP_NATIVE(vs_setFloat32, njs_data_view_prototype_set,
                             2, NJS_OBJ_TYPE_FLOAT32_ARRAY),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setFloat64, njs_data_view_prototype_set,
+    NJS_DECLARE_PROP_NATIVE(vs_setFloat64, njs_data_view_prototype_set,
                             2, NJS_OBJ_TYPE_FLOAT64_ARRAY),
 };
 
@@ -2726,12 +2726,12 @@ static njs_object_prop_t  njs_typed_array_u8_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Uint8Array),
+    NJS_DECLARE_PROP_NAME(vs_Uint8Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 1), 0),
 };
 
@@ -2744,11 +2744,11 @@ static const njs_object_init_t  njs_typed_array_u8_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_u8_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 1), 0),
 };
 
@@ -2770,15 +2770,15 @@ const njs_object_type_init_t  njs_typed_array_u8_type_init = {
 
 static njs_object_prop_t  njs_typed_array_u8c_constructor_props[] =
 {
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_Uint8ClampedArray,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_Uint8ClampedArray,
                          NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 1), 0),
 };
 
@@ -2791,11 +2791,11 @@ static const njs_object_init_t  njs_typed_array_u8c_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_u8c_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 1), 0),
 };
 
@@ -2819,12 +2819,12 @@ static njs_object_prop_t  njs_typed_array_i8_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Int8Array),
+    NJS_DECLARE_PROP_NAME(vs_Int8Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 1), 0),
 };
 
@@ -2837,11 +2837,11 @@ static const njs_object_init_t  njs_typed_array_i8_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_i8_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 1), 0),
 };
 
@@ -2865,12 +2865,12 @@ static njs_object_prop_t  njs_typed_array_u16_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Uint16Array),
+    NJS_DECLARE_PROP_NAME(vs_Uint16Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 2), 0),
 };
 
@@ -2883,11 +2883,11 @@ static const njs_object_init_t  njs_typed_array_u16_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_u16_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 2), 0),
 };
 
@@ -2911,11 +2911,12 @@ static njs_object_prop_t  njs_typed_array_i16_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Int16Array),
+    NJS_DECLARE_PROP_NAME(vs_Int16Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create, 0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 2), 0),
 };
 
@@ -2928,11 +2929,11 @@ static const njs_object_init_t  njs_typed_array_i16_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_i16_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 2), 0),
 };
 
@@ -2956,12 +2957,12 @@ static njs_object_prop_t  njs_typed_array_u32_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Uint32Array),
+    NJS_DECLARE_PROP_NAME(vs_Uint32Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT, njs_value(NJS_NUMBER, 1, 4), 0),
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT, njs_value(NJS_NUMBER, 1, 4), 0),
 };
 
 
@@ -2973,11 +2974,11 @@ static const njs_object_init_t  njs_typed_array_u32_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_u32_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 4), 0),
 };
 
@@ -3001,12 +3002,12 @@ static njs_object_prop_t  njs_typed_array_i32_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Int32Array),
+    NJS_DECLARE_PROP_NAME(vs_Int32Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 4), 0),
 };
 
@@ -3019,11 +3020,11 @@ static const njs_object_init_t  njs_typed_array_i32_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_i32_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT, njs_value(NJS_NUMBER, 1, 4), 0),
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT, njs_value(NJS_NUMBER, 1, 4), 0),
 };
 
 
@@ -3046,12 +3047,12 @@ static njs_object_prop_t  njs_typed_array_f32_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Float32Array),
+    NJS_DECLARE_PROP_NAME(vs_Float32Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 4), 0),
 };
 
@@ -3064,11 +3065,11 @@ static const njs_object_init_t  njs_typed_array_f32_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_f32_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 4), 0),
 };
 
@@ -3092,12 +3093,12 @@ static njs_object_prop_t  njs_typed_array_f64_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Float64Array),
+    NJS_DECLARE_PROP_NAME(vs_Float64Array),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype,
-                             njs_object_prototype_create, 0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype,
+                             njs_object_prototype_create, 0, 0),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 8), 0),
 };
 
@@ -3110,11 +3111,11 @@ static const njs_object_init_t  njs_typed_array_f64_constructor_init = {
 
 static njs_object_prop_t  njs_typed_array_f64_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_BYTES_PER_ELEMENT,
+    NJS_DECLARE_PROP_VALUE(vs_BYTES_PER_ELEMENT,
                            njs_value(NJS_NUMBER, 1, 8), 0),
 };
 

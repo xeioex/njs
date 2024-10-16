@@ -213,8 +213,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     lhq.proto = &njs_object_hash_proto;
 
     if (name != NULL) {
-        lhq.key = njs_str_value("name");
-        lhq.key_hash = NJS_NAME_HASH;
+        lhq.key_hash = njs_atom.vs_name.atom_id;
 
         prop = njs_object_prop_alloc(vm, &njs_atom.vs_name, name, 1);
         if (njs_slow_path(prop == NULL)) {
@@ -222,6 +221,8 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         }
 
         lhq.value = prop;
+
+        lhq.key_hash = njs_atom.vs_name.atom_id;
 
         ret = njs_lvlhsh_insert(&error->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
@@ -231,8 +232,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     }
 
     if (message!= NULL) {
-        lhq.key = njs_str_value("message");
-        lhq.key_hash = NJS_MESSAGE_HASH;
+        lhq.key_hash = njs_atom.vs_message.atom_id;
 
         prop = njs_object_prop_alloc(vm, &njs_atom.vs_message, message, 1);
         if (njs_slow_path(prop == NULL)) {
@@ -243,6 +243,8 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
 
         lhq.value = prop;
 
+        lhq.key_hash = njs_atom.vs_message.atom_id;
+
         ret = njs_lvlhsh_insert(&error->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
             njs_internal_error(vm, "lvlhsh insert failed");
@@ -251,8 +253,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     }
 
     if (errors != NULL) {
-        lhq.key = njs_str_value("errors");
-        lhq.key_hash = NJS_ERRORS_HASH;
 
         prop = njs_object_prop_alloc(vm, &njs_atom.vs_errors, errors, 1);
         if (njs_slow_path(prop == NULL)) {
@@ -262,6 +262,8 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         prop->enumerable = 0;
 
         lhq.value = prop;
+
+        lhq.key_hash = njs_atom.vs_errors.atom_id;
 
         ret = njs_lvlhsh_insert(&error->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
@@ -338,10 +340,10 @@ static njs_object_prop_t  njs_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Error),
+    NJS_DECLARE_PROP_NAME(vs_Error),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -355,10 +357,10 @@ static njs_object_prop_t  njs_eval_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_EvalError),
+    NJS_DECLARE_PROP_NAME(vs_EvalError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -372,10 +374,10 @@ static njs_object_prop_t  njs_internal_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_InternalError),
+    NJS_DECLARE_PROP_NAME(vs_InternalError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -389,10 +391,10 @@ static njs_object_prop_t  njs_range_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_RangeError),
+    NJS_DECLARE_PROP_NAME(vs_RangeError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -406,10 +408,10 @@ static njs_object_prop_t  njs_reference_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_ReferenceError),
+    NJS_DECLARE_PROP_NAME(vs_ReferenceError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -423,9 +425,10 @@ static njs_object_prop_t  njs_syntax_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_SyntaxError),
+    NJS_DECLARE_PROP_NAME(vs_SyntaxError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create, 0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -439,10 +442,10 @@ static njs_object_prop_t  njs_type_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_TypeError),
+    NJS_DECLARE_PROP_NAME(vs_TypeError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -456,10 +459,10 @@ static njs_object_prop_t  njs_uri_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_URIError),
+    NJS_DECLARE_PROP_NAME(vs_URIError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -473,9 +476,10 @@ static njs_object_prop_t  njs_aggregate_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_AggregateError),
+    NJS_DECLARE_PROP_NAME(vs_AggregateError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create, 0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 };
 
 
@@ -560,10 +564,10 @@ static njs_object_prop_t  njs_memory_error_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_MemoryError),
+    NJS_DECLARE_PROP_NAME(vs_MemoryError),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_memory_error_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype,
+                             njs_memory_error_prototype_create, 0, 0),
 };
 
 
@@ -793,24 +797,24 @@ njs_error_to_string(njs_vm_t *vm, njs_value_t *retval, const njs_value_t *error)
 
 static njs_object_prop_t  njs_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_Error,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_Error,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_,
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_valueOf, njs_error_prototype_value_of,
+    NJS_DECLARE_PROP_NATIVE(vs_valueOf, njs_error_prototype_value_of,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString, njs_error_prototype_to_string,
+    NJS_DECLARE_PROP_NATIVE(vs_toString, njs_error_prototype_to_string,
                             0, 0),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_stack, njs_error_prototype_stack,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_stack, njs_error_prototype_stack,
+                             0, NJS_OBJECT_PROP_VALUE_CW),
 };
 
 
@@ -831,14 +835,14 @@ const njs_object_type_init_t  njs_error_type_init = {
 
 static njs_object_prop_t  njs_eval_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_EvalError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_EvalError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_,
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_,
                            NJS_OBJECT_PROP_VALUE_CW),
 };
 
@@ -876,13 +880,13 @@ njs_internal_error_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
 
 static njs_object_prop_t  njs_internal_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_InternalError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_InternalError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_,
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString,
+    NJS_DECLARE_PROP_NATIVE(vs_toString,
                             njs_internal_error_prototype_to_string, 0, 0),
 };
 
@@ -912,14 +916,14 @@ const njs_object_type_init_t  njs_memory_error_type_init = {
 
 static njs_object_prop_t  njs_range_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_RangeError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_RangeError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_,
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_,
                            NJS_OBJECT_PROP_VALUE_CW),
 };
 
@@ -941,14 +945,14 @@ const njs_object_type_init_t  njs_range_error_type_init = {
 
 static njs_object_prop_t  njs_reference_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_ReferenceError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_ReferenceError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_,
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_,
                            NJS_OBJECT_PROP_VALUE_CW),
 };
 
@@ -970,14 +974,14 @@ const njs_object_type_init_t  njs_reference_error_type_init = {
 
 static njs_object_prop_t  njs_syntax_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_SyntaxError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_SyntaxError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
 };
 
 
@@ -998,14 +1002,14 @@ const njs_object_type_init_t  njs_syntax_error_type_init = {
 
 static njs_object_prop_t  njs_type_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_TypeError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_TypeError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
 };
 
 
@@ -1026,14 +1030,14 @@ const njs_object_type_init_t  njs_type_error_type_init = {
 
 static njs_object_prop_t  njs_uri_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_URIError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_URIError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
 };
 
 
@@ -1054,14 +1058,14 @@ const njs_object_type_init_t  njs_uri_error_type_init = {
 
 static njs_object_prop_t  njs_aggregate_error_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_name, njs_atom.vs_AggregateError,
+    NJS_DECLARE_PROP_VALUE(vs_name, njs_atom.vs_AggregateError,
                            NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(njs_atom.vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_VALUE(vs_message, njs_atom.vs_, NJS_OBJECT_PROP_VALUE_CW),
 };
 
 

@@ -168,14 +168,12 @@ njs_object_hash_create(njs_vm_t *vm, njs_lvlhsh_t *hash,
         if ((prop->type & NJS_PROPERTY_NOT_INIT) != 0) {
             prop->type = prop->type & ~NJS_PROPERTY_NOT_INIT;
 
-            prop->name = *prop->pname;
             if (prop->type != NJS_ACCESSOR) {
-	        prop->u.value = *prop->u.pvalue;
+                prop->u.value = *prop->u.pvalue;
             }
         }
 
-        njs_object_property_key_set(&lhq, &prop->name, 0);
-
+        lhq.key_hash  = prop->atom_id;
 
         lhq.value = (void *) prop;
 
@@ -206,27 +204,9 @@ const njs_lvlhsh_proto_t  njs_object_hash_proto
 static njs_int_t
 njs_object_hash_test(njs_lvlhsh_query_t *lhq, void *data)
 {
-    u_char             *start;
-    njs_value_t        *name;
-    njs_object_prop_t  *prop;
-
-    prop = data;
-    name = &prop->name;
-
-    if (njs_slow_path(njs_is_symbol(name))) {
-        return ((njs_symbol_key(name) == lhq->key_hash)
-                && lhq->key.start == NULL) ? NJS_OK : NJS_DECLINED;
-    }
-
-    /* string. */
-
-    if (lhq->key.length != name->string.data->size) {
-        return NJS_DECLINED;
-    }
-
-    start = name->string.data->start;
-
-    if (memcmp(start, lhq->key.start, lhq->key.length) == 0) {
+    if (njs_fast_path(lhq->key_hash ==
+        ((njs_object_prop_t *)data)->atom_id))
+    {
         return NJS_OK;
     }
 
@@ -916,14 +896,14 @@ njs_object_enumerate_object(njs_vm_t *vm, const njs_object_t *object,
 }
 
 
-#define njs_process_prop(vm, prop, flags, items, items_symbol)                 \
-    if (!(flags & NJS_ENUM_SYMBOL && njs_is_symbol(&prop->name))) {            \
+#define njs_process_prop(vm, prop_name, flags, items, items_symbol)            \
+    if (!(flags & NJS_ENUM_SYMBOL && njs_is_symbol(prop_name))) {              \
         /*                                                                     \
          * prop from shared_hash is not symbol:                                \
          * add to items before props from hash                                 \
          */                                                                    \
                                                                                \
-        ret = njs_array_add(vm, items, &prop->name);                           \
+        ret = njs_array_add(vm, items, prop_name);                             \
         if (njs_slow_path(ret != NJS_OK)) {                                    \
             return NJS_ERROR;                                                  \
         }                                                                      \
@@ -933,7 +913,7 @@ njs_object_enumerate_object(njs_vm_t *vm, const njs_object_t *object,
          * prop from shared_hash is symbol:                                    \
          * add to items_symbol                                                 \
          */                                                                    \
-        ret = njs_array_add(vm, items_symbol, &prop->name);                    \
+        ret = njs_array_add(vm, items_symbol, prop_name);                      \
         if (njs_slow_path(ret != NJS_OK)) {                                    \
             return NJS_ERROR;                                                  \
         }                                                                      \
@@ -948,6 +928,7 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
     uint32_t            items_length;
     njs_int_t           ret;
     njs_array_t         *items_string, *items_symbol;
+    njs_value_t         prop_name;
     njs_lvlhsh_each_t   lhe;
     njs_object_prop_t   *prop, *ext_prop;
     njs_lvlhsh_query_t  lhq;
@@ -981,11 +962,16 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
             break;
         }
 
-        if (!njs_is_enumerable(&prop->name, flags)) {
+        ret = njs_get_prop_name_by_atom_id(vm, &prop_name, prop->atom_id);
+        if (ret != NJS_OK) {
+            return NJS_ERROR;
+        }
+
+        if (!njs_is_enumerable(&prop_name, flags)) {
             continue;
         }
 
-        njs_object_property_key_set(&lhq, &prop->name, lhe.key_hash);
+        lhq.key_hash = prop->atom_id;
 
         ext_prop = njs_object_exist_in_proto(parent, object, &lhq);
         if (ext_prop != NULL) {
@@ -1001,12 +987,12 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
 
             /* prop is:  !in_hash && in_shared_hash */
 
-            num = njs_string_to_index(&prop->name);
+            num = njs_string_to_index(&prop_name);
             if (!njs_number_is_integer_index(num)) {
-                njs_process_prop(vm, prop, flags, items_string, items_symbol);
+                njs_process_prop(vm, (&prop_name), flags, items_string, items_symbol);
 
             } else {
-                ret = njs_array_add(vm, items, &prop->name);
+                ret = njs_array_add(vm, items, &prop_name);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NJS_ERROR;
                 }
@@ -1022,7 +1008,7 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
 
             /* prop is:  in_hash && in_shared_hash */
 
-            num = njs_string_to_index(&prop->name);
+            num = njs_string_to_index(&prop_name);
             if (!njs_number_is_integer_index(num)) {
 
                 njs_object_prop_t *hash_prop = lhq.value;
@@ -1034,7 +1020,7 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
                 if (hash_prop->type != NJS_WHITEOUT &&
                     !(hash_prop->enum_in_object_hash))
                 {
-                    njs_process_prop(vm, prop, flags, items_string,
+                    njs_process_prop(vm, (&prop_name), flags, items_string,
                                      items_symbol);
                 }
             }
@@ -1053,24 +1039,29 @@ local_hash:
             break;
         }
 
-        if (!njs_is_enumerable(&prop->name, flags) ||
+        ret = njs_get_prop_name_by_atom_id(vm, &prop_name, prop->atom_id);
+        if (ret != NJS_OK) {
+            return NJS_ERROR;
+        }
+
+        if (!njs_is_enumerable(&prop_name, flags) ||
             !(prop->enumerable || !(flags & NJS_ENUM_ENUMERABLE_ONLY)) ||
             prop->type == NJS_WHITEOUT)
         {
             continue;
         }
 
-        njs_object_property_key_set(&lhq, &prop->name, lhe.key_hash);
+        lhq.key_hash = prop->atom_id;
 
         ext_prop = njs_object_exist_in_proto(parent, object, &lhq);
         if (ext_prop != NULL) {
             continue;
         }
 
-        num = njs_string_to_index(&prop->name);
+        num = njs_string_to_index(&prop_name);
         if (njs_number_is_integer_index(num)) {
 
-            ret = njs_array_add(vm, items, &prop->name);
+            ret = njs_array_add(vm, items, &prop_name);
             if (njs_slow_path(ret != NJS_OK)) {
                 return NJS_ERROR;
             }
@@ -1082,17 +1073,15 @@ local_hash:
                 /* prop is:  in_hash && !in_shared_hash */
 
                 /* select names of not deleted props */
-
-                njs_process_prop(vm, prop, flags, items_string,
+                njs_process_prop(vm, (&prop_name), flags, items_string,
                                  items_symbol);
 
             } else {
                 /* prop is:  in_hash && in_shared_hash */
 
                 /* select names of not deleted and created again */
-
                 if (prop->enum_in_object_hash) {
-                    njs_process_prop(vm, prop, flags, items_string,
+                    njs_process_prop(vm, (&prop_name), flags, items_string,
                                      items_symbol);
                 }
             }
@@ -1250,6 +1239,7 @@ static njs_int_t
 njs_object_copy_shared_hash(njs_vm_t *vm, njs_object_t *object)
 {
     njs_int_t            ret;
+    njs_value_t          prop_name;
     njs_flathsh_t        new_hash, *shared_hash;
     njs_object_prop_t    *prop;
     njs_flathsh_each_t   fhe;
@@ -1271,13 +1261,18 @@ njs_object_copy_shared_hash(njs_vm_t *vm, njs_object_t *object)
             break;
         }
 
-        if (njs_is_symbol(&prop->name)) {
-            fhq.key_hash = njs_symbol_key(&prop->name);
+        ret = njs_get_prop_name_by_atom_id(vm, &prop_name, prop->atom_id);
+        if (ret != NJS_OK) {
+            return NJS_ERROR;
+        }
+
+        if (njs_is_symbol(&prop_name)) {
+            fhq.key_hash = njs_symbol_key(&prop_name);
             fhq.key.start = NULL;
 
         } else {
-            njs_string_get(&prop->name, &fhq.key);
-            fhq.key_hash = njs_djb_hash(fhq.key.start, fhq.key.length);
+            njs_string_get(&prop_name, &fhq.key);
+            fhq.key_hash = prop->atom_id;
         }
 
         fhq.value = prop;
@@ -1565,8 +1560,15 @@ njs_object_define_property(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     value = njs_argument(args, 1);
     name = njs_lvalue_arg(&lvalue, args, nargs, 2);
 
+    if (!name->atom_id) {
+        ret = njs_atom_atomize_key(vm, name);
+        if (ret != NJS_OK) {
+            return NJS_ERROR;
+        }
+    }
+
     ret = njs_object_prop_define(vm, value, name, desc,
-                                 NJS_OBJECT_PROP_DESCRIPTOR, 0);
+                                 NJS_OBJECT_PROP_DESCRIPTOR, name->atom_id);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -1628,8 +1630,16 @@ njs_object_define_properties(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             goto done;
         }
 
+        if (!(&keys->start[i])->atom_id) {
+            ret = njs_atom_atomize_key(vm, &keys->start[i]);
+            if (ret != NJS_OK) {
+                goto done;
+            }
+        }
+
         ret = njs_object_prop_define(vm, value, &keys->start[i], &desc,
-                                     NJS_OBJECT_PROP_DESCRIPTOR, 0);
+                                     NJS_OBJECT_PROP_DESCRIPTOR,
+                                     (&keys->start[i])->atom_id);
         if (njs_slow_path(ret != NJS_OK)) {
             goto done;
         }
@@ -1707,6 +1717,15 @@ njs_object_get_own_property_descriptors(njs_vm_t *vm, njs_value_t *args,
 
     for (i = 0; i < length; i++) {
         key = &names->start[i];
+        if (!key->atom_id) {
+
+            ret = njs_atom_atomize_key(vm, key);
+            if (ret != NJS_OK) {
+                ret = NJS_ERROR;
+                goto done;
+            }
+        }
+
         ret = njs_object_prop_descriptor(vm, &descriptor, value, key);
         if (njs_slow_path(ret != NJS_OK)) {
             ret = NJS_ERROR;
@@ -1719,7 +1738,8 @@ njs_object_get_own_property_descriptors(njs_vm_t *vm, njs_value_t *args,
             goto done;
         }
 
-        njs_object_property_key_set(&lhq, key, 0);
+        lhq.key_hash = key->atom_id;
+
         lhq.value = pr;
 
         ret = njs_lvlhsh_insert(&descriptors->hash, &lhq);
@@ -2188,11 +2208,12 @@ njs_property_prototype_create(njs_vm_t *vm, njs_lvlhsh_t *hash,
         return NULL;
     }
 
+    lhq.value = prop;
+
     njs_set_type_object(njs_prop_value(prop), prototype, prototype->type);
 
-    lhq.value = prop;
-    lhq.key_hash = NJS_PROTOTYPE_HASH;
-    lhq.key = njs_str_value("prototype");
+    lhq.key_hash = prop->atom_id;
+
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
@@ -2213,66 +2234,66 @@ static njs_object_prop_t  njs_object_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(njs_atom.vs_Object),
+    NJS_DECLARE_PROP_NAME(vs_Object),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_prototype, njs_object_prototype_create,
-                             0, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(vs_prototype, njs_object_prototype_create,
+                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_create, njs_object_create, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_create, njs_object_create, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_keys, njs_object_keys, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_keys, njs_object_keys, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_values, njs_object_values, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_values, njs_object_values, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_entries, njs_object_entries, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_entries, njs_object_entries, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_defineProperty,
+    NJS_DECLARE_PROP_NATIVE(vs_defineProperty,
                             njs_object_define_property, 3, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_defineProperties,
+    NJS_DECLARE_PROP_NATIVE(vs_defineProperties,
                             njs_object_define_properties, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getOwnPropertyDescriptor,
+    NJS_DECLARE_PROP_NATIVE(vs_getOwnPropertyDescriptor,
                             njs_object_get_own_property_descriptor, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getOwnPropertyDescriptors,
+    NJS_DECLARE_PROP_NATIVE(vs_getOwnPropertyDescriptors,
                             njs_object_get_own_property_descriptors, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getOwnPropertyNames,
+    NJS_DECLARE_PROP_NATIVE(vs_getOwnPropertyNames,
                             njs_object_get_own_property, 1, NJS_ENUM_STRING),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getOwnPropertySymbols,
+    NJS_DECLARE_PROP_NATIVE(vs_getOwnPropertySymbols,
                             njs_object_get_own_property, 1, NJS_ENUM_SYMBOL),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_getPrototypeOf,
+    NJS_DECLARE_PROP_NATIVE(vs_getPrototypeOf,
                             njs_object_get_prototype_of, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_setPrototypeOf,
+    NJS_DECLARE_PROP_NATIVE(vs_setPrototypeOf,
                             njs_object_set_prototype_of, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_freeze, njs_object_set_integrity_level,
+    NJS_DECLARE_PROP_NATIVE(vs_freeze, njs_object_set_integrity_level,
                             1, NJS_OBJECT_INTEGRITY_FROZEN),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isFrozen,
+    NJS_DECLARE_PROP_NATIVE(vs_isFrozen,
                             njs_object_test_integrity_level, 1,
                             NJS_OBJECT_INTEGRITY_FROZEN),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_seal, njs_object_set_integrity_level, 1,
+    NJS_DECLARE_PROP_NATIVE(vs_seal, njs_object_set_integrity_level, 1,
                             NJS_OBJECT_INTEGRITY_SEALED),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isSealed,
+    NJS_DECLARE_PROP_NATIVE(vs_isSealed,
                             njs_object_test_integrity_level, 1,
                             NJS_OBJECT_INTEGRITY_SEALED),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_preventExtensions, njs_object_prevent_extensions,
+    NJS_DECLARE_PROP_NATIVE(vs_preventExtensions, njs_object_prevent_extensions,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isExtensible, njs_object_is_extensible,
+    NJS_DECLARE_PROP_NATIVE(vs_isExtensible, njs_object_is_extensible,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_assign, njs_object_assign, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_assign, njs_object_assign, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_is, njs_object_is, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(vs_is, njs_object_is, 2, 0),
 };
 
 
@@ -2450,14 +2471,14 @@ njs_property_constructor_set(njs_vm_t *vm, njs_lvlhsh_t *hash,
     prop->enumerable = 0;
 
     lhq.value = prop;
-    lhq.key_hash = NJS_CONSTRUCTOR_HASH;
-    lhq.key = njs_str_value("constructor");
+
+    lhq.key_hash = prop->atom_id;
+
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
 
     ret = njs_lvlhsh_insert(hash, &lhq);
-
     if (njs_fast_path(ret == NJS_OK)) {
         return njs_prop_value(prop);
     }
@@ -2726,26 +2747,26 @@ njs_object_prototype_is_prototype_of(njs_vm_t *vm, njs_value_t *args,
 
 static njs_object_prop_t  njs_object_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs___proto__, njs_object_prototype_proto,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs___proto__, njs_object_prototype_proto,
+                             0, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(njs_atom.vs_constructor,
-                             njs_object_prototype_create_constructor,
-                             0, 0, NJS_OBJECT_PROP_VALUE_CW),
+    NJS_DECLARE_PROP_HANDLER(vs_constructor,
+                             njs_object_prototype_create_constructor, 0,
+                             NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_valueOf, njs_object_prototype_value_of,
+    NJS_DECLARE_PROP_NATIVE(vs_valueOf, njs_object_prototype_value_of,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_toString, njs_object_prototype_to_string,
+    NJS_DECLARE_PROP_NATIVE(vs_toString, njs_object_prototype_to_string,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_hasOwnProperty,
+    NJS_DECLARE_PROP_NATIVE(vs_hasOwnProperty,
                             njs_object_prototype_has_own_property, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_propertyIsEnumerable,
+    NJS_DECLARE_PROP_NATIVE(vs_propertyIsEnumerable,
                             njs_object_prototype_prop_is_enumerable, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(njs_atom.vs_isPrototypeOf,
+    NJS_DECLARE_PROP_NATIVE(vs_isPrototypeOf,
                             njs_object_prototype_is_prototype_of, 1, 0),
 };
 
