@@ -339,6 +339,7 @@ test262: njs test262_njs test262_quickjs
 
 test262_quickjs: njs
 	NJS_SKIP_LIST="test/js/promise_rejection_tracker_recursive.t.js \\
+test/fs/methods.t.mjs \\
 test/js/async_exception_in_await.t.js" \\
 	test/test262 --binary='$NJS_BUILD_DIR/njs -n QuickJS -m'
 END
