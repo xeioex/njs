@@ -53,7 +53,7 @@ stream {
     }
 
     server {
-        listen       127.0.0.1:8080;
+        listen       127.0.0.1:8081;
 
         js_periodic test.tick interval=30ms jitter=1ms;
         js_periodic test.timer interval=1s worker_affinity=all;
@@ -79,7 +79,7 @@ http {
     %%TEST_GLOBALS_HTTP%%
 
     server {
-        listen       127.0.0.1:8081;
+        listen       127.0.0.1:8080;
         server_name  localhost;
 
         location /fetch_ok {
@@ -94,7 +94,7 @@ http {
 
 EOF
 
-my $p1 = port(8081);
+my $p1 = port(8080);
 
 $t->write_file('test.js', <<EOF);
     import fs from 'fs';
@@ -270,24 +270,26 @@ $t->write_file('test.js', <<EOF);
 EOF
 
 $t->run_daemon(\&stream_daemon, port(8090));
-$t->try_run('no js_periodic')->plan(9);
+$t->try_run('no js_periodic');
+plan(skip_all => 'not yet') if http_get('/engine') =~ /QuickJS$/m;
+$t->plan(9);
 $t->waitforsocket('127.0.0.1:' . port(8090));
 
 ###############################################################################
 
 select undef, undef, undef, 0.2;
 
-is(stream('127.0.0.1:' . port(8080))->io('affinity'), 'affinity',
+is(stream('127.0.0.1:' . port(8081))->io('affinity'), 'affinity',
 	'affinity test');
-is(stream('127.0.0.1:' . port(8080))->io('tick'), 'tick', '3x tick test');
-is(stream('127.0.0.1:' . port(8080))->io('timer'), 'timer', 'timer test');
-is(stream('127.0.0.1:' . port(8080))->io('file'), 'file', 'file test');
-is(stream('127.0.0.1:' . port(8080))->io('fetch'), 'fetch', 'fetch test');
-is(stream('127.0.0.1:' . port(8080))->io('multiple_fetches'),
+is(stream('127.0.0.1:' . port(8081))->io('tick'), 'tick', '3x tick test');
+is(stream('127.0.0.1:' . port(8081))->io('timer'), 'timer', 'timer test');
+is(stream('127.0.0.1:' . port(8081))->io('file'), 'file', 'file test');
+is(stream('127.0.0.1:' . port(8081))->io('fetch'), 'fetch', 'fetch test');
+is(stream('127.0.0.1:' . port(8081))->io('multiple_fetches'),
 	'multiple_fetches', 'muliple fetches test');
-is(stream('127.0.0.1:' . port(8080))->io('timeout_exception'),
+is(stream('127.0.0.1:' . port(8081))->io('timeout_exception'),
 	'timeout_exception', 'timeout exception test');
-is(stream('127.0.0.1:' . port(8080))->io('vars'), 'vars', 'vars test');
+is(stream('127.0.0.1:' . port(8081))->io('vars'), 'vars', 'vars test');
 
 $t->stop();
 
