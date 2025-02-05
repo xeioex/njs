@@ -3217,7 +3217,7 @@ ngx_http_js_request_variables(njs_vm_t *vm, njs_object_prop_t *prop,
 {
     njs_int_t                   rc, is_capture, start, length;
     njs_str_t                   val, s;
-    ngx_str_t                   name;
+    ngx_str_t                   name, name_lc;
     ngx_uint_t                  i, key;
     ngx_http_variable_t        *v;
     ngx_http_core_main_conf_t  *cmcf;
@@ -3258,9 +3258,18 @@ ngx_http_js_request_variables(njs_vm_t *vm, njs_object_prop_t *prop,
         }
 
         /* Lookup the variable in nginx variables */
-        key = ngx_hash_strlow(name.data, name.data, name.len);
 
-        vv = ngx_http_get_variable(r, &name, key);
+        name_lc.data = ngx_pcalloc(r->pool, name.len);
+        if (name_lc.data == NULL) {
+            njs_vm_error(vm, "internal error");
+            return NJS_ERROR;
+        }
+
+        name_lc.len = name.len;
+
+        key = ngx_hash_strlow(name_lc.data, name.data, name.len);
+
+        vv = ngx_http_get_variable(r, &name_lc, key);
         if (vv == NULL || vv->not_found) {
             njs_value_undefined_set(retval);
             return NJS_DECLINED;
@@ -3272,9 +3281,15 @@ ngx_http_js_request_variables(njs_vm_t *vm, njs_object_prop_t *prop,
 
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
 
-    key = ngx_hash_strlow(name.data, name.data, name.len);
+    name_lc.data = ngx_pcalloc(r->pool, name.len);
+    if (name_lc.data == NULL) {
+        njs_vm_error(vm, "internal error");
+        return NJS_ERROR;
+    }
 
-    v = ngx_hash_find(&cmcf->variables_hash, key, name.data, name.len);
+    key = ngx_hash_strlow(name_lc.data, name.data, name.len);
+
+    v = ngx_hash_find(&cmcf->variables_hash, key, name_lc.data, name.len);
 
     if (v == NULL) {
         njs_vm_error(vm, "variable not found");
@@ -6130,7 +6145,7 @@ ngx_http_qjs_variables_own_property(JSContext *cx, JSPropertyDescriptor *pdesc,
     JSValueConst obj, JSAtom prop)
 {
     uint32_t                    buffer_type;
-    ngx_str_t                   name;
+    ngx_str_t                   name, name_lc;
     ngx_uint_t                  i, key, start, length, is_capture;
     ngx_http_request_t         *r;
     ngx_http_variable_value_t  *vv;
@@ -6184,9 +6199,17 @@ ngx_http_qjs_variables_own_property(JSContext *cx, JSPropertyDescriptor *pdesc,
         return 1;
     }
 
-    key = ngx_hash_strlow(name.data, name.data, name.len);
+    name_lc.data = ngx_pcalloc(r->pool, name.len);
+    if (name_lc.data == NULL) {
+        (void) JS_ThrowOutOfMemory(cx);
+        return -1;
+    }
 
-    vv = ngx_http_get_variable(r, &name, key);
+    name_lc.len = name.len;
+
+    key = ngx_hash_strlow(name_lc.data, name.data, name.len);
+
+    vv = ngx_http_get_variable(r, &name_lc, key);
     JS_FreeCString(cx, (char *) name.data);
     if (vv == NULL || vv->not_found) {
         return 0;
@@ -6207,7 +6230,7 @@ static int
 ngx_http_qjs_variables_set_property(JSContext *cx, JSValueConst obj,
     JSAtom prop, JSValueConst value, JSValueConst receiver, int flags)
 {
-    ngx_str_t                   name, s;
+    ngx_str_t                   name, name_lc, s;
     ngx_uint_t                  key;
     ngx_http_js_ctx_t          *ctx;
     ngx_http_request_t         *r;
@@ -6231,11 +6254,18 @@ ngx_http_qjs_variables_set_property(JSContext *cx, JSValueConst obj,
 
     name.len = ngx_strlen(name.data);
 
-    key = ngx_hash_strlow(name.data, name.data, name.len);
+
+    name_lc.data = ngx_pcalloc(r->pool, name.len);
+    if (name_lc.data == NULL) {
+        (void) JS_ThrowOutOfMemory(cx);
+        return -1;
+    }
+
+    key = ngx_hash_strlow(name_lc.data, name.data, name.len);
 
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
 
-    v = ngx_hash_find(&cmcf->variables_hash, key, name.data, name.len);
+    v = ngx_hash_find(&cmcf->variables_hash, key, name_lc.data, name.len);
     JS_FreeCString(cx, (char *) name.data);
 
     if (v == NULL) {
