@@ -120,8 +120,8 @@ static ngx_stream_js_ev_t *ngx_stream_js_event(ngx_stream_session_t *s,
     njs_str_t *event);
 
 static njs_int_t ngx_stream_js_ext_get_remote_address(njs_vm_t *vm,
-    njs_object_prop_t *prop, njs_value_t *value, njs_value_t *setval,
-    njs_value_t *retval);
+    njs_object_prop_t *prop, uint32_t unused, njs_value_t *value,
+    njs_value_t *setval, njs_value_t *retval);
 
 static njs_int_t ngx_stream_js_ext_done(njs_vm_t *vm, njs_value_t *args,
      njs_uint_t nargs, njs_index_t unused, njs_value_t *retval);
@@ -137,11 +137,11 @@ static njs_int_t ngx_stream_js_ext_set_return_value(njs_vm_t *vm,
     njs_value_t *retval);
 
 static njs_int_t ngx_stream_js_ext_variables(njs_vm_t *vm,
-    njs_object_prop_t *prop, njs_value_t *value, njs_value_t *setval,
-    njs_value_t *retval);
+    njs_object_prop_t *prop, uint32_t atom_id, njs_value_t *value,
+    njs_value_t *setval, njs_value_t *retval);
 static njs_int_t ngx_stream_js_periodic_variables(njs_vm_t *vm,
-    njs_object_prop_t *prop, njs_value_t *value, njs_value_t *setval,
-    njs_value_t *retval);
+    njs_object_prop_t *prop, uint32_t atom_id, njs_value_t *value,
+    njs_value_t *setval, njs_value_t *retval);
 
 #if (NJS_HAVE_QUICKJS)
 
@@ -1404,8 +1404,8 @@ ngx_stream_js_event(ngx_stream_session_t *s, njs_str_t *event)
 
 static njs_int_t
 ngx_stream_js_ext_get_remote_address(njs_vm_t *vm,
-    njs_object_prop_t *prop, njs_value_t *value, njs_value_t *setval,
-    njs_value_t *retval)
+    njs_object_prop_t *prop, uint32_t unused, njs_value_t *value,
+    njs_value_t *setval, njs_value_t *retval)
 {
     ngx_connection_t      *c;
     ngx_stream_session_t  *s;
@@ -1707,7 +1707,8 @@ ngx_stream_js_ext_set_return_value(njs_vm_t *vm, njs_value_t *args,
 
 static njs_int_t
 ngx_stream_js_session_variables(njs_vm_t *vm, njs_object_prop_t *prop,
-    ngx_stream_session_t *s, njs_value_t *setval, njs_value_t *retval)
+    uint32_t atom_id, ngx_stream_session_t *s, njs_value_t *setval,
+    njs_value_t *retval)
 {
     njs_int_t                     rc;
     njs_str_t                     val;
@@ -1717,7 +1718,7 @@ ngx_stream_js_session_variables(njs_vm_t *vm, njs_object_prop_t *prop,
     ngx_stream_core_main_conf_t  *cmcf;
     ngx_stream_variable_value_t  *vv;
 
-    rc = njs_vm_prop_name(vm, prop, &val);
+    rc = njs_vm_prop_name(vm, atom_id, &val);
     if (rc != NJS_OK) {
         njs_value_undefined_set(retval);
         return NJS_DECLINED;
@@ -1810,7 +1811,8 @@ ngx_stream_js_session_variables(njs_vm_t *vm, njs_object_prop_t *prop,
 
 static njs_int_t
 ngx_stream_js_ext_variables(njs_vm_t *vm, njs_object_prop_t *prop,
-    njs_value_t *value, njs_value_t *setval, njs_value_t *retval)
+    uint32_t atom_id, njs_value_t *value, njs_value_t *setval,
+    njs_value_t *retval)
 {
     ngx_stream_session_t  *s;
 
@@ -1820,13 +1822,14 @@ ngx_stream_js_ext_variables(njs_vm_t *vm, njs_object_prop_t *prop,
         return NJS_DECLINED;
     }
 
-    return ngx_stream_js_session_variables(vm, prop, s, setval, retval);
+    return ngx_stream_js_session_variables(vm, prop, atom_id, s, setval, retval);
 }
 
 
 static njs_int_t
 ngx_stream_js_periodic_variables(njs_vm_t *vm, njs_object_prop_t *prop,
-    njs_value_t *value, njs_value_t *setval, njs_value_t *retval)
+    uint32_t atom_id, njs_value_t *value, njs_value_t *setval,
+    njs_value_t *retval)
 {
     ngx_stream_session_t  *s;
 
@@ -1836,7 +1839,7 @@ ngx_stream_js_periodic_variables(njs_vm_t *vm, njs_object_prop_t *prop,
         return NJS_DECLINED;
     }
 
-    return ngx_stream_js_session_variables(vm, prop, s, setval, retval);
+    return ngx_stream_js_session_variables(vm, prop, atom_id, s, setval, retval);
 }
 
 
