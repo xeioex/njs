@@ -905,7 +905,7 @@ njs_xml_node_ext_remove_children(njs_vm_t *vm, njs_value_t *args,
             return NJS_ERROR;
         }
 
-        njs_value_string_get(selector, &name);
+        njs_value_string_get(vm, selector, &name);
 
         return njs_xml_node_tag_remove(vm, current, &name);
     }
@@ -956,7 +956,7 @@ njs_xml_node_ext_set_attribute(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    njs_value_string_get(name, &str);
+    njs_value_string_get(vm, name, &str);
 
     return njs_xml_node_attr_handler(vm, current, &str, njs_arg(args, nargs, 2),
                                      !remove ? retval : NULL);
@@ -1029,7 +1029,7 @@ njs_xml_node_ext_text(njs_vm_t *vm, njs_object_prop_t *unused, uint32_t unused1,
             return NJS_ERROR;
         }
 
-        njs_value_string_get(setval, &content);
+        njs_value_string_get(vm, setval, &content);
 
         ret = njs_xml_encode_special_chars(vm, &content, &enc);
         if (njs_slow_path(ret != NJS_OK)) {

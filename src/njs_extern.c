@@ -9,25 +9,24 @@
 
 
 static njs_int_t njs_external_prop_handler(njs_vm_t *vm,
-    njs_object_prop_t *self, uint32_t atom_id, njs_value_t *value, njs_value_t *setval,
-    njs_value_t *retval);
+    njs_object_prop_t *self, uint32_t atom_id, njs_value_t *value,
+    njs_value_t *setval, njs_value_t *retval);
 
 
 static njs_int_t
 njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
     const njs_external_t *external, njs_uint_t n)
 {
-    size_t                   size;
-    njs_int_t                ret;
-    njs_value_t              prop_name;
-    const u_char             *start;
-    njs_function_t           *function;
-    njs_flathsh_obj_t        *hash;
-    njs_object_prop_t        *prop;
-    njs_exotic_slots_t       *slot, *next;
-    const njs_external_t     *end;
-    njs_flathsh_obj_query_t  lhq;
-
+    size_t                size;
+    njs_int_t             ret;
+    njs_value_t           prop_name;
+    const u_char          *start;
+    njs_flathsh_t         *hash;
+    njs_function_t        *function;
+    njs_object_prop_t     *prop;
+    njs_exotic_slots_t    *slot, *next;
+    njs_flathsh_query_t   lhq;
+    const njs_external_t  *end;
 
     slot = njs_arr_add(protos);
     njs_memzero(slot, sizeof(njs_exotic_slots_t));
@@ -71,16 +70,11 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
             lhq.key_hash = external->name.symbol;
 
         } else {
-            ret = njs_string_create(vm, &prop_name,
-                                    external->name.string.start,
-                                    external->name.string.length);
+            ret = njs_atom_string_create(vm, &prop_name,
+                                         external->name.string.start,
+                                         external->name.string.length);
             if (njs_slow_path(ret != NJS_OK)) {
                 return NJS_ERROR;
-            }
-
-            ret = njs_atom_atomize_key(vm, &prop_name);
-            if (ret != NJS_OK) {
-                return ret;
             }
 
             lhq.key_hash = prop_name.atom_id;
@@ -172,7 +166,7 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
             break;
         }
 
-        ret = njs_flathsh_obj_insert(hash, &lhq);
+        ret = njs_flathsh_unique_insert(hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
             njs_internal_error(vm, "lvlhsh insert failed");
             return NJS_ERROR;
@@ -196,13 +190,12 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
     uint32_t atom_id, njs_value_t *value, njs_value_t *setval,
     njs_value_t *retval)
 {
-    njs_int_t                ret;
-    njs_value_t              self_name;
-    njs_object_prop_t        *prop;
-    njs_external_ptr_t       external;
-    njs_object_value_t       *ov;
-    njs_exotic_slots_t       *slots;
-    njs_flathsh_obj_query_t  lhq;
+    njs_int_t            ret;
+    njs_object_prop_t    *prop;
+    njs_external_ptr_t   external;
+    njs_object_value_t   *ov;
+    njs_exotic_slots_t   *slots;
+    njs_flathsh_query_t  lhq;
 
     if (njs_slow_path(retval == NULL)) {
         return NJS_DECLINED;
@@ -230,11 +223,6 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
         njs_set_object_value(retval, ov);
     }
 
-    ret = njs_get_prop_name_by_atom_id(vm, &self_name, atom_id);
-    if (ret != NJS_OK) {
-        return NJS_ERROR;
-    }
-
     prop = njs_object_prop_alloc(vm, retval, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
@@ -245,14 +233,12 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
     prop->enumerable = self->enumerable;
 
     lhq.value = prop;
-
     lhq.key_hash = atom_id;
-
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
 
-    ret = njs_flathsh_obj_insert(njs_object_hash(value), &lhq);
+    ret = njs_flathsh_unique_insert(njs_object_hash(value), &lhq);
     if (njs_slow_path(ret != NJS_OK)) {
         njs_internal_error(vm, "lvlhsh insert/replace failed");
         return NJS_ERROR;

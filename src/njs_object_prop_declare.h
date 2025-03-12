@@ -9,12 +9,14 @@
 
 #define NJS_DECLARE_PROP_VALUE(_name, _v, _fl)                                \
     {                                                                         \
-        .type = NJS_PROPERTY,                                                 \
         .atom_id = NJS_ATOM_ ## _name,                                        \
-        .u.value = _v,                                                        \
-        .enumerable = !!(_fl & NJS_OBJECT_PROP_ENUMERABLE),                   \
-        .configurable = !!(_fl & NJS_OBJECT_PROP_CONFIGURABLE),               \
-        .writable = !!(_fl & NJS_OBJECT_PROP_WRITABLE),                       \
+        .desc = {                                                             \
+            .type = NJS_PROPERTY,                                             \
+            .u.value = _v,                                                    \
+            .enumerable = !!(_fl & NJS_OBJECT_PROP_ENUMERABLE),               \
+            .configurable = !!(_fl & NJS_OBJECT_PROP_CONFIGURABLE),           \
+            .writable = !!(_fl & NJS_OBJECT_PROP_WRITABLE),                   \
+        },                                                                    \
     }
 
 
@@ -26,27 +28,32 @@
 
 #define NJS_DECLARE_PROP_HANDLER(_name, _native, _m16, _fl)                   \
     {                                                                         \
-        .type = NJS_PROPERTY_HANDLER,                                         \
         .atom_id = NJS_ATOM_ ## _name,                                        \
-        .u.value = njs_prop_handler2(_native, _m16),                          \
-        .enumerable = !!(_fl & NJS_OBJECT_PROP_ENUMERABLE),                   \
-        .configurable = !!(_fl & NJS_OBJECT_PROP_CONFIGURABLE),               \
-        .writable = !!(_fl & NJS_OBJECT_PROP_WRITABLE),                       \
+        .desc = {                                                             \
+            .type = NJS_PROPERTY_HANDLER,                                     \
+            .u.value = njs_prop_handler2(_native, _m16),                      \
+            .enumerable = !!(_fl & NJS_OBJECT_PROP_ENUMERABLE),               \
+            .configurable = !!(_fl & NJS_OBJECT_PROP_CONFIGURABLE),           \
+            .writable = !!(_fl & NJS_OBJECT_PROP_WRITABLE),                   \
+        },                                                                    \
     }
 
 
 #define NJS_DECLARE_PROP_GETTER(_name, _native, _magic)                       \
     {                                                                         \
-        .type = NJS_ACCESSOR,                                                 \
         .atom_id = NJS_ATOM_ ## _name,                                        \
-        .u.accessor = njs_getter(_native, _magic),                            \
-        .writable = NJS_ATTRIBUTE_UNSET,                                      \
-        .configurable = 1,                                                    \
+        .desc = {                                                             \
+            .type = NJS_ACCESSOR,                                             \
+            .u.accessor = njs_getter(_native, _magic),                        \
+            .writable = NJS_ATTRIBUTE_UNSET,                                  \
+            .configurable = 1,                                                \
+        },                                                                    \
     }
 
 
 #define NJS_DECLARE_PROP_NAME(_name)                                          \
-    NJS_DECLARE_PROP_VALUE(name, njs_strval(_name), NJS_OBJECT_PROP_VALUE_C)
+    NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval(_name),                     \
+                           NJS_OBJECT_PROP_VALUE_C)
 
 
 #define NJS_DECLARE_PROP_LENGTH(_v)                                           \

@@ -80,7 +80,6 @@ struct njs_parser_s {
     njs_parser_scope_t              *scope;
     njs_variable_type_t             var_type;
     njs_int_t                       ret;
-    uintptr_t                       undefined_id;
 
     uint8_t                         use_lhs;
 
@@ -134,7 +133,7 @@ njs_variable_t *njs_variable_resolve(njs_vm_t *vm, njs_parser_node_t *node);
 njs_index_t njs_variable_index(njs_vm_t *vm, njs_parser_node_t *node);
 njs_bool_t njs_parser_has_side_effect(njs_parser_node_t *node);
 njs_int_t njs_parser_variable_reference(njs_parser_t *parser,
-    njs_parser_scope_t *scope, njs_parser_node_t *node, uintptr_t unique_id,
+    njs_parser_scope_t *scope, njs_parser_node_t *node, uintptr_t atom_id,
     njs_reference_type_t type);
 njs_token_type_t njs_parser_unexpected_token(njs_vm_t *vm, njs_parser_t *parser,
     njs_str_t *name, njs_token_type_t type);

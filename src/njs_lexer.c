@@ -18,7 +18,6 @@ struct njs_lexer_multi_s {
 };
 
 
-static njs_int_t njs_lexer_hash_test(njs_lvlhsh_query_t *lhq, void *data);
 static njs_int_t njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token);
 static void njs_lexer_string(njs_lexer_t *lexer, njs_lexer_token_t *token,
     u_char quote);
@@ -26,16 +25,6 @@ static void njs_lexer_number(njs_lexer_t *lexer, njs_lexer_token_t *token);
 static void njs_lexer_multi(njs_lexer_t *lexer, njs_lexer_token_t *token,
     const njs_lexer_multi_t *multi, size_t length);
 static void njs_lexer_division(njs_lexer_t *lexer, njs_lexer_token_t *token);
-
-
-const njs_lvlhsh_proto_t  njs_lexer_hash_proto
-    njs_aligned(64) =
-{
-    NJS_LVLHSH_DEFAULT,
-    njs_lexer_hash_test,
-    njs_lvlhsh_alloc,
-    njs_lvlhsh_free,
-};
 
 
 static const uint8_t  njs_tokens[256]  njs_aligned(64) = {
@@ -296,8 +285,6 @@ njs_lexer_init(njs_vm_t *vm, njs_lexer_t *lexer, njs_str_t *file,
     lexer->start = start;
     lexer->end = end;
     lexer->line = 1;
-
-    lexer->mem_pool = vm->atom_hash_mem_pool;
     lexer->vm = vm;
 
     njs_queue_init(&lexer->preread);
@@ -310,7 +297,7 @@ njs_int_t
 njs_lexer_in_stack_init(njs_lexer_t *lexer)
 {
     lexer->in_stack_size = 128;
-    lexer->in_stack = njs_mp_zalloc(lexer->mem_pool, lexer->in_stack_size);
+    lexer->in_stack = njs_mp_zalloc(lexer->vm->mem_pool, lexer->in_stack_size);
     if (lexer->in_stack == NULL) {
         return NJS_ERROR;
     }
@@ -339,7 +326,7 @@ njs_lexer_in_stack_push(njs_lexer_t *lexer)
     size = lexer->in_stack_size;
     lexer->in_stack_size = size * 2;
 
-    tmp = njs_mp_alloc(lexer->mem_pool, size * 2);
+    tmp = njs_mp_alloc(lexer->vm->mem_pool, size * 2);
     if (tmp == NULL) {
         return NJS_ERROR;
     }
@@ -347,7 +334,7 @@ njs_lexer_in_stack_push(njs_lexer_t *lexer)
     memcpy(tmp, lexer->in_stack, size);
     memset(&tmp[size], 0, size);
 
-    njs_mp_free(lexer->mem_pool, lexer->in_stack);
+    njs_mp_free(lexer->vm->mem_pool, lexer->in_stack);
     lexer->in_stack = tmp;
 
     return NJS_OK;
@@ -411,7 +398,7 @@ njs_lexer_next_token(njs_lexer_t *lexer)
     njs_int_t          ret;
     njs_lexer_token_t  *token;
 
-    token = njs_mp_zalloc(lexer->mem_pool, sizeof(njs_lexer_token_t));
+    token = njs_mp_zalloc(lexer->vm->mem_pool, sizeof(njs_lexer_token_t));
     if (njs_slow_path(token == NULL)) {
         return NULL;
     }
@@ -531,7 +518,7 @@ njs_lexer_consume_token(njs_lexer_t *lexer, unsigned length)
 
         njs_queue_remove(lnk);
 
-        njs_mp_free(lexer->mem_pool, token);
+        njs_mp_free(lexer->vm->mem_pool, token);
     }
 }
 
@@ -704,87 +691,11 @@ njs_lexer_make_token(njs_lexer_t *lexer, njs_lexer_token_t *token)
 
 
 static njs_int_t
-njs_lexer_hash_test(njs_lvlhsh_query_t *lhq, void *data)
-{
-    u_char             *start;
-    njs_value_t        *name;
-
-    name = data;
-
-    /* string. */
-
-    if (lhq->key.length != name->string.data->size) {
-        return NJS_DECLINED;
-    }
-
-    start = name->string.data->start;
-
-    if (memcmp(start, lhq->key.start, lhq->key.length) == 0) {
-        return NJS_OK;
-    }
-
-    return NJS_DECLINED;
-}
-
-
-njs_value_t *
-njs_lexer_keyword_find(njs_vm_t *vm, u_char *key, size_t size, size_t length,
-    uint32_t hash)
-{
-    njs_int_t           ret;
-    njs_value_t         *entry;
-    njs_lvlhsh_query_t  lhq;
-
-    lhq.key.start = key;
-    lhq.key.length = size;
-
-    lhq.key_hash = hash;
-    lhq.proto = &njs_lexer_hash_proto;
-
-    ret = njs_lvlhsh_find(vm->atom_hash, &lhq);
-    if (ret == NJS_OK) {
-        return lhq.value;
-    }
-
-    ret = njs_lvlhsh_find(&vm->atom_hash_shared_cell, &lhq);
-    if (ret == NJS_OK) {
-        return lhq.value;
-    }
-
-    entry = njs_mp_alloc(vm->atom_hash_mem_pool, sizeof(njs_value_t));
-    if (njs_slow_path(entry == NULL)) {
-        return NULL;
-    }
-
-    ret = njs_string_create(vm, entry, key, size);
-    if (njs_slow_path(ret != NJS_OK)) {
-        return NULL;
-    }
-
-    entry->string.atom_id = (*vm->atom_hash_atom_id)++;
-    if (entry->string.atom_id >= 0x80000000) {
-        return NULL;
-    }
-    entry->string.token_type = 0;
-
-    lhq.value = entry;
-    lhq.pool = vm->atom_hash_mem_pool;
-
-    ret = njs_lvlhsh_insert(vm->atom_hash, &lhq);
-    if (njs_slow_path(ret != NJS_OK)) {
-        return NULL;
-    }
-
-    return entry;
-}
-
-
-static njs_int_t
 njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token)
 {
-    u_char                           *p, c;
-    uint32_t                         hash_id;
-    const njs_value_t                *entry;
+    u_char             *p, c;
+    uint32_t           hash_id;
+    const njs_value_t  *entry;
 
     /* TODO: UTF-8 */
 
@@ -823,9 +734,9 @@ njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token)
     token->text.length = p - token->text.start;
     lexer->start = p;
 
-    entry = njs_lexer_keyword_find(lexer->vm, token->text.start,
-                                   token->text.length, token->text.length,
-                                   hash_id);
+    entry = njs_atom_find_or_add(lexer->vm, token->text.start,
+                                 token->text.length, token->text.length,
+                                 hash_id);
     if (njs_slow_path(entry == NULL)) {
         return NJS_ERROR;
     }
@@ -838,9 +749,8 @@ njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token)
         token->type = entry->string.token_id;
         token->keyword_type = entry->string.token_type;
     }
-    token->atom_id = entry->atom_id;
 
-    token->unique_id = (uintptr_t) entry;
+    token->atom_id = entry->atom_id;
 
     return NJS_OK;
 }

@@ -100,7 +100,7 @@ njs_text_encoder_encode(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
         }
 
-        (void) njs_string_prop(&prop, input);
+        (void) njs_string_prop(vm, &prop, input);
 
         if (prop.length != 0) {
             return njs_text_encoder_encode_utf8(vm, &prop, retval);
@@ -164,6 +164,7 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_int_t             ret;
     njs_str_t             str;
     njs_value_t           *this, *input, *dest, value, read, written;
+    njs_object_t          *object;
     const u_char          *start, *end;
     njs_typed_array_t     *array;
     njs_unicode_decode_t  ctx;
@@ -192,7 +193,7 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    njs_string_get(input, &str);
+    njs_string_get(vm, input, &str);
 
     start = str.start;
     end = start + str.length;
@@ -225,18 +226,36 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         to = njs_utf8_encode(to, cp);
     }
 
-    return njs_vm_object_alloc(vm, retval, &njs_atom.vs_read, &read,
-                               &njs_atom.vs_written, &written, NULL);
+    object = njs_object_alloc(vm);
+    if (njs_slow_path(object == NULL)) {
+        return NJS_ERROR;
+    }
+
+    njs_set_object(retval, object);
+
+    ret = njs_object_prop_define(vm, retval, NJS_ATOM_read, &read,
+                                 NJS_OBJECT_PROP_VALUE_CW);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    ret = njs_object_prop_define(vm, retval, NJS_ATOM_written, &written,
+                                 NJS_OBJECT_PROP_VALUE_CW);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    return NJS_OK;
 }
 
 
-static const njs_object_propi_t  njs_text_encoder_properties[] =
+static const njs_object_prop_init_t  njs_text_encoder_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(encoding, njs_strval(utf_8), 0),
+    NJS_DECLARE_PROP_VALUE(encoding, njs_ascii_strval("utf-8"), 0),
 
     NJS_DECLARE_PROP_NATIVE(encode, njs_text_encoder_encode, 0, 0),
 
@@ -251,11 +270,11 @@ static const njs_object_init_t  njs_text_encoder_init = {
 };
 
 
-static const njs_object_propi_t  njs_text_encoder_constructor_properties[] =
+static const njs_object_prop_init_t  njs_text_encoder_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
-    NJS_DECLARE_PROP_NAME(TextEncoder),
+    NJS_DECLARE_PROP_NAME("TextEncoder"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),
@@ -340,7 +359,7 @@ njs_text_decoder_arg_encoding(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    njs_string_get(value, &str);
+    njs_string_get(vm, value, &str);
 
     for (label = &njs_encoding_labels[0]; label->name.length != 0; label++) {
         if (njs_strstr_eq(&str, &label->name)) {
@@ -376,16 +395,14 @@ njs_text_decoder_arg_options(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_fatal),
-                             &retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_fatal, &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
     data->fatal = njs_bool(&retval);
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_ignoreBOM),
-                             &retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_ignoreBOM, &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -411,7 +428,7 @@ njs_text_decoder_encoding(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused
 
     switch (data->encoding) {
     case NJS_ENCODING_UTF8:
-        *retval = njs_atom.vs_utf_8;
+        njs_atom_to_value(vm, retval, NJS_ATOM_utf_8);
         break;
 
     default:
@@ -521,8 +538,7 @@ njs_text_decoder_decode(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return NJS_ERROR;
         }
 
-        ret = njs_value_property(vm, options,
-                                 njs_value_arg(&njs_atom.vs_stream), retval);
+        ret = njs_value_property(vm, options, NJS_ATOM_stream, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }
@@ -562,7 +578,7 @@ njs_text_decoder_decode(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_text_decoder_properties[] =
+static const njs_object_prop_init_t  njs_text_decoder_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -586,11 +602,11 @@ static const njs_object_init_t  njs_text_decoder_init = {
 };
 
 
-static const njs_object_propi_t  njs_text_decoder_constructor_properties[] =
+static const njs_object_prop_init_t  njs_text_decoder_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
-    NJS_DECLARE_PROP_NAME(TextDecoder),
+    NJS_DECLARE_PROP_NAME("TextDecoder"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),

@@ -219,12 +219,6 @@ typedef enum {
 
 
 typedef struct {
-    njs_str_t                       name;
-} njs_lexer_entry_t;
-
-
-typedef struct {
-    njs_lexer_entry_t               entry;
     njs_token_type_t                type;
     njs_bool_t                      reserved;
 } njs_keyword_t;
@@ -244,7 +238,6 @@ typedef struct {
     njs_keyword_type_t              keyword_type;
     uint32_t                        line;
     uint32_t                        atom_id;
-    uintptr_t                       unique_id;
     njs_str_t                       text;
     double                          number;
     njs_queue_link_t                link;
@@ -262,7 +255,6 @@ typedef struct {
     uint32_t                        line;
     njs_str_t                       file;
 
-    njs_mp_t                        *mem_pool;
     njs_vm_t                        *vm;
 
     u_char                          *start;
@@ -289,8 +281,6 @@ njs_int_t njs_lexer_in_stack_push(njs_lexer_t *lexer);
 void njs_lexer_in_stack_pop(njs_lexer_t *lexer);
 void njs_lexer_in_fail_set(njs_lexer_t *lexer, njs_int_t flag);
 njs_int_t njs_lexer_in_fail_get(njs_lexer_t *lexer);
-njs_value_t *njs_lexer_keyword_find(njs_vm_t *vm, u_char *key, size_t size,
-    size_t length, uint32_t hash);
 
 
 const njs_lexer_keyword_entry_t *njs_lexer_keyword(const u_char *key,
@@ -299,9 +289,12 @@ njs_int_t njs_lexer_keywords(njs_arr_t *array);
 
 
 njs_inline void
-njs_lexer_entry(uintptr_t unique_id, njs_lexer_entry_t *lex_entry)
+njs_lexer_entry(njs_vm_t *vm, uintptr_t atom_id, njs_str_t *entry)
 {
-    njs_string_get((njs_value_t *) unique_id, &lex_entry->name);
+    njs_value_t  value;
+
+    njs_atom_to_value(vm, &value, atom_id);
+    njs_string_get(vm, &value, entry);
 }
 
 
@@ -363,9 +356,5 @@ njs_lexer_token_is_identifier_reference(njs_lexer_token_t *token)
 {
     return njs_lexer_token_is_binding_identifier(token);
 }
-
-
-extern const njs_lvlhsh_proto_t  njs_lexer_hash_proto;
-
 
 #endif /* _NJS_LEXER_H_INCLUDED_ */

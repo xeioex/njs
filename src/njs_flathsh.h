@@ -88,6 +88,11 @@ njs_hash_elts(njs_flathsh_descr_t *h)
  */
 NJS_EXPORT njs_int_t njs_flathsh_find(const njs_flathsh_t *fh,
     njs_flathsh_query_t *fhq);
+/*
+ * The same as njs_flathsh_find(), but for hashes with unique keys.
+ */
+NJS_EXPORT njs_int_t njs_flathsh_unique_find(const njs_flathsh_t *fh,
+    njs_flathsh_query_t *fhq);
 
 /*
  * njs_flathsh_insert() adds a hash element.  If the element is already
@@ -106,6 +111,11 @@ NJS_EXPORT njs_int_t njs_flathsh_find(const njs_flathsh_t *fh,
  */
 NJS_EXPORT njs_int_t njs_flathsh_insert(njs_flathsh_t *fh,
     njs_flathsh_query_t *fhq);
+/*
+ * The same as njs_flathsh_insert(), but for hashes with unique keys.
+ */
+NJS_EXPORT njs_int_t njs_flathsh_unique_insert(njs_flathsh_t *fh,
+    njs_flathsh_query_t *fhq);
 
 /*
  * njs_flathsh_delete() deletes a hash element.  If the element has been
@@ -116,6 +126,11 @@ NJS_EXPORT njs_int_t njs_flathsh_insert(njs_flathsh_t *fh,
  * The optional njs_flathsh_query_t fields: pool.
  */
 NJS_EXPORT njs_int_t njs_flathsh_delete(njs_flathsh_t *fh,
+    njs_flathsh_query_t *fhq);
+/*
+ * The same as njs_flathsh_delete(), but for hashes with unique keys.
+ */
+NJS_EXPORT njs_int_t njs_flathsh_unique_delete(njs_flathsh_t *fh,
     njs_flathsh_query_t *fhq);
 
 
@@ -130,7 +145,7 @@ typedef struct {
     } while (0)
 
 
-NJS_EXPORT void *njs_flathsh_each(const njs_flathsh_t *fh,
+NJS_EXPORT njs_flathsh_elt_t *njs_flathsh_each(const njs_flathsh_t *fh,
     njs_flathsh_each_t *fhe);
 
 /*
@@ -166,7 +181,19 @@ typedef struct njs_flathsh_proto_s  njs_lvlhsh_proto_t;
 #define njs_lvlhsh_insert(lh, lhq) njs_flathsh_insert(lh, lhq)
 #define njs_lvlhsh_delete(lh, lhq) njs_flathsh_delete(lh, lhq)
 #define njs_lvlhsh_each_init(lhe, _proto)  njs_flathsh_each_init(lhe, _proto)
-#define njs_lvlhsh_each(lh, lhe) njs_flathsh_each(lh, lhe)
+
+njs_inline void *
+njs_lvlhsh_each(const njs_flathsh_t *lh, njs_flathsh_each_t *lhe)
+{
+    njs_flathsh_elt_t  *e;
+
+    e = njs_flathsh_each(lh, lhe);
+    if (e == NULL) {
+        return NULL;
+    }
+
+    return e->value;
+}
 
 
 #endif /* _NJS_FLATHSH_H_INCLUDED_ */

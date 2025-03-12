@@ -39,7 +39,7 @@ typedef enum {
 
 
 struct njs_object_init_s {
-    const njs_object_propi_t    *properties;
+    const njs_object_prop_init_t    *properties;
     njs_uint_t                  items;
 };
 
@@ -74,15 +74,15 @@ njs_array_t *njs_object_own_enumerate(njs_vm_t *vm, const njs_object_t *object,
 njs_int_t njs_object_traverse(njs_vm_t *vm, njs_object_t *object, void *ctx,
     njs_object_traverse_cb_t cb);
 njs_int_t njs_object_make_shared(njs_vm_t *vm, njs_object_t *object);
-njs_int_t njs_object_hash_create(njs_vm_t *vm, njs_flathsh_obj_t *hash,
-    const njs_object_propi_t *prop, njs_uint_t n);
+njs_int_t njs_object_hash_create(njs_vm_t *vm, njs_flathsh_t *hash,
+    const njs_object_prop_init_t *prop, njs_uint_t n);
 njs_int_t njs_primitive_prototype_get_proto(njs_vm_t *vm,
     njs_object_prop_t *prop, uint32_t unused, njs_value_t *value,
     njs_value_t *setval, njs_value_t *retval);
 njs_int_t njs_object_prototype_create(njs_vm_t *vm, njs_object_prop_t *prop,
     uint32_t unused, njs_value_t *value, njs_value_t *setval,
     njs_value_t *retval);
-njs_value_t *njs_property_prototype_create(njs_vm_t *vm, njs_flathsh_obj_t *hash,
+njs_value_t *njs_property_prototype_create(njs_vm_t *vm, njs_flathsh_t *hash,
     njs_object_t *prototype);
 njs_int_t njs_object_prototype_proto(njs_vm_t *vm, njs_object_prop_t *prop,
     uint32_t unused, njs_value_t *value, njs_value_t *setval,
@@ -90,7 +90,7 @@ njs_int_t njs_object_prototype_proto(njs_vm_t *vm, njs_object_prop_t *prop,
 njs_int_t njs_object_prototype_create_constructor(njs_vm_t *vm,
     njs_object_prop_t *prop, uint32_t unused, njs_value_t *value,
     njs_value_t *setval, njs_value_t *retval);
-njs_value_t *njs_property_constructor_set(njs_vm_t *vm, njs_flathsh_obj_t *hash,
+njs_value_t *njs_property_constructor_set(njs_vm_t *vm, njs_flathsh_t *hash,
     njs_value_t *constructor);
 njs_int_t njs_object_to_string(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *retval);
@@ -103,11 +103,11 @@ njs_int_t njs_prop_private_copy(njs_vm_t *vm, njs_property_query_t *pq,
 njs_object_prop_t *njs_object_prop_alloc(njs_vm_t *vm,
     const njs_value_t *value, uint8_t attributes);
 njs_int_t njs_object_property(njs_vm_t *vm, njs_object_t *object,
-    njs_flathsh_obj_query_t *lhq, njs_value_t *retval);
+    njs_flathsh_query_t *lhq, njs_value_t *retval);
 njs_object_prop_t *njs_object_property_add(njs_vm_t *vm, njs_value_t *object,
-    njs_value_t *key, njs_bool_t replace);
+    uint32_t atom_id, njs_bool_t replace);
 njs_int_t njs_object_prop_define(njs_vm_t *vm, njs_value_t *object,
-    njs_value_t *name, njs_value_t *value, unsigned flags, uint32_t hash);
+    uint32_t atom_id, njs_value_t *value, uint32_t flags);
 njs_int_t njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
     njs_value_t *value, njs_value_t *setval);
 njs_int_t njs_object_get_prototype_of(njs_vm_t *vm, njs_value_t *args,
@@ -146,35 +146,34 @@ njs_inline njs_int_t
 njs_primitive_value_to_key(njs_vm_t *vm, njs_value_t *dst,
     const njs_value_t *src)
 {
-    const njs_value_t  *value;
-
     switch (src->type) {
-
     case NJS_NULL:
-        value = &njs_atom.vs_null;
-        break;
+        njs_atom_to_value(vm, dst, NJS_ATOM_null);
+        return NJS_OK;
 
     case NJS_UNDEFINED:
-        value = &njs_atom.vs_undefined;
-        break;
+        njs_atom_to_value(vm, dst, NJS_ATOM_undefined);
+        return NJS_OK;
 
     case NJS_BOOLEAN:
-        value = njs_is_true(src) ? &njs_atom.vs_true : &njs_atom.vs_false;
-        break;
+        if (njs_is_true(src)) {
+            njs_atom_to_value(vm, dst, NJS_ATOM_true);
+
+        } else {
+            njs_atom_to_value(vm, dst, NJS_ATOM_false);
+        }
+
+        return NJS_OK;
 
     case NJS_NUMBER:
     case NJS_SYMBOL:
     case NJS_STRING:
-        value = src;
-        break;
+        *dst = *src;
+        return NJS_OK;
 
     default:
         return NJS_ERROR;
     }
-
-    *dst = *value;
-
-    return NJS_OK;
 }
 
 
@@ -235,9 +234,41 @@ njs_key_string_get(njs_vm_t *vm, njs_value_t *key, njs_str_t *str)
         }
     }
 
-    njs_string_get(key, str);
+    njs_string_get(vm, key, str);
 
     return NJS_OK;
+}
+
+
+njs_inline njs_int_t
+njs_atom_string_get(njs_vm_t *vm, uint32_t atom_id, njs_str_t *str)
+{
+    njs_value_t  value;
+
+    if (njs_atom_to_value(vm, &value, atom_id) != NJS_OK) {
+        return NJS_ERROR;
+    }
+
+    njs_key_string_get(vm, &value, str);
+
+    return NJS_OK;
+}
+
+
+njs_inline njs_int_t
+njs_object_prop_define_val(njs_vm_t *vm, njs_value_t *object, njs_value_t *name,
+    njs_value_t *value, unsigned flags)
+{
+    njs_int_t  ret;
+
+    if (njs_value_atom(name) == NJS_ATOM_unknown) {
+        ret = njs_atom_atomize_key(vm, name);
+        if (ret != NJS_OK) {
+            return ret;
+        }
+    }
+
+    return njs_object_prop_define(vm, object, name->atom_id, value, flags);
 }
 
 
@@ -245,9 +276,9 @@ njs_inline njs_int_t
 njs_value_create_data_prop(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *name, njs_value_t *setval, uint32_t hash)
 {
-    return njs_object_prop_define(vm, value, name, setval,
-                                  NJS_OBJECT_PROP_CREATE
-                                  | NJS_OBJECT_PROP_VALUE_ECW, hash);
+    return njs_object_prop_define_val(vm, value, name, setval,
+                                      NJS_OBJECT_PROP_CREATE
+                                      | NJS_OBJECT_PROP_VALUE_ECW);
 }
 
 
@@ -270,8 +301,7 @@ njs_object_length_set(njs_vm_t *vm, njs_value_t *value, int64_t length)
 
     njs_value_number_set(&index, length);
 
-    return njs_value_property_set(vm, value, njs_value_arg(&njs_atom.vs_length),
-                                  &index);
+    return njs_value_property_set(vm, value, NJS_ATOM_length, &index);
 }
 
 
@@ -280,7 +310,7 @@ njs_object_string_tag(njs_vm_t *vm, njs_value_t *value, njs_value_t *tag)
 {
     njs_int_t  ret;
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vw_toStringTag), tag);
+    ret = njs_value_property(vm, value, NJS_ATOM_SYMBOL_toStringTag, tag);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }

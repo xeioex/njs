@@ -9,75 +9,61 @@
 #define _NJS_ATOM_H_INCLUDED_
 
 
-#ifdef NJS_DEF_VW
-    #undef NJS_DEF_VW
-    #undef NJS_DEF_VS
-#endif
-
-#define NJS_DEF_VW(name) \
-    const njs_value_t vw_ ## name;
-
-#define NJS_DEF_VS(name) \
-    const njs_value_t vs_ ## name;
-
-typedef struct {
-    #include <njs_atom_defs.h>
-} njs_atom_values_t;
-
-
-#ifdef NJS_DEF_VW
-    #undef NJS_DEF_VW
-    #undef NJS_DEF_VS
-#endif
-
-#define NJS_DEF_VW(name) \
-    NJS_ATOM_SYMBOL_ ## name,
-
-#define NJS_DEF_VS(name) \
-    NJS_ATOM_ ## name,
-
 enum {
-    #include <njs_atom_defs.h>
+#define NJS_DEF_STRING(name, _1, _2, _3) NJS_ATOM_ ## name,
+#define NJS_DEF_SYMBOL(name, str) NJS_ATOM_SYMBOL_ ## name,
+#include <njs_atom_defs.h>
     NJS_ATOM_SIZE,
+#undef NJS_DEF_SYMBOL
+#undef NJS_DEF_STRING
 };
 
 
-#include <njs_atom_map.h>
+uint32_t njs_atom_hash_init(njs_vm_t *vm);
+njs_int_t njs_atom_symbol_add(njs_vm_t *vm, njs_value_t *value);
+njs_value_t *njs_atom_find_or_add(njs_vm_t *vm, u_char *key, size_t size,
+    size_t length, uint32_t hash);
 
-njs_int_t njs_atom_hash_init(njs_vm_t *vm);
-njs_int_t njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value);
-njs_int_t njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value);
-
-extern const njs_atom_values_t    njs_atom;
-extern const njs_flathsh_proto_t  njs_atom_hash_proto;
 
 njs_inline njs_int_t
-njs_get_prop_name_by_atom_id(njs_vm_t *vm, njs_value_t *prop_name, uint32_t atom_id)
+njs_atom_to_value(njs_vm_t *vm, njs_value_t *dst, uint32_t atom_id)
 {
-    double num;
+    size_t               size;
+    double               num;
+    njs_flathsh_descr_t  *h;
+    u_char               buf[128];
 
-    if (atom_id & 0x80000000) {
-        num = atom_id & 0x7FFFFFFF;
+    njs_assert(atom_id != NJS_ATOM_unknown);
 
-        size_t size;
-        u_char buf[128];
-
+    if (njs_atom_is_number(atom_id)) {
+        num = njs_atom_number(atom_id);
         size = njs_dtoa(num, (char *) buf);
-        njs_int_t ret = njs_string_new(vm, prop_name, buf, size, size);
-        if (ret != NJS_OK) {
+
+        if (njs_string_new(vm, dst, buf, size, size) != NJS_OK) {
             return NJS_ERROR;
         }
+
+        dst->atom_id = atom_id;
+
         return NJS_OK;
-
     }
 
-    if (atom_id < vm->atom_hash_atom_id_shared_cell) {
-        *prop_name = *((njs_value_t *)(njs_hash_elts(
-                      (&vm->atom_hash_shared_cell)->slot))[atom_id].value);
+    if (atom_id < vm->shared_atom_count) {
+        h = vm->atom_hash_shared.slot;
+
+        njs_assert(atom_id < h->elts_count);
+
+        *dst = *((njs_value_t *) njs_hash_elts(h)[atom_id].value);
+
     } else {
-        *prop_name = *((njs_value_t *)(njs_hash_elts(vm->atom_hash->slot))[
-                      atom_id - vm->atom_hash_atom_id_shared_cell].value);
+        h = vm->atom_hash_current->slot;
+        atom_id -= vm->shared_atom_count;
+
+        njs_assert(atom_id < h->elts_count);
+
+        *dst = *((njs_value_t *) njs_hash_elts(h)[atom_id].value);
     }
+
     return NJS_OK;
 }
 

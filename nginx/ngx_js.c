@@ -2646,11 +2646,11 @@ ngx_js_ext_console_time(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 return ret;
             }
 
-            njs_value_string_get(value, &name);
+            njs_value_string_get(vm, value, &name);
         }
 
     } else {
-        njs_value_string_get(value, &name);
+        njs_value_string_get(vm, value, &name);
     }
 
     console = njs_value_external(this);
@@ -2739,11 +2739,11 @@ ngx_js_ext_console_time_end(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 return ret;
             }
 
-            njs_value_string_get(value, &name);
+            njs_value_string_get(vm, value, &name);
         }
 
     } else {
-        njs_value_string_get(value, &name);
+        njs_value_string_get(vm, value, &name);
     }
 
     console = njs_value_external(this);

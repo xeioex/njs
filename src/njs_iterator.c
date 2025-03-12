@@ -175,7 +175,7 @@ njs_iterator_prototype_get_this(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_iterator_prototype_properties[] =
+static const njs_object_prop_init_t  njs_iterator_prototype_properties[] =
 {
     NJS_DECLARE_PROP_NATIVE(SYMBOL_iterator,
                             njs_iterator_prototype_get_this, 0, 0),
@@ -223,14 +223,12 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
 
     njs_set_object(retval, object);
 
-    prop_value = njs_object_property_add(vm, retval,
-                                         njs_value_arg(&njs_atom.vs_value), 0);
+    prop_value = njs_object_property_add(vm, retval, NJS_ATOM_value, 0);
     if (njs_slow_path(prop_value == NULL)) {
         return NJS_ERROR;
     }
 
-    prop_done = njs_object_property_add(vm, retval,
-                                        njs_value_arg(&njs_atom.vs_done), 0);
+    prop_done = njs_object_property_add(vm, retval, NJS_ATOM_done, 0);
     if (njs_slow_path(prop_done == NULL)) {
         return NJS_ERROR;
     }
@@ -253,13 +251,13 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_array_iterator_prototype_properties[] =
+static const njs_object_prop_init_t  njs_array_iterator_prototype_properties[] =
 {
     NJS_DECLARE_PROP_NATIVE(next, njs_array_iterator_prototype_next,
                             0, NJS_DATA_TAG_ARRAY_ITERATOR),
 
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag,
-                           njs_strval(Array_Iterator),
+                           njs_ascii_strval("Array Iterator"),
                            NJS_OBJECT_PROP_VALUE_C),
 };
 
@@ -337,7 +335,7 @@ njs_object_iterate(njs_vm_t *vm, njs_iterator_args_t *args,
             value = njs_object_value(value);
         }
 
-        length = njs_string_prop(&string_prop, value);
+        length = njs_string_prop(vm, &string_prop, value);
 
         p = string_prop.start;
         end = p + string_prop.size;
@@ -494,7 +492,7 @@ njs_object_iterate_reverse(njs_vm_t *vm, njs_iterator_args_t *args,
             value = njs_object_value(value);
         }
 
-        length = njs_string_prop(&string_prop, value);
+        length = njs_string_prop(vm, &string_prop, value);
         end = string_prop.start + string_prop.size;
 
         if ((size_t) length == string_prop.size) {
@@ -612,7 +610,8 @@ njs_iterator_object_handler(njs_vm_t *vm, njs_iterator_handler_t handler,
     njs_value_t  prop, *entry;
 
     if (key != NULL) {
-        ret = njs_value_property(vm, njs_value_arg(&args->value), key, &prop);
+        ret = njs_value_property_val(vm, njs_value_arg(&args->value), key,
+                                     &prop);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }

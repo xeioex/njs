@@ -9,7 +9,7 @@
 
 
 static njs_int_t njs_object_property_query(njs_vm_t *vm,
-    njs_property_query_t *pq, njs_object_t *object, njs_value_t *key);
+    njs_property_query_t *pq, njs_object_t *object, uint32_t atom_id);
 static njs_int_t njs_array_property_query(njs_vm_t *vm,
     njs_property_query_t *pq, njs_array_t *array, uint32_t index);
 static njs_int_t njs_typed_array_property_query(njs_vm_t *vm,
@@ -37,14 +37,14 @@ njs_int_t
 njs_value_to_primitive(njs_vm_t *vm, njs_value_t *dst, njs_value_t *value,
     njs_uint_t hint)
 {
-    njs_int_t                ret;
-    njs_uint_t               tries;
-    njs_value_t              method, retval;
-    njs_flathsh_obj_query_t  lhq;
+    njs_int_t            ret;
+    njs_uint_t           tries;
+    njs_value_t          method, retval;
+    njs_flathsh_query_t  lhq;
 
-    static const njs_value_t *hashes[] = {
-        &njs_atom.vs_valueOf,
-        &njs_atom.vs_toString,
+    static const uint32_t atoms[] = {
+        NJS_ATOM_valueOf,
+        NJS_ATOM_toString,
     };
 
     if (njs_is_primitive(value)) {
@@ -61,7 +61,7 @@ njs_value_to_primitive(njs_vm_t *vm, njs_value_t *dst, njs_value_t *value,
         if (njs_is_object(value) && tries < 2) {
             hint ^= tries++;
 
-            lhq.key_hash = hashes[hint]->atom_id;
+            lhq.key_hash = atoms[hint];
 
             ret = njs_object_property(vm, njs_object(value), &lhq, &method);
 
@@ -169,7 +169,7 @@ njs_value_own_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags)
             dst = values->start;
 
             while (k < end) {
-                ret = njs_value_property(vm, value, k++, dst++);
+                ret = njs_value_property_val(vm, value, k++, dst++);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NULL;
                 }
@@ -196,7 +196,7 @@ njs_value_own_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags)
                     return NULL;
                 }
 
-                ret = njs_value_property(vm, value, k, &entry->start[1]);
+                ret = njs_value_property_val(vm, value, k, &entry->start[1]);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NULL;
                 }
@@ -231,8 +231,7 @@ njs_value_of(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
         return NJS_DECLINED;
     }
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_valueOf),
-                             retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_valueOf, retval);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
@@ -252,7 +251,7 @@ njs_value_length(njs_vm_t *vm, njs_value_t *value, int64_t *length)
     njs_string_prop_t  string_prop;
 
     if (njs_is_string(value)) {
-        *length = njs_string_prop(&string_prop, value);
+        *length = njs_string_prop(vm, &string_prop, value);
 
     } else if (njs_is_primitive(value)) {
         *length = 0;
@@ -536,6 +535,132 @@ njs_value_is_data_view(const njs_value_t *value)
 }
 
 
+njs_inline njs_int_t
+njs_object_property_query(njs_vm_t *vm, njs_property_query_t *pq,
+    njs_object_t *object, uint32_t atom_id)
+{
+    double              num;
+    njs_int_t           ret;
+    njs_bool_t          own;
+    njs_value_t         key;
+    njs_array_t         *array;
+    njs_object_t        *proto;
+    njs_object_prop_t   *prop;
+    njs_typed_array_t   *tarray;
+    njs_object_value_t  *ov;
+
+    pq->lhq.proto = &njs_object_hash_proto;
+
+    own = pq->own;
+    pq->own = 1;
+
+    proto = object;
+
+    do {
+        switch (proto->type) {
+        case NJS_ARRAY:
+            array = (njs_array_t *) proto;
+
+            if (njs_fast_path(njs_atom_is_number(atom_id))) {
+                ret = njs_array_property_query(vm, pq, array,
+                                               njs_atom_number(atom_id));
+                if (njs_fast_path(ret != NJS_DECLINED)) {
+                    return (ret == NJS_DONE) ? NJS_DECLINED : ret;
+                }
+            }
+
+            ret = njs_atom_to_value(vm, &key, atom_id);
+            if (njs_slow_path(ret != NJS_OK)) {
+                return ret;
+            }
+
+            num = njs_key_to_index(&key);
+
+            if (njs_key_is_integer_index(num, &key)) {
+                ret = njs_array_property_query(vm, pq, array, num);
+                if (njs_fast_path(ret != NJS_DECLINED)) {
+                    return (ret == NJS_DONE) ? NJS_DECLINED : ret;
+                }
+            }
+
+            break;
+
+        case NJS_TYPED_ARRAY:
+            if (njs_fast_path(njs_atom_is_number(atom_id))) {
+                tarray = (njs_typed_array_t *) proto;
+                return njs_typed_array_property_query(vm, pq, tarray,
+                                                      njs_atom_number(atom_id));
+            }
+
+            ret = njs_atom_to_value(vm, &key, atom_id);
+            if (njs_slow_path(ret != NJS_OK)) {
+                return ret;
+            }
+
+            num = njs_key_to_index(&key);
+
+            if (!isnan(num)) {
+                return NJS_DECLINED;
+            }
+
+            break;
+
+        case NJS_OBJECT_VALUE:
+            ov = (njs_object_value_t *) proto;
+            if (!njs_is_string(&ov->value)) {
+                break;
+            }
+
+            if (njs_fast_path(njs_atom_is_number(atom_id))) {
+                ov = (njs_object_value_t *) proto;
+                ret = njs_string_property_query(vm, pq, &ov->value,
+                                                njs_atom_number(atom_id));
+                if (njs_fast_path(ret != NJS_DECLINED)) {
+                    return ret;
+                }
+            }
+
+            break;
+
+        default:
+            break;
+        }
+
+        pq->lhq.key_hash = atom_id;
+
+        ret = njs_flathsh_unique_find(&proto->hash, &pq->lhq);
+
+        if (ret == NJS_OK) {
+            prop = pq->lhq.value;
+
+            if (prop->type != NJS_WHITEOUT) {
+                return ret;
+            }
+
+            if (pq->own) {
+                pq->own_whiteout = &proto->hash;
+            }
+
+        } else {
+            ret = njs_flathsh_unique_find(&proto->shared_hash, &pq->lhq);
+            if (ret == NJS_OK) {
+                return njs_prop_private_copy(vm, pq, proto);
+            }
+        }
+
+        if (own) {
+            return NJS_DECLINED;
+        }
+
+        pq->own = 0;
+        proto = proto->__proto__;
+
+    } while (proto != NULL);
+
+    return NJS_DECLINED;
+}
+
+
 /*
  * ES5.1, 8.12.1: [[GetOwnProperty]], [[GetProperty]].
  * The njs_property_query() returns values
@@ -555,15 +680,15 @@ njs_value_is_data_view(const njs_value_t *value)
 
 njs_int_t
 njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
-    njs_value_t *key)
+    uint32_t atom_id)
 {
-    double          num;
     uint32_t        index;
     njs_int_t       ret;
+    njs_value_t     key;
     njs_object_t    *obj;
     njs_function_t  *function;
 
-    njs_assert(njs_is_index_or_key(key));
+    njs_assert(atom_id != 0);
 
     switch (value->type) {
     case NJS_BOOLEAN:
@@ -574,11 +699,9 @@ njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
         break;
 
     case NJS_STRING:
-        if (njs_fast_path(!njs_is_null_or_undefined_or_boolean(key))) {
-            num = njs_key_to_index(key);
-            if (njs_fast_path(njs_key_is_integer_index(num, key))) {
-                return njs_string_property_query(vm, pq, value, num);
-            }
+        if (njs_atom_is_number(atom_id)) {
+            return njs_string_property_query(vm, pq, value,
+                                             njs_atom_number(atom_id));
         }
 
         obj = &vm->string_object;
@@ -608,10 +731,10 @@ njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
     case NJS_UNDEFINED:
     case NJS_NULL:
     default:
-        ret = njs_primitive_value_to_string(vm, &pq->key, key);
+        ret = njs_atom_to_value(vm, &key, atom_id);
 
         if (njs_fast_path(ret == NJS_OK)) {
-            njs_string_get(&pq->key, &pq->lhq.key);
+            njs_string_get(vm, &key, &pq->lhq.key);
             njs_type_error(vm, "cannot get property \"%V\" of %s",
                            &pq->lhq.key, njs_is_null(value) ? "null"
                                                             : "undefined");
@@ -624,142 +747,13 @@ njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
         return NJS_ERROR;
     }
 
+    ret = njs_object_property_query(vm, pq, obj, atom_id);
 
-    ret = njs_primitive_value_to_key(vm, &pq->key, key);
-
-    if (njs_fast_path(ret == NJS_OK)) {
-        if (njs_is_symbol(key)) {
-            pq->lhq.key_hash = njs_symbol_key(key);
-
-        } else {
-            if (key->atom_id == 0) {
-                ret = njs_atom_atomize_key(vm, key);
-                if (ret != NJS_OK) {
-                    return ret;
-                }
-            }
-
-            pq->lhq.key_hash = key->atom_id;
-        }
-
-        ret = njs_object_property_query(vm, pq, obj, key);
-
-        if (njs_slow_path(ret == NJS_DECLINED && obj->slots != NULL)) {
-            return njs_external_property_query(vm, pq, value);
-        }
+    if (njs_slow_path(ret == NJS_DECLINED && obj->slots != NULL)) {
+        return njs_external_property_query(vm, pq, value);
     }
 
     return ret;
-}
-
-
-static njs_int_t
-njs_object_property_query(njs_vm_t *vm, njs_property_query_t *pq,
-    njs_object_t *object, njs_value_t *key)
-{
-    double              num;
-    njs_int_t           ret;
-    njs_bool_t          own;
-    njs_array_t         *array;
-    njs_object_t        *proto;
-    njs_object_prop_t   *prop;
-    njs_typed_array_t   *tarray;
-    njs_object_value_t  *ov;
-
-    pq->lhq.proto = &njs_object_hash_proto;
-
-    own = pq->own;
-    pq->own = 1;
-
-    proto = object;
-
-    do {
-        switch (proto->type) {
-        case NJS_ARRAY:
-            array = (njs_array_t *) proto;
-            num = njs_key_to_index(key);
-
-            if (njs_fast_path(njs_key_is_integer_index(num, key))) {
-                ret = njs_array_property_query(vm, pq, array, num);
-                if (njs_fast_path(ret != NJS_DECLINED)) {
-                    return (ret == NJS_DONE) ? NJS_DECLINED : ret;
-                }
-            }
-
-            break;
-
-        case NJS_TYPED_ARRAY:
-            num = njs_key_to_index(key);
-            if (njs_fast_path(njs_key_is_integer_index(num, key))) {
-                tarray = (njs_typed_array_t *) proto;
-                return njs_typed_array_property_query(vm, pq, tarray, num);
-            }
-
-            if (!isnan(num)) {
-                return NJS_DECLINED;
-            }
-
-            break;
-
-        case NJS_OBJECT_VALUE:
-            ov = (njs_object_value_t *) proto;
-            if (!njs_is_string(&ov->value)) {
-                break;
-            }
-
-            num = njs_key_to_index(key);
-            if (njs_fast_path(njs_key_is_integer_index(num, key))) {
-                ov = (njs_object_value_t *) proto;
-                ret = njs_string_property_query(vm, pq, &ov->value, num);
-                if (njs_fast_path(ret != NJS_DECLINED)) {
-                    return ret;
-                }
-            }
-
-            break;
-
-        default:
-            break;
-        }
-
-        if (key->atom_id == 0) {
-            ret = njs_atom_atomize_key(vm, key);
-            if (ret != NJS_OK) {
-                return ret;
-            }
-        }
-        pq->lhq.key_hash = key->atom_id;
-
-        ret = njs_flathsh_obj_find(&proto->hash, &pq->lhq);
-
-        if (ret == NJS_OK) {
-            prop = pq->lhq.value;
-
-            if (prop->type != NJS_WHITEOUT) {
-                return ret;
-            }
-
-            if (pq->own) {
-                pq->own_whiteout = &proto->hash;
-            }
-
-        } else {
-            ret = njs_flathsh_obj_find(&proto->shared_hash, &pq->lhq);
-            if (ret == NJS_OK) {
-                return njs_prop_private_copy(vm, pq, proto);
-            }
-        }
-
-        if (own) {
-            return NJS_DECLINED;
-        }
-
-        pq->own = 0;
-        proto = proto->__proto__;
-
-    } while (proto != NULL);
-
-    return NJS_DECLINED;
 }
 
 
@@ -826,15 +820,9 @@ njs_array_property_query(njs_vm_t *vm, njs_property_query_t *pq,
             }
         }
 
-        if (pq->key.atom_id == 0) {
-            ret = njs_atom_atomize_key(vm, &pq->key);
-            if (ret != NJS_OK) {
-                return ret;
-            }
-        }
-        pq->lhq.key_hash = pq->key.atom_id;
+        pq->lhq.key_hash = njs_number_atom(index);
 
-        ret = njs_flathsh_obj_find(&array->object.hash, &pq->lhq);
+        ret = njs_flathsh_unique_find(&array->object.hash, &pq->lhq);
         if (ret == NJS_OK) {
             prop = pq->lhq.value;
 
@@ -929,7 +917,6 @@ static njs_int_t
 njs_string_property_query(njs_vm_t *vm, njs_property_query_t *pq,
     njs_value_t *object, uint32_t index)
 {
-    njs_int_t          ret;
     njs_slice_prop_t   slice;
     njs_object_prop_t  *prop;
     njs_string_prop_t  string;
@@ -938,7 +925,7 @@ njs_string_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 
     slice.start = index;
     slice.length = 1;
-    slice.string_length = njs_string_prop(&string, object);
+    slice.string_length = njs_string_prop(vm, &string, object);
 
     if (slice.start < slice.string_length) {
         /*
@@ -951,18 +938,7 @@ njs_string_property_query(njs_vm_t *vm, njs_property_query_t *pq,
         prop->writable = 0;
         prop->enumerable = 1;
         prop->configurable = 0;
-
         pq->lhq.value = prop;
-
-        if (pq->query != NJS_PROPERTY_QUERY_GET) {
-            /* pq->lhq.key is used by NJS_VMCODE_PROPERTY_SET for TypeError */
-            ret = njs_uint32_to_string(vm, &pq->key, index);
-            if (njs_slow_path(ret != NJS_OK)) {
-                return NJS_ERROR;
-            }
-
-            njs_string_get(&pq->key, &pq->lhq.key);
-        }
 
         return NJS_OK;
     }
@@ -1033,10 +1009,9 @@ njs_external_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 
 
 njs_int_t
-njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_property(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *retval)
 {
-    double                num;
     uint32_t              index;
     njs_int_t             ret;
     njs_array_t          *array;
@@ -1044,16 +1019,8 @@ njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
     njs_typed_array_t     *tarray;
     njs_property_query_t  pq;
 
-    njs_assert(njs_is_index_or_key(key));
-
-    if (njs_fast_path(njs_is_number(key))) {
-        num = njs_number(key);
-
-        if (njs_slow_path(!njs_number_is_integer_index(num))) {
-            goto slow_path;
-        }
-
-        index = (uint32_t) num;
+    if (njs_fast_path(njs_atom_is_number(atom_id))) {
+        index = njs_atom_number(atom_id);
 
         if (njs_is_typed_array(value)) {
             tarray = njs_typed_array(value);
@@ -1095,9 +1062,9 @@ njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 
 slow_path:
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query(vm, &pq, value, atom_id);
 
     switch (ret) {
 
@@ -1123,7 +1090,7 @@ slow_path:
         case NJS_PROPERTY_HANDLER:
             pq.scratch = *prop;
             prop = &pq.scratch;
-            ret = njs_prop_handler(prop)(vm, prop, pq.lhq.key_hash, value, NULL,
+            ret = njs_prop_handler(prop)(vm, prop, atom_id, value, NULL,
                                          njs_prop_value(prop));
 
             if (njs_slow_path(ret != NJS_OK)) {
@@ -1164,31 +1131,21 @@ slow_path:
 
 
 njs_int_t
-njs_value_property_set(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_property_set(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *setval)
 {
-    double                    num;
-    uint32_t                  index;
-    njs_int_t                 ret;
-    njs_array_t               *array;
-    njs_value_t               retval;
-    njs_object_prop_t         *prop;
-    njs_typed_array_t         *tarray;
-    njs_property_query_t      pq;
-    njs_flathsh_obj_elt_t     *elt;
-    njs_flathsh_obj_descr_t   *h;
+    uint32_t              index;
+    njs_int_t             ret;
+    njs_array_t           *array;
+    njs_value_t           retval, key;
+    njs_object_prop_t     *prop;
+    njs_typed_array_t     *tarray;
+    njs_flathsh_elt_t     *elt;
+    njs_flathsh_descr_t   *h;
+    njs_property_query_t  pq;
 
-    njs_assert(njs_is_index_or_key(key));
-
-    if (njs_fast_path(njs_is_number(key))) {
-
-        num = njs_number(key);
-
-        if (njs_slow_path(!njs_number_is_integer_index(num))) {
-            goto slow_path;
-        }
-
-        index = (uint32_t) num;
+    if (njs_fast_path(njs_atom_is_number(atom_id))) {
+        index = njs_atom_number(atom_id);
 
         if (njs_is_typed_array(value)) {
             tarray = njs_typed_array(value);
@@ -1227,9 +1184,9 @@ slow_path:
         return NJS_ERROR;
     }
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 0, 0);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 0);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query(vm, &pq, value, atom_id);
 
     switch (ret) {
 
@@ -1238,7 +1195,7 @@ slow_path:
 
         if (njs_is_data_descriptor(prop)) {
             if (!prop->writable) {
-                njs_key_string_get(vm, &pq.key,  &pq.lhq.key);
+                njs_atom_string_get(vm, atom_id, &pq.lhq.key);
                 njs_type_error(vm,
                              "Cannot assign to read-only property \"%V\" of %s",
                                &pq.lhq.key, njs_type_string(value->type));
@@ -1251,7 +1208,7 @@ slow_path:
                                          value, setval, 1, &retval);
             }
 
-            njs_key_string_get(vm, &pq.key,  &pq.lhq.key);
+            njs_atom_string_get(vm, atom_id, &pq.lhq.key);
             njs_type_error(vm,
                      "Cannot set property \"%V\" of %s which has only a getter",
                            &pq.lhq.key, njs_type_string(value->type));
@@ -1259,7 +1216,7 @@ slow_path:
         }
 
         if (prop->type == NJS_PROPERTY_HANDLER) {
-            ret = njs_prop_handler(prop)(vm, prop, pq.lhq.key_hash, value,
+            ret = njs_prop_handler(prop)(vm, prop, atom_id, value,
                                          setval, &retval);
             if (njs_slow_path(ret != NJS_DECLINED)) {
                 return ret;
@@ -1270,8 +1227,7 @@ slow_path:
             switch (prop->type) {
             case NJS_PROPERTY:
                 if (njs_is_array(value)) {
-                    if (njs_slow_path(pq.lhq.key_hash ==
-                                      njs_atom.vs_length.atom_id)) {
+                    if (njs_slow_path(atom_id == NJS_ATOM_length)) {
                         return njs_array_length_set(vm, value, prop, setval);
                     }
                 }
@@ -1318,7 +1274,7 @@ slow_path:
 
             pq.lhq.pool = vm->mem_pool;
 
-            int rc = njs_flathsh_obj_delete(pq.own_whiteout, &pq.lhq);
+            int rc = njs_flathsh_unique_delete(pq.own_whiteout, &pq.lhq);
             if (rc != NJS_OK) {
                 return NJS_ERROR;
             }
@@ -1326,7 +1282,7 @@ slow_path:
             h = pq.own_whiteout->slot;
 
             if (h == NULL) {
-                h = njs_flathsh_obj_new(&pq.lhq);
+                h = njs_flathsh_new(&pq.lhq);
                 if (njs_slow_path(h == NULL)) {
                     return NJS_ERROR;
                 }
@@ -1334,7 +1290,7 @@ slow_path:
                 pq.own_whiteout->slot = h;
             }
 
-            elt = njs_flathsh_obj_add_elt(pq.own_whiteout, &pq.lhq);
+            elt = njs_flathsh_add_elt(pq.own_whiteout, &pq.lhq);
             if (njs_slow_path(elt == NULL)) {
                 return NJS_ERROR;
             }
@@ -1352,11 +1308,16 @@ slow_path:
         }
 
         if (njs_slow_path(pq.own && njs_is_typed_array(value)
-                          && njs_is_string(key)))
+                          && !njs_atom_is_number(atom_id)))
         {
-
             /* Integer-Indexed Exotic Objects [[DefineOwnProperty]]. */
-            if (!isnan(njs_string_to_index(key))) {
+
+            ret = njs_atom_to_value(vm, &key, atom_id);
+            if (njs_slow_path(ret != NJS_OK)) {
+                return ret;
+            }
+
+            if (!isnan(njs_string_to_index(&key))) {
                 return NJS_OK;
             }
         }
@@ -1373,13 +1334,6 @@ slow_path:
         goto fail;
     }
 
-    if (!pq.key.atom_id) {
-        ret = njs_atom_atomize_key(vm, &pq.key);
-        if (ret != NJS_OK) {
-            return NJS_ERROR;
-        }
-    }
-
     prop = njs_object_prop_alloc(vm, &njs_value_undefined, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
@@ -1387,12 +1341,10 @@ slow_path:
 
     pq.lhq.replace = 0;
     pq.lhq.value = prop;
-
-    pq.lhq.key_hash = pq.key.atom_id;
-
+    pq.lhq.key_hash = atom_id;
     pq.lhq.pool = vm->mem_pool;
 
-    ret = njs_flathsh_obj_insert(njs_object_hash(value), &pq.lhq); //??? njs_flathsh_obj_insert2 in inlines
+    ret = njs_flathsh_unique_insert(njs_object_hash(value), &pq.lhq);
     if (njs_slow_path(ret != NJS_OK)) {
         njs_internal_error(vm, "lvlhsh insert failed");
         return NJS_ERROR;
@@ -1406,7 +1358,7 @@ found:
 
 fail:
 
-    njs_key_string_get(vm, &pq.key, &pq.lhq.key);
+    njs_atom_string_get(vm, atom_id, &pq.lhq.key);
     njs_type_error(vm, "Cannot add property \"%V\", object is not extensible",
                    &pq.lhq.key);
 
@@ -1415,30 +1367,21 @@ fail:
 
 
 njs_int_t
-njs_value_property_delete(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_property_delete(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *removed, njs_bool_t thrw)
 {
-    double                num;
     uint32_t              index;
     njs_int_t             ret;
     njs_array_t           *array;
     njs_object_prop_t     *prop;
     njs_property_query_t  pq;
 
-    njs_assert(njs_is_index_or_key(key));
-
-    if (njs_fast_path(njs_is_number(key))) {
+    if (njs_fast_path(njs_atom_is_number(atom_id))) {
         if (njs_slow_path(!(njs_is_fast_array(value)))) {
             goto slow_path;
         }
 
-        num = njs_number(key);
-
-        if (njs_slow_path(!njs_number_is_integer_index(num))) {
-            goto slow_path;
-        }
-
-        index = (uint32_t) num;
+        index = (uint32_t) njs_atom_number(atom_id);
 
         array = njs_array(value);
 
@@ -1453,9 +1396,9 @@ njs_value_property_delete(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 
 slow_path:
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_DELETE, 0, 1);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_DELETE, 1);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query(vm, &pq, value, atom_id);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
@@ -1464,7 +1407,7 @@ slow_path:
 
     if (njs_slow_path(!prop->configurable)) {
         if (thrw) {
-            njs_key_string_get(vm, &pq.key,  &pq.lhq.key);
+            njs_atom_string_get(vm, atom_id, &pq.lhq.key);
             njs_type_error(vm, "Cannot delete property \"%V\" of %s",
                            &pq.lhq.key, njs_type_string(value->type));
             return NJS_ERROR;
@@ -1476,7 +1419,7 @@ slow_path:
     switch (prop->type) {
     case NJS_PROPERTY_HANDLER:
         if (njs_is_object(value) && njs_object_slots(value) != NULL) {
-            ret = njs_prop_handler(prop)(vm, prop, pq.lhq.key_hash, value, NULL,
+            ret = njs_prop_handler(prop)(vm, prop, atom_id, value, NULL,
                                          NULL);
             if (njs_slow_path(ret != NJS_DECLINED)) {
                 return ret;
@@ -1540,16 +1483,22 @@ njs_primitive_value_to_string(njs_vm_t *vm, njs_value_t *dst,
     switch (src->type) {
 
     case NJS_NULL:
-        value = &njs_atom.vs_null;
-        break;
+        njs_atom_to_value(vm, dst, NJS_ATOM_null);
+        return NJS_OK;
 
     case NJS_UNDEFINED:
-        value = &njs_atom.vs_undefined;
-        break;
+        njs_atom_to_value(vm, dst, NJS_ATOM_undefined);
+        return NJS_OK;
 
     case NJS_BOOLEAN:
-        value = njs_is_true(src) ? &njs_atom.vs_true : &njs_atom.vs_false;
-        break;
+        if (njs_is_true(src)) {
+            njs_atom_to_value(vm, dst, NJS_ATOM_true);
+
+        } else {
+            njs_atom_to_value(vm, dst, NJS_ATOM_false);
+        }
+
+        return NJS_OK;
 
     case NJS_NUMBER:
         return njs_number_to_string(vm, dst, src);
@@ -1606,7 +1555,7 @@ njs_primitive_value_to_chain(njs_vm_t *vm, njs_chb_t *chain,
         return NJS_ERROR;
 
     case NJS_STRING:
-        (void) njs_string_prop(&string, src);
+        (void) njs_string_prop(vm, &string, src);
         njs_chb_append(chain, string.start, string.size);
         return string.length;
 
@@ -1702,8 +1651,7 @@ njs_value_species_constructor(njs_vm_t *vm, njs_value_t *object,
     njs_int_t    ret;
     njs_value_t  constructor, retval;
 
-    ret = njs_value_property(vm, object, njs_value_arg(&njs_atom.vs_constructor),
-                             &constructor);
+    ret = njs_value_property(vm, object, NJS_ATOM_constructor, &constructor);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1717,8 +1665,8 @@ njs_value_species_constructor(njs_vm_t *vm, njs_value_t *object,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, &constructor,
-                             njs_value_arg(&njs_atom.vw_species), &retval);
+    ret = njs_value_property(vm, &constructor, NJS_ATOM_SYMBOL_species,
+                             &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1745,7 +1693,7 @@ default_constructor:
 
 
 njs_int_t
-njs_value_method(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_method(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *retval)
 {
     njs_int_t  ret;
@@ -1755,7 +1703,7 @@ njs_value_method(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
         return ret;
     }
 
-    ret = njs_value_property(vm, value, key, retval);
+    ret = njs_value_property(vm, value, atom_id, retval);
     if (njs_slow_path(ret != NJS_OK)) {
         return (ret == NJS_DECLINED) ? NJS_OK : ret;
     }

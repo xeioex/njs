@@ -26,11 +26,14 @@ njs_symbol_descriptive_string(njs_vm_t *vm, njs_value_t *dst,
 
     description = njs_symbol_description(value);
 
-    if (njs_is_undefined(description)) {
-        description = &njs_atom.vs_;
-    }
+    if (!njs_is_undefined(description)) {
+        (void) njs_string_prop(vm, &string, description);
 
-    (void) njs_string_prop(&string, description);
+    } else {
+        string.start = (u_char *) "";
+        string.size = 0;
+        string.length = 0;
+    }
 
     string.length += njs_length("Symbol()");
 
@@ -79,7 +82,7 @@ njs_symbol_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_value_assign(name, value);
     njs_set_symbol(retval, 0, name);
 
-    ret = njs_atom_atomize_key_s(vm, retval);
+    ret = njs_atom_symbol_add(vm, retval);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -113,7 +116,7 @@ njs_symbol_for(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         node = (njs_rb_symbol_node_t *) rb_node;
 
         if (njs_is_string(&node->name)
-            && njs_string_cmp(value, &node->name) == 0)
+            && njs_string_cmp(vm, value, &node->name) == 0)
         {
             njs_set_symbol(retval, node->key, &node->name);
             return NJS_OK;
@@ -129,12 +132,13 @@ njs_symbol_for(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     njs_value_assign(&node->name, value);
-
     njs_set_symbol(retval, 0, &node->name);
-    ret = njs_atom_atomize_key_s(vm, retval);
+
+    ret = njs_atom_symbol_add(vm, retval);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
+
     node->key = retval->atom_id;
 
     njs_rbtree_insert(&vm->global_symbols, &node->node);
@@ -168,11 +172,11 @@ njs_symbol_key_for(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_symbol_constructor_properties[] =
+static const njs_object_prop_init_t  njs_symbol_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
-    NJS_DECLARE_PROP_NAME(Symbol),
+    NJS_DECLARE_PROP_NAME("Symbol"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),
@@ -182,32 +186,43 @@ static const njs_object_propi_t  njs_symbol_constructor_properties[] =
     NJS_DECLARE_PROP_NATIVE(keyFor, njs_symbol_key_for, 1, 0),
 
     NJS_DECLARE_PROP_VALUE(asyncIterator,
-                           njs_symval(asyncIterator), 0),
+                           njs_symval(asyncIterator, "Symbol.asyncIterator"),
+                           0),
 
-    NJS_DECLARE_PROP_VALUE(hasInstance, njs_symval(hasInstance), 0),
+    NJS_DECLARE_PROP_VALUE(hasInstance,
+                           njs_symval(hasInstance, "Symbol.hasInstance"),
+                           0),
 
     NJS_DECLARE_PROP_VALUE(isConcatSpreadable,
-                           njs_symval(isConcatSpreadable), 0),
+                   njs_symval(isConcatSpreadable, "Symbol.isConcatSpreadable"),
+                   0),
 
-    NJS_DECLARE_PROP_VALUE(iterator, njs_symval(iterator), 0),
+    NJS_DECLARE_PROP_VALUE(iterator, njs_symval(iterator, "Symbol.iterator"),
+                           0),
 
-    NJS_DECLARE_PROP_VALUE(match, njs_symval(match), 0),
+    NJS_DECLARE_PROP_VALUE(match, njs_symval(match, "Symbol.match"), 0),
 
-    NJS_DECLARE_PROP_VALUE(matchAll, njs_symval(matchAll), 0),
+    NJS_DECLARE_PROP_VALUE(matchAll, njs_symval(matchAll, "Symbol.matchAll"),
+                           0),
 
-    NJS_DECLARE_PROP_VALUE(replace, njs_symval(replace), 0),
+    NJS_DECLARE_PROP_VALUE(replace, njs_symval(replace, "Symbol.replace"), 0),
 
-    NJS_DECLARE_PROP_VALUE(search, njs_symval(search), 0),
+    NJS_DECLARE_PROP_VALUE(search, njs_symval(search, "Symbol.search"), 0),
 
-    NJS_DECLARE_PROP_VALUE(species, njs_symval(species), 0),
+    NJS_DECLARE_PROP_VALUE(species, njs_symval(species, "Symbol.species"), 0),
 
-    NJS_DECLARE_PROP_VALUE(split, njs_symval(split), 0),
+    NJS_DECLARE_PROP_VALUE(split, njs_symval(split, "Symbol.split"), 0),
 
-    NJS_DECLARE_PROP_VALUE(toPrimitive, njs_symval(toPrimitive), 0),
+    NJS_DECLARE_PROP_VALUE(toPrimitive,
+                           njs_symval(toPrimitive, "Symbol.toPrimitive"),
+                           0),
 
-    NJS_DECLARE_PROP_VALUE(toStringTag, njs_symval(toStringTag), 0),
+    NJS_DECLARE_PROP_VALUE(toStringTag,
+                           njs_symval(toStringTag, "Symbol.toStringTag"), 0),
 
-    NJS_DECLARE_PROP_VALUE(unscopables, njs_symval(unscopables), 0),
+    NJS_DECLARE_PROP_VALUE(unscopables,
+                           njs_symval(unscopables, "Symbol.unscopables"),
+                           0),
 };
 
 
@@ -276,9 +291,9 @@ njs_symbol_prototype_description(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_symbol_prototype_properties[] =
+static const njs_object_prop_init_t  njs_symbol_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_strval(Symbol),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("Symbol"),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_HANDLER(__proto__,

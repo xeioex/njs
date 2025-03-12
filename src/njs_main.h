@@ -29,7 +29,6 @@
 #include <njs_malloc.h>
 #include <njs_rbtree.h>
 #include <njs_mp.h>
-#include <njs_flathsh_obj.h>
 #include <njs_flathsh.h>
 #include <njs_arr.h>
 #include <njs_chb.h>
@@ -46,9 +45,7 @@
 #include <njs_object_prop_declare.h>
 #include <njs_error.h>
 #include <njs_string.h>
-
 #include <njs_atom.h>
-
 #include <njs_number.h>
 #include <njs_value_conversion.h>
 #include <njs_vmcode.h>

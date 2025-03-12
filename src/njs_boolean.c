@@ -38,9 +38,9 @@ njs_boolean_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_boolean_constructor_properties[] =
+static const njs_object_prop_init_t  njs_boolean_constructor_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(name, njs_strval(Boolean),
+    NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval("Boolean"),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_VALUE(length, njs_value(NJS_NUMBER, 1, 1.0),
@@ -103,14 +103,18 @@ njs_boolean_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         }
     }
 
-    njs_value_assign(retval, njs_is_true(value) ? &njs_atom.vs_true
-                                                : &njs_atom.vs_false);
+    if (njs_is_true(value)) {
+        njs_atom_to_value(vm, retval, NJS_ATOM_true);
+
+    } else {
+        njs_atom_to_value(vm, retval, NJS_ATOM_false);
+    }
 
     return NJS_OK;
 }
 
 
-static const njs_object_propi_t  njs_boolean_prototype_properties[] =
+static const njs_object_prop_init_t  njs_boolean_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(__proto__,
                              njs_primitive_prototype_get_proto, 0,

@@ -52,7 +52,7 @@ typedef enum {
 } njs_date_fmt_t;
 
 
-static double njs_date_string_parse(njs_value_t *date);
+static double njs_date_string_parse(njs_vm_t *vm, njs_value_t *date);
 static double njs_date_rfc2822_string_parse(int64_t tm[], const u_char *p,
     const u_char *end);
 static double njs_date_js_string_parse(int64_t tm[], const u_char *p,
@@ -422,7 +422,7 @@ njs_date_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             time = njs_date(&args[1])->time;
 
         } else if (njs_is_string(&args[1])) {
-            time = njs_date_string_parse(&args[1]);
+            time = njs_date_string_parse(vm, &args[1]);
 
         } else {
             time = njs_timeclip(njs_number(&args[1]));
@@ -499,7 +499,7 @@ njs_date_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
         }
 
-        time = njs_date_string_parse(&args[1]);
+        time = njs_date_string_parse(vm, &args[1]);
 
     } else {
         time = NAN;
@@ -545,7 +545,7 @@ njs_date_utc_offset_parse(const u_char *start, const u_char *end)
 }
 
 static double
-njs_date_string_parse(njs_value_t *date)
+njs_date_string_parse(njs_vm_t *vm, njs_value_t *date)
 {
     size_t         ms_length;
     int64_t        ext, utc_off;
@@ -554,7 +554,7 @@ njs_date_string_parse(njs_value_t *date)
     const u_char   *p, *next, *end;
     int64_t        tm[NJS_DATE_MAX_FIELDS];
 
-    njs_string_get(date, &string);
+    njs_string_get(vm, date, &string);
 
     p = string.start;
     end = p + string.length;
@@ -1124,11 +1124,11 @@ njs_date_number_parse(int64_t *value, const u_char *p, const u_char *end,
 }
 
 
-static const njs_object_propi_t  njs_date_constructor_properties[] =
+static const njs_object_prop_init_t  njs_date_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(7),
 
-    NJS_DECLARE_PROP_NAME(Date),
+    NJS_DECLARE_PROP_NAME("Date"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),
@@ -1204,7 +1204,7 @@ njs_date_string(njs_vm_t *vm, njs_value_t *retval, njs_date_fmt_t fmt,
                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
     if (njs_slow_path(isnan(time))) {
-        *retval = njs_atom.vs_Invalid_Date;
+        njs_atom_to_value(vm, retval, NJS_ATOM_Invalid_Date);
         return NJS_OK;
     }
 
@@ -1441,13 +1441,13 @@ static njs_int_t
 njs_date_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
 {
-    njs_int_t                ret;
-    njs_value_t              value;
-    njs_flathsh_obj_query_t  lhq;
+    njs_int_t            ret;
+    njs_value_t          value;
+    njs_flathsh_query_t  lhq;
 
     if (njs_is_object(njs_argument(args, 0))) {
         lhq.proto = &njs_object_hash_proto;
-        lhq.key_hash = njs_atom.vs_toISOString.atom_id;
+        lhq.key_hash = NJS_ATOM_toISOString;
 
         ret = njs_object_property(vm, njs_object(njs_argument(args, 0)), &lhq,
                                   &value);
@@ -1468,7 +1468,7 @@ njs_date_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_date_prototype_properties[] =
+static const njs_object_prop_init_t  njs_date_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(__proto__,
                              njs_primitive_prototype_get_proto, 0,
