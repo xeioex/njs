@@ -3664,11 +3664,11 @@ njs_ext_console_time(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 return ret;
             }
 
-            njs_value_string_get(value, &name);
+            njs_value_string_get(vm, value, &name);
         }
 
     } else {
-        njs_value_string_get(value, &name);
+        njs_value_string_get(vm, value, &name);
     }
 
     if (njs_console_time(console, &name) != NJS_OK) {
@@ -3713,11 +3713,11 @@ njs_ext_console_time_end(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 return ret;
             }
 
-            njs_value_string_get(value, &name);
+            njs_value_string_get(vm, value, &name);
         }
 
     } else {
-        njs_value_string_get(value, &name);
+        njs_value_string_get(vm, value, &name);
     }
 
     njs_console_time_end(console, &name, ns);

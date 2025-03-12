@@ -1289,7 +1289,7 @@ njs_parser_regexp_literal(njs_parser_t *parser, njs_lexer_token_t *token,
                     return NJS_ERROR;
                 }
 
-                njs_string_get(&retval, &text);
+                njs_string_get(vm, &retval, &text);
 
                 njs_parser_syntax_error(parser, "%V", &text);
 
@@ -2068,7 +2068,7 @@ njs_parser_property_definition_after(njs_parser_t *parser,
     if (property->index != NJS_TOKEN_OPEN_BRACKET
         && njs_is_string(&property->u.value))
     {
-        njs_string_get(&property->u.value, &name);
+        njs_string_get(vm, &property->u.value, &name);
 
         if (njs_slow_path(njs_strstr_eq(&name, &proto_string))) {
             if (temp->token_type == NJS_TOKEN_PROTO_INIT) {
@@ -6716,7 +6716,7 @@ njs_parser_labelled_statement_after(njs_parser_t *parser,
 
     unique_id = (uintptr_t) parser->target;
     entry = (const njs_value_t *) unique_id;
-    njs_string_get(entry, &str);
+    njs_string_get(vm, entry, &str);
 
     ret = njs_name_copy(parser->vm, &parser->node->name, &str);
     if (ret != NJS_OK) {
@@ -9417,7 +9417,7 @@ njs_parser_serialize_tree(njs_chb_t *chain, njs_parser_node_t *node,
                                 njs_number(&node->u.value));
 
             } else {
-                njs_string_get(&node->u.value, &str);
+                njs_string_get(vm, &node->u.value, &str);
                 njs_chb_append_literal(chain, " \"value\": \"");
                 njs_chb_append_str(chain, &str);
                 njs_chb_append_literal(chain, "\"");

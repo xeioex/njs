@@ -1780,8 +1780,8 @@ njs_array_indices_handler(const void *first, const void *second, void *ctx)
         return diff != 0;
     }
 
-    njs_string_get(val1, &str1);
-    njs_string_get(val2, &str2);
+    njs_string_get(vm, val1, &str1);
+    njs_string_get(vm, val2, &str2);
 
     cmp_res = strncmp((const char *) str1.start, (const char *) str2.start,
                       njs_min(str1.length, str2.length));

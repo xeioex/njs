@@ -235,7 +235,7 @@ njs_key_string_get(njs_vm_t *vm, njs_value_t *key, njs_str_t *str)
         }
     }
 
-    njs_string_get(key, str);
+    njs_string_get(vm, key, str);
 
     return NJS_OK;
 }

@@ -3549,7 +3549,7 @@ ngx_headers_js_ext_keys(njs_vm_t *vm, njs_value_t *value, njs_value_t *keys)
         start = njs_vm_array_start(vm, keys);
 
         for (k = 0; k < length; k++) {
-            njs_value_string_get(njs_argument(start, k), &hdr);
+            njs_value_string_get(vm, njs_argument(start, k), &hdr);
 
             if (h[i].key.len == hdr.length
                 && njs_strncasecmp(h[i].key.data, hdr.start, hdr.length) == 0)

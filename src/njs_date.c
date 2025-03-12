@@ -554,7 +554,7 @@ njs_date_string_parse(njs_value_t *date)
     const u_char   *p, *next, *end;
     int64_t        tm[NJS_DATE_MAX_FIELDS];
 
-    njs_string_get(date, &string);
+    njs_string_get(vm, date, &string);
 
     p = string.start;
     end = p + string.length;

@@ -398,7 +398,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
             return NJS_OK;
         }
 
-        njs_string_get(&key, &name);
+        njs_string_get(vm, &key, &name);
 
         if (njs_slow_path((p + name.length + 3) > end)) {
             njs_type_error(vm, "njs_builtin_traverse() key is too long");
@@ -540,7 +540,7 @@ njs_builtin_match_native_function(njs_vm_t *vm, njs_function_t *function,
                                  njs_value_arg(&njs_atom.vs_name), &tag);
 
         if (ret == NJS_OK && njs_is_string(&tag)) {
-            njs_string_get(&tag, &ctx.match);
+            njs_string_get(vm, &tag, &ctx.match);
         }
 
         ret = njs_object_traverse(vm, njs_object(&value), &ctx,
@@ -593,7 +593,7 @@ njs_builtin_match_native_function(njs_vm_t *vm, njs_function_t *function,
 
         ret = njs_object_string_tag(vm, &value, &tag);
         if (ret == NJS_OK && njs_is_string(&tag)) {
-            njs_string_get(&tag, &ctx.match);
+            njs_string_get(vm, &tag, &ctx.match);
         }
 
         ret = njs_object_traverse(vm, njs_object(&value), &ctx,
@@ -684,7 +684,7 @@ njs_ext_on(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    njs_string_get(value, &type);
+    njs_string_get(vm, value, &type);
 
     i = 0;
     n = sizeof(hooks) / sizeof(hooks[0]);
@@ -800,7 +800,7 @@ njs_global_this_prop_handler(njs_vm_t *vm, njs_object_prop_t *prop,
         return NJS_DECLINED;
     }
 
-    njs_string_get(&prop_name, &lhq.key);
+    njs_string_get(vm, &prop_name, &lhq.key);
 
     lhq.key_hash = njs_djb_hash(lhq.key.start, lhq.key.length);
     lhq.proto = &njs_lexer_hash_proto;
@@ -1493,7 +1493,7 @@ njs_ext_process_kill(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         signal = njs_value_number(arg);
 
     } else if (njs_value_is_string(arg)) {
-        njs_value_string_get(arg, &str);
+        njs_string_get(vm, arg, &str);
 
         if (str.length < 3 || memcmp(str.start, "SIG", 3) != 0) {
             njs_vm_type_error(vm, "\"signal\" unknown value: \"%V\"", &str);

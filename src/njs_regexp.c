@@ -147,7 +147,7 @@ njs_regexp_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return ret;
         }
 
-        njs_string_get(flags, &string);
+        njs_string_get(vm, flags, &string);
 
         start = string.start;
 
@@ -160,7 +160,7 @@ njs_regexp_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    njs_string_get(pattern, &string);
+    njs_string_get(vm, pattern, &string);
 
     return njs_regexp_create(vm, retval, string.start, string.length,
                              re_flags);
@@ -1546,10 +1546,10 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         if (p >= next) {
             njs_chb_append(&chain, next, p - next);
 
-            njs_string_get(retval, &rep);
+            njs_string_get(vm, retval, &rep);
             njs_chb_append_str(&chain, &rep);
 
-            njs_string_get(&matched, &m);
+            njs_string_get(vm, &matched, &m);
 
             next = p + m.length;
         }

@@ -240,7 +240,7 @@ njs_variable_scope_find(njs_parser_t *parser, njs_parser_scope_t *scope,
 
 failed:
 
-    njs_lexer_entry(unique_id, entry);
+    njs_lexer_entry(parser->vm, unique_id, entry);
 
     njs_parser_syntax_error(parser, "\"%V\" has already been declared",
                             &entry->name);

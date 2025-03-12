@@ -192,7 +192,7 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    njs_string_get(input, &str);
+    njs_string_get(vm, input, &str);
 
     start = str.start;
     end = start + str.length;
@@ -340,7 +340,7 @@ njs_text_decoder_arg_encoding(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    njs_string_get(value, &str);
+    njs_string_get(vm, value, &str);
 
     for (label = &njs_encoding_labels[0]; label->name.length != 0; label++) {
         if (njs_strstr_eq(&str, &label->name)) {
