@@ -127,7 +127,7 @@ njs_scope_values_hash_test(njs_lvlhsh_query_t *lhq, void *data)
     value = data;
 
     if (njs_is_string(value)) {
-        njs_string_get(value, &string);
+        njs_string_get(vm, value, &string);
 
     } else {
         string.start = (u_char *) value;
@@ -177,7 +177,7 @@ njs_scope_value_index(njs_vm_t *vm, const njs_value_t *src, njs_uint_t runtime,
     value_size = sizeof(njs_value_t);
 
     if (njs_is_string(src)) {
-        njs_string_get(src, &str);
+        njs_string_get(vm, src, &str);
 
         size = (uint32_t) str.length;
         start = str.start;

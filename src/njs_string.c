@@ -2550,11 +2550,11 @@ njs_string_prototype_match(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                     return ret;
                 }
 
-                njs_string_get(&args[1], &string);
+                njs_string_get(vm, &args[1], &string);
             }
 
         } else {
-            njs_string_get(&args[1], &string);
+            njs_string_get(vm, &args[1], &string);
         }
 
         /* A void value. */
@@ -2841,7 +2841,7 @@ njs_string_get_substitution(njs_vm_t *vm, njs_value_t *matched,
     njs_value_t        name, value;
     njs_string_prop_t  s, m;
 
-    njs_string_get(replacement, &rep);
+    njs_string_get(vm, replacement, &rep);
     p = rep.start;
     end = rep.start + rep.length;
 
@@ -2922,7 +2922,7 @@ njs_string_get_substitution(njs_vm_t *vm, njs_value_t *matched,
                     goto exception;
                 }
 
-                njs_string_get(&value, &str);
+                njs_string_get(vm, &value, &str);
                 njs_chb_append_str(&chain, &str);
             }
 
@@ -2952,7 +2952,7 @@ njs_string_get_substitution(njs_vm_t *vm, njs_value_t *matched,
                 p += (c2 != 0) ? 3 : 2;
 
                 if (njs_is_defined(&captures[n])) {
-                    njs_string_get(&captures[n], &cap);
+                    njs_string_get(vm, &captures[n], &cap);
                     njs_chb_append_str(&chain, &cap);
                 }
 
@@ -3038,7 +3038,7 @@ njs_string_prototype_replace(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                     return NJS_ERROR;
                 }
 
-                njs_string_get(&value, &str);
+                njs_string_get(vm, &value, &str);
 
                 if (njs_strlchr(str.start, str.start + str.length, 'g')
                     == NULL)
@@ -4016,7 +4016,7 @@ njs_string_atob(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     /* Forgiving-base64 decode. */
 
     b64 = njs_basis64;
-    njs_string_get(value, &str);
+    njs_string_get(vm, value, &str);
 
     tmp = njs_mp_alloc(vm->mem_pool, str.length);
     if (tmp == NULL) {

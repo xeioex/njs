@@ -752,7 +752,7 @@ njs_error_prototype_stack(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused
             return ret;
         }
 
-        njs_string_get(&rv, &string);
+        njs_string_get(vm, &rv, &string);
 
         ret = njs_backtrace_to_string(vm, backtrace, &string);
 

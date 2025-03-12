@@ -1254,7 +1254,7 @@ njs_object_copy_shared_hash(njs_vm_t *vm, njs_object_t *object)
             fhq.key.start = NULL;
 
         } else {
-            njs_string_get(&prop_name, &fhq.key);
+            njs_string_get(vm, &prop_name, &fhq.key);
             fhq.key_hash = elt->key_hash;
         }
 

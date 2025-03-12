@@ -372,7 +372,7 @@ next:
             return ret;
         }
 
-        njs_string_get(&val, &str);
+        njs_string_get(vm, &val, &str);
 
         if (!njs_strstr_eq(&str, &str_buffer)) {
             return NJS_DECLINED;
@@ -527,7 +527,7 @@ njs_buffer_from_string(njs_vm_t *vm, njs_value_t *value,
         return NJS_ERROR;
     }
 
-    njs_string_get(&dst, &str);
+    njs_string_get(vm, &dst, &str);
 
     buffer = njs_buffer_alloc(vm, str.length, 0);
     if (njs_slow_path(buffer == NULL)) {
@@ -1704,7 +1704,7 @@ njs_buffer_write_string(njs_vm_t *vm, njs_value_t *value,
         return NJS_ERROR;
     }
 
-    njs_string_get(&dst, &str);
+    njs_string_get(vm, &dst, &str);
 
     start = &buffer->u.u8[array->offset + offset];
 
@@ -1888,7 +1888,7 @@ njs_buffer_fill_string(njs_vm_t *vm, const njs_value_t *value,
         return NJS_ERROR;
     }
 
-    njs_string_get(&dst, &str);
+    njs_string_get(vm, &dst, &str);
 
     if (str.length == 0) {
         memset(start, 0, end - start);
@@ -2174,7 +2174,7 @@ encoding:
                 return ret;
             }
 
-            njs_string_get(&dst, &str);
+            njs_string_get(vm, &dst, &str);
 
         } else {
             src = njs_typed_array(value);
@@ -2421,7 +2421,7 @@ njs_buffer_encoding(njs_vm_t *vm, const njs_value_t *value, njs_bool_t throw)
         return &njs_buffer_encodings[0];
     }
 
-    njs_string_get(value, &name);
+    njs_string_get(vm, value, &name);
 
     for (encoding = &njs_buffer_encodings[0];
          encoding->name.length != 0;

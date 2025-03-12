@@ -611,7 +611,7 @@ njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
         ret = njs_primitive_value_to_string(vm, &pq->key, key);
 
         if (njs_fast_path(ret == NJS_OK)) {
-            njs_string_get(&pq->key, &pq->lhq.key);
+            njs_string_get(vm, &pq->key, &pq->lhq.key);
             njs_type_error(vm, "cannot get property \"%V\" of %s",
                            &pq->lhq.key, njs_is_null(value) ? "null"
                                                             : "undefined");
@@ -961,7 +961,7 @@ njs_string_property_query(njs_vm_t *vm, njs_property_query_t *pq,
                 return NJS_ERROR;
             }
 
-            njs_string_get(&pq->key, &pq->lhq.key);
+            njs_string_get(vm, &pq->key, &pq->lhq.key);
         }
 
         return NJS_OK;

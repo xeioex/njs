@@ -407,7 +407,7 @@ typedef struct {
         .atom_id = NJS_ATOM_ ## s,                                            \
         .token_type = njs_tbl_typ_vs_ ## s,                                   \
         .token_id = njs_tbl_tok_vs_ ## s,                                     \
-        .data = &(njs_string_t) {                                             \
+        .data = & (njs_string_t) {                                             \
             .start = (u_char *) njs_tbl_str_vs_ ## s,                         \
             .length = njs_length(njs_tbl_str_vs_ ## s),                       \
             .size = njs_length(njs_tbl_str_vs_ ## s),                         \
@@ -531,7 +531,7 @@ typedef struct {
     (njs_is_number(value) || njs_is_key(value))
 
 
-#define njs_string_get(value, str)                                            \
+#define njs_string_get(vm, value, str)                                        \
     do {                                                                      \
         (str)->length = (value)->string.data->size;                           \
         (str)->start = (u_char *) (value)->string.data->start;                \

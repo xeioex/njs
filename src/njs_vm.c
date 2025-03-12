@@ -992,9 +992,9 @@ njs_vm_bind_handler(njs_vm_t *vm, const njs_str_t *var_name,
 
 
 void
-njs_value_string_get(njs_value_t *value, njs_str_t *dst)
+njs_value_string_get(njs_vm_t *vm, njs_value_t *value, njs_str_t *dst)
 {
-    njs_string_get(value, dst);
+    njs_string_get(vm, value, dst);
 }
 
 
@@ -1086,7 +1086,7 @@ njs_vm_prop_name(njs_vm_t *vm, uint32_t atom_id, njs_str_t *dst)
         return NJS_ERROR;
     }
 
-    njs_string_get(&prop_name, dst);
+    njs_string_get(vm, &prop_name, dst);
 
     return NJS_OK;
 }
@@ -1120,7 +1120,7 @@ njs_vm_value_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
                       && njs_number(src) == 0
                       && signbit(njs_number(src))))
     {
-        njs_string_get(&njs_atom.vs__0, dst); /* minus zero */
+        njs_string_get(vm, &njs_atom.vs__0, dst); /* minus zero */
         return NJS_OK;
     }
 
@@ -1194,7 +1194,7 @@ njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
     while (njs_rbtree_is_there_successor(variables, rb_node)) {
         node = (njs_variable_node_t *) rb_node;
 
-        njs_lexer_entry(node->variable->unique_id, lex_entry);
+        njs_lexer_entry(vm, node->variable->unique_id, lex_entry);
         if (njs_slow_path(lex_entry == NULL)) {
             return NULL;
         }
@@ -1519,7 +1519,7 @@ njs_vm_value_to_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
 
     if (njs_is_error(src)) {
         if (njs_is_memory_error(vm, src)) {
-            njs_string_get(&njs_atom.vs_MemoryError, dst);
+            njs_string_get(vm, &njs_atom.vs_MemoryError, dst);
             return NJS_OK;
         }
 

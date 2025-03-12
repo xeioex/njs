@@ -1684,7 +1684,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
         break;
 
     case NJS_STRING:
-        njs_string_get(value, &str);
+        njs_string_get(vm, value, &str);
 
         if (!console || stringify->depth != 0) {
             njs_json_append_string(chain, value, '\'');
@@ -1701,7 +1701,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
             return NJS_ERROR;
         }
 
-        njs_string_get(&str_val, &str);
+        njs_string_get(vm, &str_val, &str);
         njs_chb_append_str(chain, &str);
 
         break;
@@ -1738,7 +1738,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
                 return NJS_ERROR;
             }
 
-            njs_string_get(&str_val, &str);
+            njs_string_get(vm, &str_val, &str);
             njs_chb_sprintf(chain, 16 + str.length, "[Number: %V]", &str);
             break;
 
@@ -1748,7 +1748,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
                 return NJS_ERROR;
             }
 
-            njs_string_get(&str_val, &str);
+            njs_string_get(vm, &str_val, &str);
             njs_chb_sprintf(chain, 16 + str.length, "[Symbol: %V]", &str);
 
             break;
@@ -1778,7 +1778,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
         }
 
         if (njs_is_string(&tag)) {
-            njs_string_get(&tag, &str);
+            njs_string_get(vm, &tag, &str);
         }
 
         if (str.length != 0) {
@@ -1848,7 +1848,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
             return NJS_ERROR;
         }
 
-        njs_string_get(&str_val, &str);
+        njs_string_get(vm, &str_val, &str);
         njs_chb_append_str(chain, &str);
 
         break;
@@ -2040,7 +2040,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
 
         if(state->array) {
             if (key->type == NJS_STRING) {
-                njs_string_get(key, &str);
+                njs_string_get(vm, key, &str);
                 if (str.length == 6 && memcmp(str.start, "length", 6) == 0) {
                     continue;
                 }
