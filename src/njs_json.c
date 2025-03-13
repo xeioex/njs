@@ -1386,7 +1386,9 @@ njs_json_stringify_array(njs_json_stringify_t *stringify)
         }
 
         for (k = 0; k < properties->length; k++) {
-            if (njs_values_strict_equal(value, &properties->start[k]) == 1) {
+            if (njs_values_strict_equal(stringify->vm, value,
+                                        &properties->start[k]) == 1)
+            {
                 break;
             }
         }
@@ -1882,7 +1884,7 @@ njs_dump_visited(njs_vm_t *vm, njs_json_stringify_t *stringify,
     depth = stringify->depth - 1;
 
     for (; depth >= 0; depth--) {
-        if (njs_values_same(&stringify->states[depth].value, value)) {
+        if (njs_values_same(vm, &stringify->states[depth].value, value)) {
             return 1;
         }
     }

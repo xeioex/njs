@@ -1173,7 +1173,7 @@ njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
         return NULL;
     }
 
-    if (!njs_values_same(value, &vm->global_value)
+    if (!njs_values_same(vm, value, &vm->global_value)
         || vm->global_scope == NULL)
     {
         goto done;

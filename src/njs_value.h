@@ -540,12 +540,17 @@ typedef struct {
 
 #define njs_string_get(vm, value, str)                                        \
     do {                                                                      \
+        njs_value_t  _dst;                                                    \
+                                                                              \
         if (njs_slow_path((value)->string.data == NULL)) {                    \
             njs_assert((value)->atom_id != 0);                                \
-            njs_atom_to_value(vm, value, (value)->atom_id);                   \
-        }                                                                     \
+            njs_atom_to_value(vm, &_dst, (value)->atom_id);                   \
+            njs_assert(njs_is_string(&_dst));                                 \
+            njs_string_get_unsafe(&_dst, str);                                \
                                                                               \
-        njs_string_get_unsafe(value, str);                                    \
+        } else {                                                              \
+            njs_string_get_unsafe(value, str);                                \
+        }                                                                     \
     } while (0)
 
 
@@ -979,7 +984,8 @@ njs_int_t njs_primitive_value_to_chain(njs_vm_t *vm, njs_chb_t *chain,
 double njs_string_to_number(njs_vm_t *vm, const njs_value_t *value);
 njs_int_t njs_int64_to_string(njs_vm_t *vm, njs_value_t *value, int64_t i64);
 
-njs_bool_t njs_string_eq(const njs_value_t *v1, const njs_value_t *v2);
+njs_bool_t njs_string_eq(njs_vm_t *vm, const njs_value_t *v1,
+    const njs_value_t *v2);
 
 njs_int_t njs_property_query(njs_vm_t *vm, njs_property_query_t *pq,
     njs_value_t *value, njs_value_t *key);
@@ -1056,10 +1062,15 @@ njs_value_property_i64_delete(njs_vm_t *vm, njs_value_t *value, int64_t index,
 
 
 njs_inline njs_bool_t
-njs_values_same_non_numeric(const njs_value_t *val1, const njs_value_t *val2)
+njs_values_same_non_numeric(njs_vm_t *vm, const njs_value_t *val1,
+    const njs_value_t *val2)
 {
     if (njs_is_string(val1)) {
-        return njs_string_eq(val1, val2);
+        if (val1->atom_id != 0 && val2->atom_id != 0) {
+            return (val1->atom_id == val2->atom_id);
+        }
+
+        return njs_string_eq(vm, val1, val2);
     }
 
     if (njs_is_symbol(val1)) {
@@ -1071,7 +1082,8 @@ njs_values_same_non_numeric(const njs_value_t *val1, const njs_value_t *val2)
 
 
 njs_inline njs_bool_t
-njs_values_strict_equal(const njs_value_t *val1, const njs_value_t *val2)
+njs_values_strict_equal(njs_vm_t *vm, const njs_value_t *val1,
+    const njs_value_t *val2)
 {
     if (val1->type != val2->type) {
         return 0;
@@ -1087,12 +1099,12 @@ njs_values_strict_equal(const njs_value_t *val1, const njs_value_t *val2)
         return (njs_number(val1) == njs_number(val2));
     }
 
-    return njs_values_same_non_numeric(val1, val2);
+    return njs_values_same_non_numeric(vm, val1, val2);
 }
 
 
 njs_inline njs_bool_t
-njs_values_same(const njs_value_t *val1, const njs_value_t *val2)
+njs_values_same(njs_vm_t *vm, const njs_value_t *val1, const njs_value_t *val2)
 {
     double  num1, num2;
 
@@ -1123,12 +1135,13 @@ njs_values_same(const njs_value_t *val1, const njs_value_t *val2)
         return num1 == num2;
     }
 
-    return njs_values_same_non_numeric(val1, val2);
+    return njs_values_same_non_numeric(vm, val1, val2);
 }
 
 
 njs_inline njs_bool_t
-njs_values_same_zero(const njs_value_t *val1, const njs_value_t *val2)
+njs_values_same_zero(njs_vm_t *vm, const njs_value_t *val1,
+    const njs_value_t *val2)
 {
     double  num1, num2;
 
@@ -1153,7 +1166,7 @@ njs_values_same_zero(const njs_value_t *val1, const njs_value_t *val2)
         return num1 == num2;
     }
 
-    return njs_values_same_non_numeric(val1, val2);
+    return njs_values_same_non_numeric(vm, val1, val2);
 }
 
 

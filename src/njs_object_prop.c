@@ -512,7 +512,8 @@ set_prop:
 
             if (njs_is_valid(njs_prop_value(prop))
                 && prev->type != NJS_PROPERTY_HANDLER
-                && !njs_values_same(njs_prop_value(prop), njs_prop_value(prev)))
+                && !njs_values_same(vm, njs_prop_value(prop),
+                                    njs_prop_value(prev)))
             {
                 goto exception;
             }
@@ -595,8 +596,8 @@ done:
             {
                 if (prev->configurable != NJS_ATTRIBUTE_TRUE
                     && prev->writable != NJS_ATTRIBUTE_TRUE
-                    && !njs_values_strict_equal(njs_prop_value(prev),
-                                                 njs_prop_value(prop)))
+                    && !njs_values_strict_equal(vm, njs_prop_value(prev),
+                                                njs_prop_value(prop)))
                 {
                     njs_type_error(vm, "Cannot redefine property: \"length\"");
                     return NJS_ERROR;

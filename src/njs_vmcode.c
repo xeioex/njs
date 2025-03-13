@@ -960,7 +960,7 @@ NEXT_LBL;
         njs_vmcode_operand(vm, vmcode->operand3, value2);
         njs_vmcode_operand(vm, vmcode->operand2, value1);
 
-        ret = njs_values_strict_equal(value1, value2);
+        ret = njs_values_strict_equal(vm, value1, value2);
 
         njs_vmcode_operand(vm, vmcode->operand1, retval);
         njs_set_boolean(retval, ret);
@@ -974,7 +974,7 @@ NEXT_LBL;
         njs_vmcode_operand(vm, vmcode->operand3, value2);
         njs_vmcode_operand(vm, vmcode->operand2, value1);
 
-        ret = njs_values_strict_equal(value1, value2);
+        ret = njs_values_strict_equal(vm, value1, value2);
 
         njs_vmcode_operand(vm, vmcode->operand1, retval);
         njs_set_boolean(retval, !ret);
@@ -1339,7 +1339,7 @@ NEXT_LBL;
         njs_vmcode_operand(vm, vmcode->operand3, value2);
         njs_vmcode_operand(vm, vmcode->operand2, value1);
 
-        if (njs_values_strict_equal(value1, value2)) {
+        if (njs_values_strict_equal(vm, value1, value2)) {
             equal = (njs_vmcode_equal_jump_t *) pc;
             ret = equal->offset;
 

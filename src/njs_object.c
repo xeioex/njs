@@ -2108,8 +2108,8 @@ static njs_int_t
 njs_object_is(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
 {
-    njs_set_boolean(retval, njs_values_same(njs_arg(args, nargs, 1),
-                                                 njs_arg(args, nargs, 2)));
+    njs_set_boolean(retval, njs_values_same(vm, njs_arg(args, nargs, 1),
+                                            njs_arg(args, nargs, 2)));
 
     return NJS_OK;
 }

@@ -592,7 +592,7 @@ njs_promise_resolve_function(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     resolution = njs_arg(args, nargs, 1);
 
-    if (njs_values_same(resolution, &context->promise)) {
+    if (njs_values_same(vm, resolution, &context->promise)) {
         njs_error_fmt_new(vm, &error, NJS_OBJ_TYPE_TYPE_ERROR,
                           "promise self resolution");
         if (njs_slow_path(!njs_is_error(&error))) {
@@ -689,7 +689,7 @@ njs_promise_resolve(njs_vm_t *vm, njs_value_t *constructor, njs_value_t *x,
             return NJS_ERROR;
         }
 
-        if (njs_values_same(&value, constructor)) {
+        if (njs_values_same(vm, &value, constructor)) {
             njs_value_assign(retval, x);
             return NJS_OK;
         }
