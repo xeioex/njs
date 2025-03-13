@@ -1095,8 +1095,8 @@ njs_generate_var_statement_after(njs_vm_t *vm, njs_generator_t *generator,
     if (expr->token_type == NJS_TOKEN_FUNCTION_EXPRESSION
          || expr->token_type == NJS_TOKEN_ASYNC_FUNCTION_EXPRESSION)
     {
-        ret = njs_values_same(&expr->u.value.data.u.lambda->name,
-                           (njs_value_t *)&njs_atom.vs_); /* empty string */
+        ret = njs_values_same(vm, &expr->u.value.data.u.lambda->name,
+                              njs_value_arg(&njs_value_empty_string));
         if (njs_slow_path(ret < 0)) {
             return NJS_ERROR;
         }

@@ -536,27 +536,18 @@ njs_string_instance_length(njs_vm_t *vm, njs_object_prop_t *prop,
 
 
 njs_bool_t
-njs_string_eq(const njs_value_t *v1, const njs_value_t *v2)
+njs_string_eq(njs_vm_t *vm, const njs_value_t *v1, const njs_value_t *v2)
 {
-    size_t  size;
+    njs_str_t  s1, s2;
 
-    if (v1->atom_id != 0) {
-        if (v2->atom_id != 0) {
-            return (v1->atom_id == v2->atom_id);
-        }
-    }
+    njs_string_get(vm, v1, &s1);
+    njs_string_get(vm, v2, &s2);
 
-    size = v1->string.data->size;
-
-    if (size != v2->string.data->size) {
+    if (s1.length != s2.length) {
         return 0;
     }
 
-    if (v1->string.data->length != v2->string.data->length) {
-        return 0;
-    }
-
-    return (memcmp(v1->string.data->start, v2->string.data->start, size) == 0);
+    return (memcmp(s1.start, s2.start, s1.length) == 0) ;
 }
 
 
