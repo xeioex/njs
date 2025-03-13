@@ -252,7 +252,7 @@ njs_value_length(njs_vm_t *vm, njs_value_t *value, int64_t *length)
     njs_string_prop_t  string_prop;
 
     if (njs_is_string(value)) {
-        *length = njs_string_prop(&string_prop, value);
+        *length = njs_string_prop(vm, &string_prop, value);
 
     } else if (njs_is_primitive(value)) {
         *length = 0;
@@ -938,7 +938,7 @@ njs_string_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 
     slice.start = index;
     slice.length = 1;
-    slice.string_length = njs_string_prop(&string, object);
+    slice.string_length = njs_string_prop(vm, &string, object);
 
     if (slice.start < slice.string_length) {
         /*
@@ -1606,7 +1606,7 @@ njs_primitive_value_to_chain(njs_vm_t *vm, njs_chb_t *chain,
         return NJS_ERROR;
 
     case NJS_STRING:
-        (void) njs_string_prop(&string, src);
+        (void) njs_string_prop(vm, &string, src);
         njs_chb_append(chain, string.start, string.size);
         return string.length;
 

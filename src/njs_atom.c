@@ -158,7 +158,7 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
         if (njs_fast_path(njs_key_is_integer_index(num, value)) &&
             ((uint32_t) num) < 0x80000000)
         {
-            value->atom_id = ((uint32_t) num) | 0x80000000;
+            value->atom_id = njs_number_atom(((uint32_t) num));
 
         } else {
             hash_id = njs_djb_hash(value->string.data->start,
@@ -182,7 +182,7 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
         if (njs_fast_path(njs_key_is_integer_index(num, value)) &&
             ((uint32_t) num) < 0x80000000)
         {
-            value->atom_id = ((uint32_t) num) | 0x80000000;
+            value->atom_id = njs_number_atom(((uint32_t) num));
 
         } else {
             /* convert num to string, and atomize it. */

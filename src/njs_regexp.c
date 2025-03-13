@@ -728,8 +728,8 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    (void) njs_string_prop(&source_string, &source);
-    (void) njs_string_prop(&flags_string, &flags);
+    (void) njs_string_prop(vm, &source_string, &source);
+    (void) njs_string_prop(vm, &flags_string, &flags);
 
     size = source_string.size + flags_string.size + njs_length("//");
     length = source_string.length + flags_string.length + njs_length("//");
@@ -882,7 +882,7 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
         last_index = 0;
     }
 
-    length = njs_string_prop(&string, s);
+    length = njs_string_prop(vm, &string, s);
 
     if (njs_slow_path((size_t) last_index > length)) {
         goto not_found;
@@ -1326,7 +1326,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         return ret;
     }
 
-    length = njs_string_prop(&s, string);
+    length = njs_string_prop(vm, &s, string);
 
     rep.start = NULL;
     rep.length = 0;
@@ -1635,7 +1635,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
         return ret;
     }
 
-    (void) njs_string_prop(&s, retval);
+    (void) njs_string_prop(vm, &s, retval);
 
     sticky = memchr(s.start, 'y', s.size) != NULL;
 
@@ -1690,7 +1690,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
         goto done;
     }
 
-    length = njs_string_prop(&s, string);
+    length = njs_string_prop(vm, &s, string);
 
     if (njs_slow_path(s.size == 0)) {
         ret = njs_regexp_exec(vm, rx, string, NJS_REGEXP_FLAG_TEST, &z);
@@ -1794,7 +1794,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
                 return NJS_ERROR;
             }
 
-            (void) njs_string_prop(&sv, retval);
+            (void) njs_string_prop(vm, &sv, retval);
 
             ret = njs_array_string_add(vm, array, sv.start, sv.size,
                                        sv.length);

@@ -80,8 +80,8 @@ static njs_int_t njs_json_stringify_array(njs_json_stringify_t *stringify);
 
 static njs_int_t njs_json_append_value(njs_vm_t *vm, njs_chb_t *chain,
     njs_value_t *value);
-static void njs_json_append_string(njs_chb_t *chain, const njs_value_t *value,
-    char quote);
+static void njs_json_append_string(njs_vm_t *vm, njs_chb_t *chain,
+    const njs_value_t *value, char quote);
 static void njs_json_append_number(njs_chb_t *chain, const njs_value_t *value);
 
 static njs_object_t *njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
@@ -112,7 +112,7 @@ njs_json_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    (void) njs_string_prop(&string, text);
+    (void) njs_string_prop(vm, &string, text);
 
     p = string.start;
     end = p + string.size;
@@ -225,7 +225,7 @@ njs_json_stringify(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     switch (space->type) {
     case NJS_STRING:
-        length = njs_string_prop(&prop, space);
+        length = njs_string_prop(vm, &prop, space);
         p = njs_string_offset(&prop, njs_min(length, 10));
 
         stringify->space.start = prop.start;
@@ -1167,7 +1167,7 @@ njs_json_stringify_iterator(njs_json_stringify_t *stringify,
         state->written = 1;
 
         if (!state->array) {
-            njs_json_append_string(&chain, key, '\"');
+            njs_json_append_string(stringify->vm, &chain, key, '\"');
             njs_chb_append_literal(&chain,":");
             if (stringify->space.length != 0) {
                 njs_chb_append_literal(&chain," ");
@@ -1441,7 +1441,7 @@ njs_json_append_value(njs_vm_t *vm, njs_chb_t *chain, njs_value_t *value)
 
     switch (value->type) {
     case NJS_STRING:
-        njs_json_append_string(chain, value, '\"');
+        njs_json_append_string(vm, chain, value, '\"');
         break;
 
     case NJS_NUMBER:
@@ -1472,7 +1472,8 @@ njs_json_append_value(njs_vm_t *vm, njs_chb_t *chain, njs_value_t *value)
 
 
 static void
-njs_json_append_string(njs_chb_t *chain, const njs_value_t *value, char quote)
+njs_json_append_string(njs_vm_t *vm, njs_chb_t *chain, const njs_value_t *value,
+    char quote)
 {
     size_t             size;
     u_char             c, *dst, *dst_end;
@@ -1483,7 +1484,7 @@ njs_json_append_string(njs_chb_t *chain, const njs_value_t *value, char quote)
     static char  hex2char[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                   '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
-    (void) njs_string_prop(&string, value);
+    (void) njs_string_prop(vm, &string, value);
 
     p = string.start;
     end = p + string.size;
@@ -1684,10 +1685,10 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
         break;
 
     case NJS_STRING:
-        njs_string_get(vm, value, &str);
+        njs_string_get(stringify->vm, value, &str);
 
         if (!console || stringify->depth != 0) {
-            njs_json_append_string(chain, value, '\'');
+            njs_json_append_string(stringify->vm, chain, value, '\'');
             return NJS_OK;
         }
 
@@ -1701,7 +1702,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
             return NJS_ERROR;
         }
 
-        njs_string_get(vm, &str_val, &str);
+        njs_string_get(stringify->vm, &str_val, &str);
         njs_chb_append_str(chain, &str);
 
         break;
@@ -1738,7 +1739,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
                 return NJS_ERROR;
             }
 
-            njs_string_get(vm, &str_val, &str);
+            njs_string_get(stringify->vm, &str_val, &str);
             njs_chb_sprintf(chain, 16 + str.length, "[Number: %V]", &str);
             break;
 
@@ -1748,7 +1749,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
                 return NJS_ERROR;
             }
 
-            njs_string_get(vm, &str_val, &str);
+            njs_string_get(stringify->vm, &str_val, &str);
             njs_chb_sprintf(chain, 16 + str.length, "[Symbol: %V]", &str);
 
             break;
@@ -1756,7 +1757,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
         case NJS_STRING:
         default:
             njs_chb_append_literal(chain, "[String: ");
-            njs_json_append_string(chain, value, '\'');
+            njs_json_append_string(stringify->vm, chain, value, '\'');
             njs_chb_append_literal(chain, "]");
             break;
         }
@@ -1778,7 +1779,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
         }
 
         if (njs_is_string(&tag)) {
-            njs_string_get(vm, &tag, &str);
+            njs_string_get(stringify->vm, &tag, &str);
         }
 
         if (str.length != 0) {
@@ -1798,7 +1799,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
         }
 
         if (ret == NJS_OK) {
-            (void) njs_string_prop(&string, &tag);
+            (void) njs_string_prop(stringify->vm, &string, &tag);
             njs_chb_append(chain, string.start, string.size);
             njs_chb_append_literal(chain, " ");
         }
@@ -1848,7 +1849,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
             return NJS_ERROR;
         }
 
-        njs_string_get(vm, &str_val, &str);
+        njs_string_get(stringify->vm, &str_val, &str);
         njs_chb_append_str(chain, &str);
 
         break;
@@ -2011,7 +2012,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
             }
 
             if (ret == NJS_OK) {
-                (void) njs_string_prop(&string, &tag);
+                (void) njs_string_prop(vm, &string, &tag);
                 njs_chb_append(&chain, string.start, string.size);
                 njs_chb_append_literal(&chain, " ");
             }

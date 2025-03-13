@@ -2051,7 +2051,7 @@ njs_typed_array_to_chain(njs_vm_t *vm, njs_chb_t *chain,
         sep = njs_value_arg(&njs_atom.vs_spec_COMMA);
     }
 
-    (void) njs_string_prop(&separator, sep);
+    (void) njs_string_prop(vm, &separator, sep);
 
     length = njs_typed_array_length(array);
 

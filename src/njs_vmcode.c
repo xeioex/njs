@@ -2349,8 +2349,8 @@ njs_string_concat(njs_vm_t *vm, njs_value_t *val1, njs_value_t *val2,
     size_t             size, length;
     njs_string_prop_t  string1, string2;
 
-    (void) njs_string_prop(&string1, val1);
-    (void) njs_string_prop(&string2, val2);
+    (void) njs_string_prop(vm, &string1, val1);
+    (void) njs_string_prop(vm, &string2, val2);
 
     length = string1.length + string2.length;
     size = string1.size + string2.size;
@@ -2393,7 +2393,6 @@ again:
     if (val1->type == val2->type) {
 
         if (njs_is_string(val1)) {
-
             if (val1->atom_id == 0) {
                 ret = njs_atom_atomize_key(vm, val1);
                 if (njs_slow_path(ret != NJS_OK)) {
@@ -2407,6 +2406,7 @@ again:
                     return -1;
                 }
             }
+
             return val1->atom_id == val2->atom_id;
         }
 
@@ -2441,7 +2441,7 @@ again:
     /* If "hv" is a string then "lv" can be a numeric or symbol. */
     if (njs_is_string(hv)) {
         return !njs_is_symbol(lv)
-            && (njs_number(lv) == njs_string_to_number(hv));
+            && (njs_number(lv) == njs_string_to_number(vm, hv));
     }
 
     /* "hv" is an object and "lv" is either a string or a symbol or a numeric. */
@@ -2478,11 +2478,11 @@ njs_primitive_values_compare(njs_vm_t *vm, njs_value_t *val1, njs_value_t *val2)
             num2 = njs_number(val2);
 
         } else {
-            num2 = njs_string_to_number(val2);
+            num2 = njs_string_to_number(vm, val2);
         }
 
     } else if (njs_is_numeric(val2)) {
-        num1 = njs_string_to_number(val1);
+        num1 = njs_string_to_number(vm, val1);
         num2 = njs_number(val2);
 
     } else {

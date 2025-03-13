@@ -1120,7 +1120,7 @@ njs_vm_value_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
                       && njs_number(src) == 0
                       && signbit(njs_number(src))))
     {
-        njs_string_get(vm, &njs_atom.vs__0, dst); /* minus zero */
+        *dst = njs_str_value("-0");
         return NJS_OK;
     }
 
@@ -1519,7 +1519,7 @@ njs_vm_value_to_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
 
     if (njs_is_error(src)) {
         if (njs_is_memory_error(vm, src)) {
-            njs_string_get(vm, &njs_atom.vs_MemoryError, dst);
+            *dst = njs_str_value("MemoryError");
             return NJS_OK;
         }
 

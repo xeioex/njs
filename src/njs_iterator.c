@@ -337,7 +337,7 @@ njs_object_iterate(njs_vm_t *vm, njs_iterator_args_t *args,
             value = njs_object_value(value);
         }
 
-        length = njs_string_prop(&string_prop, value);
+        length = njs_string_prop(vm, &string_prop, value);
 
         p = string_prop.start;
         end = p + string_prop.size;
@@ -494,7 +494,7 @@ njs_object_iterate_reverse(njs_vm_t *vm, njs_iterator_args_t *args,
             value = njs_object_value(value);
         }
 
-        length = njs_string_prop(&string_prop, value);
+        length = njs_string_prop(vm, &string_prop, value);
         end = string_prop.start + string_prop.size;
 
         if ((size_t) length == string_prop.size) {

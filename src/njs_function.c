@@ -142,7 +142,7 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
     if (prefix != NULL || symbol != 0) {
         if (njs_is_defined(njs_prop_value(prop))) {
             njs_value_assign(&value, njs_prop_value(prop));
-            (void) njs_string_prop(&string, &value);
+            (void) njs_string_prop(vm, &string, &value);
 
             len = (prefix != NULL) ? njs_strlen(prefix) + 1: 0;
             p = njs_string_alloc(vm, njs_prop_value(prop),

@@ -100,7 +100,7 @@ njs_text_encoder_encode(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
         }
 
-        (void) njs_string_prop(&prop, input);
+        (void) njs_string_prop(vm, &prop, input);
 
         if (prop.length != 0) {
             return njs_text_encoder_encode_utf8(vm, &prop, retval);
