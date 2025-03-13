@@ -941,7 +941,7 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
 
         prop = elt->value;
 
-        ret = njs_get_prop_name_by_atom_id(vm, &prop_name, elt->key_hash);
+        ret = njs_atom_to_string(vm, &prop_name, elt->key_hash);
         if (ret != NJS_OK) {
             return NJS_ERROR;
         }
@@ -1020,7 +1020,7 @@ local_hash:
 
         prop = elt->value;
 
-        ret = njs_get_prop_name_by_atom_id(vm, &prop_name, elt->key_hash);
+        ret = njs_atom_to_string(vm, &prop_name, elt->key_hash);
         if (ret != NJS_OK) {
             return NJS_ERROR;
         }
@@ -1244,7 +1244,7 @@ njs_object_copy_shared_hash(njs_vm_t *vm, njs_object_t *object)
 
         prop = elt->value;
 
-        ret = njs_get_prop_name_by_atom_id(vm, &prop_name, elt->key_hash);
+        ret = njs_atom_to_string(vm, &prop_name, elt->key_hash);
         if (ret != NJS_OK) {
             return NJS_ERROR;
         }
