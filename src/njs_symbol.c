@@ -27,7 +27,7 @@ njs_symbol_descriptive_string(njs_vm_t *vm, njs_value_t *dst,
     description = njs_symbol_description(value);
 
     if (njs_is_undefined(description)) {
-        description = &njs_atom.vs_;
+        description = &njs_value_empty_string;
     }
 
     (void) njs_string_prop(vm, &string, description);

@@ -888,13 +888,6 @@ njs_vm_value(njs_vm_t *vm, const njs_str_t *path, njs_value_t *retval)
             return NJS_ERROR;
         }
 
-        if(!key.atom_id) {
-            ret = njs_atom_atomize_key(vm, &key);
-            if (njs_slow_path(ret != NJS_OK)) {
-                return NJS_ERROR;
-            }
-        }
-
         ret = njs_value_property(vm, &value, &key, njs_value_arg(retval));
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
@@ -1538,8 +1531,7 @@ njs_vm_value_to_string(njs_vm_t *vm, njs_str_t *dst, njs_value_t *src)
     ret = njs_value_to_string(vm, &value, &value);
 
     if (njs_fast_path(ret == NJS_OK)) {
-        dst->length = value.string.data->size;
-        dst->start = value.string.data->start;
+        njs_string_get(vm, &value, dst);
     }
 
     return ret;

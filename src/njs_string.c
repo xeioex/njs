@@ -385,7 +385,7 @@ njs_string_base64(njs_vm_t *vm, njs_value_t *retval, const njs_str_t *src)
     length = njs_encode_base64_length(src, &dst.length);
 
     if (njs_slow_path(dst.length == 0)) {
-        njs_value_assign(retval, &njs_atom.vs_);
+        njs_set_empty_string(retval);
         return NJS_OK;
     }
 
@@ -538,7 +538,13 @@ njs_string_instance_length(njs_vm_t *vm, njs_object_prop_t *prop,
 njs_bool_t
 njs_string_eq(const njs_value_t *v1, const njs_value_t *v2)
 {
-    size_t  size, length1, length2;
+    size_t  size;
+
+    if (v1->atom_id != 0) {
+        if (v2->atom_id != 0) {
+            return (v1->atom_id == v2->atom_id);
+        }
+    }
 
     size = v1->string.data->size;
 
@@ -546,10 +552,7 @@ njs_string_eq(const njs_value_t *v1, const njs_value_t *v2)
         return 0;
     }
 
-    length1 = v1->string.data->length;
-    length2 = v2->string.data->length;
-
-    if (length1 != 0 && length2 != 0 && length1 != length2) {
+    if (v1->string.data->length != v2->string.data->length) {
         return 0;
     }
 
@@ -3308,6 +3311,10 @@ njs_string_to_index(const njs_value_t *value)
 
     if (njs_slow_path(value->type == NJS_SYMBOL)) {
         return NAN;
+    }
+
+    if (njs_atom_is_number(value->atom_id)) {
+        return njs_atom_number(value->atom_id);
     }
 
     size = value->string.data->size;
