@@ -2642,7 +2642,7 @@ njs_data_view_prototype_set(njs_vm_t *vm, njs_value_t *args,
 
 static const njs_object_propi_t  njs_data_view_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_strval(DataView),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(DataView),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_HANDLER(constructor,
@@ -2770,7 +2770,7 @@ const njs_object_type_init_t  njs_typed_array_u8_type_init = {
 
 static const njs_object_propi_t  njs_typed_array_u8c_constructor_props[] =
 {
-    NJS_DECLARE_PROP_VALUE(name, njs_strval(Uint8ClampedArray),
+    NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval(Uint8ClampedArray),
                          NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_LENGTH(3),

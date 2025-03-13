@@ -259,7 +259,7 @@ static const njs_object_propi_t  njs_array_iterator_prototype_properties[] =
                             0, NJS_DATA_TAG_ARRAY_ITERATOR),
 
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag,
-                           njs_strval(Array_Iterator),
+                           njs_ascii_strval(Array_Iterator),
                            NJS_OBJECT_PROP_VALUE_C),
 };
 

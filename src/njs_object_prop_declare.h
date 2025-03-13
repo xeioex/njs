@@ -46,7 +46,8 @@
 
 
 #define NJS_DECLARE_PROP_NAME(_name)                                          \
-    NJS_DECLARE_PROP_VALUE(name, njs_strval(_name), NJS_OBJECT_PROP_VALUE_C)
+    NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval(_name),                     \
+                           NJS_OBJECT_PROP_VALUE_C)
 
 
 #define NJS_DECLARE_PROP_LENGTH(_v)                                           \

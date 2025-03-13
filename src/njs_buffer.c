@@ -2470,7 +2470,7 @@ njs_buffer_decode_string(njs_vm_t *vm, const njs_value_t *value,
 
 static const njs_object_propi_t  njs_buffer_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_strval(Buffer),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(Buffer),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_HANDLER(constructor,

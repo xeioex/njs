@@ -51,8 +51,10 @@ njs_int_t njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value);
 extern const njs_atom_values_t    njs_atom;
 extern const njs_flathsh_proto_t  njs_atom_hash_proto;
 
+
+/* Returns string or symbol. */
 njs_inline njs_int_t
-njs_atom_to_string(njs_vm_t *vm, njs_value_t *string, uint32_t atom_id)
+njs_atom_to_value(njs_vm_t *vm, njs_value_t *dst, uint32_t atom_id)
 {
     size_t  size;
     double  num;
@@ -62,15 +64,15 @@ njs_atom_to_string(njs_vm_t *vm, njs_value_t *string, uint32_t atom_id)
         num = atom_id & 0x7FFFFFFF;
         size = njs_dtoa(num, (char *) buf);
 
-        return njs_string_new(vm, string, buf, size, size);
+        return njs_string_new(vm, dst, buf, size, size);
     }
 
     if (atom_id < vm->atom_hash_atom_id_shared_cell) {
-        *string = *((njs_value_t *) (njs_hash_elts(
+        *dst = *((njs_value_t *) (njs_hash_elts(
                       (&vm->atom_hash_shared_cell)->slot))[atom_id].value);
 
     } else {
-        *string = *((njs_value_t *) (njs_hash_elts(vm->atom_hash->slot))[
+        *dst = *((njs_value_t *) (njs_hash_elts(vm->atom_hash->slot))[
                       atom_id - vm->atom_hash_atom_id_shared_cell].value);
     }
 

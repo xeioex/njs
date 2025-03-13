@@ -40,7 +40,7 @@ njs_boolean_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
 static const njs_object_propi_t  njs_boolean_constructor_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(name, njs_strval(Boolean),
+    NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval(Boolean),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_VALUE(length, njs_value(NJS_NUMBER, 1, 1.0),

@@ -17,7 +17,7 @@
     .vw_ ## name = njs_symval(name),
 
 #define NJS_DEF_VS(name) \
-    .vs_ ## name = njs_strval(name),
+    .vs_ ## name = njs_ascii_strval(name),
 
 const njs_atom_values_t njs_atom = {
     #include <njs_atom_defs.h>

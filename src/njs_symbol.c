@@ -278,7 +278,7 @@ njs_symbol_prototype_description(njs_vm_t *vm, njs_value_t *args,
 
 static const njs_object_propi_t  njs_symbol_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_strval(Symbol),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(Symbol),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_HANDLER(__proto__,
