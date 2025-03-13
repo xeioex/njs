@@ -133,7 +133,7 @@ njs_regexp_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
 
         } else {
-            pattern = njs_value_arg(&njs_atom.vs_);
+            pattern = njs_value_arg(&njs_value_empty_string);
         }
 
         re_flags = 0;
@@ -510,7 +510,7 @@ njs_regexp_alloc(njs_vm_t *vm, njs_regexp_pattern_t *pattern)
         regexp->object.error_data = 0;
         njs_set_number(&regexp->last_index, 0);
         regexp->pattern = pattern;
-        regexp->string = njs_atom.vs_;
+        njs_set_empty_string(&regexp->string);
         return regexp;
     }
 
@@ -1060,8 +1060,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
 
     njs_set_number(&prop->u.value, index);
 
-    lhq.key_hash = njs_atom.vs_index.atom_id;
-
+    lhq.key_hash = NJS_ATOM_index;
     lhq.replace = 0;
     lhq.value = prop;
     lhq.pool = vm->mem_pool;
@@ -1077,8 +1076,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto fail;
     }
 
-    lhq.key_hash = njs_atom.vs_input.atom_id;
-
+    lhq.key_hash = NJS_ATOM_input;
     lhq.value = prop;
 
     ret = njs_flathsh_obj_insert(&array->object.hash, &lhq);
@@ -1091,8 +1089,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto fail;
     }
 
-    lhq.key_hash = njs_atom.vs_groups.atom_id;
-
+    lhq.key_hash = NJS_ATOM_groups;
     lhq.value = prop;
 
     ret = njs_flathsh_obj_insert(&array->object.hash, &lhq);

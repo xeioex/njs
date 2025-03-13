@@ -781,7 +781,7 @@ extern const njs_value_t  njs_value_true;
 extern const njs_value_t  njs_value_zero;
 extern const njs_value_t  njs_value_nan;
 extern const njs_value_t  njs_value_invalid;
-
+extern const njs_value_t  njs_value_empty_string;
 
 njs_inline void
 njs_set_boolean(njs_value_t *value, unsigned yn)
@@ -803,6 +803,20 @@ njs_set_number(njs_value_t *value, double num)
     value->data.truth = njs_is_number_true(num);
     value->atom_id = 0;
 }
+
+
+njs_inline void
+njs_set_string(njs_value_t *value, uint32_t atom_id)
+{
+    value->type = NJS_STRING;
+    value->data.truth = (atom_id != 0);
+    value->atom_id = atom_id;
+    value->string.data = NULL;
+}
+
+
+#define njs_set_empty_string(value) \
+    njs_set_string(value, NJS_ATOM_)
 
 
 njs_inline void

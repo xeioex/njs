@@ -174,6 +174,14 @@ njs_uint32_to_string(njs_vm_t *vm, njs_value_t *value, uint32_t u32)
     size_t  size;
     u_char  *p;
 
+    if (!(u32 & 0x80000000)) {
+        value->type = NJS_STRING;
+        value->data.truth = (u32 != 0);
+        value->atom_id = njs_number_atom(u32);
+        value->string.data = NULL;
+        return NJS_OK;
+    }
+
     p = njs_string_alloc(vm, value, 10, 10);
     if (njs_slow_path(p == NULL)) {
         return NJS_ERROR;
@@ -182,10 +190,6 @@ njs_uint32_to_string(njs_vm_t *vm, njs_value_t *value, uint32_t u32)
     size = njs_sprintf(p, p + 10, "%uD", u32) - p;
     value->string.data->length = size;
     value->string.data->size = size;
-
-    if (!(u32 & 0x80000000)) {
-        value->atom_id = njs_number_atom(u32);
-    }
 
     return NJS_OK;
 }

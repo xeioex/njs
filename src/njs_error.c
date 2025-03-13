@@ -213,16 +213,13 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     lhq.proto = &njs_object_hash_proto;
 
     if (name != NULL) {
-        lhq.key_hash = njs_atom.vs_name.atom_id;
-
         prop = njs_object_prop_alloc(vm, name, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
         }
 
         lhq.value = prop;
-
-        lhq.key_hash = njs_atom.vs_name.atom_id;
+        lhq.key_hash = NJS_ATOM_name;
 
         ret = njs_flathsh_obj_insert(&error->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
@@ -232,8 +229,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     }
 
     if (message!= NULL) {
-        lhq.key_hash = njs_atom.vs_message.atom_id;
-
         prop = njs_object_prop_alloc(vm, message, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
@@ -242,8 +237,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         prop->enumerable = 0;
 
         lhq.value = prop;
-
-        lhq.key_hash = njs_atom.vs_message.atom_id;
+        lhq.key_hash = NJS_ATOM_message;
 
         ret = njs_flathsh_obj_insert(&error->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
@@ -253,7 +247,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     }
 
     if (errors != NULL) {
-
         prop = njs_object_prop_alloc(vm, errors, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
@@ -262,8 +255,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         prop->enumerable = 0;
 
         lhq.value = prop;
-
-        lhq.key_hash = njs_atom.vs_errors.atom_id;
+        lhq.key_hash = NJS_ATOM_errors;
 
         ret = njs_flathsh_obj_insert(&error->hash, &lhq);
         if (njs_slow_path(ret != NJS_OK)) {
