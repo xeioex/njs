@@ -1077,7 +1077,7 @@ njs_vm_prop_name(njs_vm_t *vm, uint32_t atom_id, njs_str_t *dst)
     njs_int_t      ret;
     njs_value_t    prop_name;
 
-    ret = njs_atom_to_string(vm, &prop_name, atom_id);
+    ret = njs_atom_to_value(vm, &prop_name, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }

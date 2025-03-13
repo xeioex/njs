@@ -1773,7 +1773,7 @@ static const njs_object_propi_t  njs_promise_prototype_properties[] =
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_strval(Promise),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(Promise),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_NATIVE(then, njs_promise_prototype_then, 2, 0),

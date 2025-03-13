@@ -722,7 +722,7 @@ njs_prop_private_copy(njs_vm_t *vm, njs_property_query_t *pq,
             return NJS_ERROR;
         }
 
-        ret = njs_atom_to_string(vm, &prop_name, pq->lhq.key_hash);
+        ret = njs_atom_to_value(vm, &prop_name, pq->lhq.key_hash);
         if (ret != NJS_OK) {
             return NJS_ERROR;
         }

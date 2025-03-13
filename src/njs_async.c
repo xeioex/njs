@@ -180,7 +180,7 @@ static const njs_object_init_t  njs_async_constructor_init = {
 
 static const njs_object_propi_t  njs_async_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_strval(AsyncFunction),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(AsyncFunction),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_HANDLER(constructor,

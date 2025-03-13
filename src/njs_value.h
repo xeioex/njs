@@ -394,13 +394,12 @@ typedef struct {
         .type = NJS_SYMBOL,                                                   \
         .truth = 1,                                                           \
         .magic32 = NJS_ATOM_SYMBOL_ ## name,                                  \
-        .u = { .value = (njs_value_t *) &njs_strval(Symbol_ ## name) }         \
+        .u = { .value = (njs_value_t *) &njs_ascii_strval(Symbol_ ## name) }  \
     }                                                                         \
 }
 
 
-/* Declares an ASCII string value for which size == length. */
-#define njs_strval(s) (njs_value_t) {                                         \
+#define njs_ascii_strval(s) (njs_value_t) {                                   \
     .string = {                                                               \
         .type = NJS_STRING,                                                   \
         .truth = njs_length(njs_tbl_str_vs_ ## s) ? 1 : 0,                    \

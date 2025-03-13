@@ -236,7 +236,7 @@ static const njs_object_propi_t  njs_text_encoder_properties[] =
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(encoding, njs_strval(utf_8), 0),
+    NJS_DECLARE_PROP_VALUE(encoding, njs_ascii_strval(utf_8), 0),
 
     NJS_DECLARE_PROP_NATIVE(encode, njs_text_encoder_encode, 0, 0),
 
