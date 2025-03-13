@@ -9,6 +9,18 @@
 #define _NJS_ATOM_H_INCLUDED_
 
 
+#define njs_atom_is_number(atom_id) \
+    ((atom_id & 0x80000000))
+
+
+#define njs_atom_number(atom_id) \
+    (atom_id & 0x7FFFFFFF)
+
+
+#define njs_number_atom(n) \
+    (n | 0x80000000)
+
+
 #ifdef NJS_DEF_VW
     #undef NJS_DEF_VW
     #undef NJS_DEF_VS
@@ -60,8 +72,8 @@ njs_atom_to_value(njs_vm_t *vm, njs_value_t *dst, uint32_t atom_id)
     double  num;
     u_char  buf[128];
 
-    if (atom_id & 0x80000000) {
-        num = atom_id & 0x7FFFFFFF;
+    if (njs_atom_is_number(atom_id)) {
+        num = njs_atom_number(atom_id);
         size = njs_dtoa(num, (char *) buf);
 
         return njs_string_new(vm, dst, buf, size, size);

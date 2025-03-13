@@ -76,7 +76,7 @@ static njs_int_t njs_buffer_write_string(njs_vm_t *vm, njs_value_t *value,
     njs_typed_array_t *array, const njs_buffer_encoding_t *encoding,
     uint64_t offset, uint64_t length, njs_value_t *retval);
 static njs_int_t njs_buffer_fill(njs_vm_t *vm, njs_typed_array_t *array,
-    const njs_value_t *fill, const njs_value_t *encoding, uint64_t offset,
+    const njs_value_t *fill, njs_value_t *encoding, uint64_t offset,
     uint64_t end);
 static njs_int_t njs_buffer_fill_string(njs_vm_t *vm, const njs_value_t *value,
     njs_typed_array_t *array, const njs_buffer_encoding_t *encoding,
@@ -543,14 +543,14 @@ njs_buffer_from_string(njs_vm_t *vm, njs_value_t *value,
 
 
 static size_t
-njs_buffer_decode_string_length(njs_value_t *value,
+njs_buffer_decode_string_length(njs_vm_t *vm, njs_value_t *value,
     const njs_buffer_encoding_t *encoding)
 {
     size_t             size;
     njs_str_t          str;
     njs_string_prop_t  string;
 
-    (void) njs_string_prop(&string, value);
+    (void) njs_string_prop(vm, &string, value);
 
     str.start = string.start;
     str.length = string.size;
@@ -595,7 +595,7 @@ njs_buffer_byte_length(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return NJS_ERROR;
         }
 
-        size = njs_buffer_decode_string_length(value, encoding);
+        size = njs_buffer_decode_string_length(vm, value, encoding);
 
         njs_set_number(retval, size);
 
@@ -965,7 +965,7 @@ static njs_int_t
 njs_buffer_is_encoding(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
 {
-    const njs_value_t  *value;
+    njs_value_t  *value;
 
     value = njs_arg(args, nargs, 1);
     njs_set_boolean(retval, njs_is_defined(value)
@@ -1813,7 +1813,7 @@ done:
 
 static njs_int_t
 njs_buffer_fill(njs_vm_t *vm, njs_typed_array_t *array, const njs_value_t *fill,
-    const njs_value_t *encode, uint64_t offset, uint64_t end)
+    njs_value_t *encode, uint64_t offset, uint64_t end)
 {
     double                       num;
     uint8_t                      *start, *stop;
@@ -2407,7 +2407,7 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
 
 const njs_buffer_encoding_t *
-njs_buffer_encoding(njs_vm_t *vm, const njs_value_t *value, njs_bool_t throw)
+njs_buffer_encoding(njs_vm_t *vm, njs_value_t *value, njs_bool_t throw)
 {
     njs_str_t                    name;
     const njs_buffer_encoding_t  *encoding;
@@ -2448,7 +2448,7 @@ njs_buffer_decode_string(njs_vm_t *vm, const njs_value_t *value,
     njs_str_t          str;
     njs_string_prop_t  string;
 
-    (void) njs_string_prop(&string, value);
+    (void) njs_string_prop(vm, &string, value);
 
     str.start = string.start;
     str.length = string.size;

@@ -762,9 +762,11 @@ njs_lexer_keyword_find(njs_vm_t *vm, u_char *key, size_t size, size_t length,
     }
 
     entry->string.atom_id = (*vm->atom_hash_atom_id)++;
-    if (entry->string.atom_id >= 0x80000000) {
+    if (njs_atom_is_number(entry->string.atom_id)) {
+        njs_internal_error(vm, "too many atoms");
         return NULL;
     }
+
     entry->string.token_type = 0;
 
     lhq.value = entry;

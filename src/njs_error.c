@@ -629,7 +629,7 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
         name_value = &value1;
     }
 
-    (void) njs_string_prop(&name, name_value);
+    (void) njs_string_prop(vm, &name, name_value);
 
     ret = njs_value_property(vm,  (njs_value_t *) error,
                              njs_value_arg(&njs_atom.vs_message),
@@ -649,7 +649,7 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
         message_value = &value2;
     }
 
-    (void) njs_string_prop(&message, message_value);
+    (void) njs_string_prop(vm, &message, message_value);
 
     if (name.size == 0) {
         *retval = *message_value;

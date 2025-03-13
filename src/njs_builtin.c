@@ -1358,7 +1358,7 @@ njs_env_hash_init(njs_vm_t *vm, njs_flathsh_obj_t *hash, char **environment)
             return NJS_ERROR;
         }
 
-        (void) njs_string_prop(&string, &prop_name);
+        (void) njs_string_prop(vm, &string, &prop_name);
 
         length = string.length;
         s = string.start;

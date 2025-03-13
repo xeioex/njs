@@ -714,7 +714,7 @@ njs_object_enumerate_string(njs_vm_t *vm, const njs_value_t *value,
     const u_char       *src, *end;
     njs_string_prop_t  str_prop;
 
-    len = (uint32_t) njs_string_prop(&str_prop, value);
+    len = (uint32_t) njs_string_prop(vm, &str_prop, value);
 
     ret = njs_array_expand(vm, items, 0, len);
     if (njs_slow_path(ret != NJS_OK)) {
@@ -2592,7 +2592,7 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
         return NJS_OK;
     }
 
-    (void) njs_string_prop(&string, &tag);
+    (void) njs_string_prop(vm, &string, &tag);
 
     p = njs_string_alloc(vm, retval, string.size + njs_length("[object ]"),
                          string.length + njs_length("[object ]"));

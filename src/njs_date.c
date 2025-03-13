@@ -52,7 +52,7 @@ typedef enum {
 } njs_date_fmt_t;
 
 
-static double njs_date_string_parse(njs_value_t *date);
+static double njs_date_string_parse(njs_vm_t *vm, njs_value_t *date);
 static double njs_date_rfc2822_string_parse(int64_t tm[], const u_char *p,
     const u_char *end);
 static double njs_date_js_string_parse(int64_t tm[], const u_char *p,
@@ -422,7 +422,7 @@ njs_date_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             time = njs_date(&args[1])->time;
 
         } else if (njs_is_string(&args[1])) {
-            time = njs_date_string_parse(&args[1]);
+            time = njs_date_string_parse(vm, &args[1]);
 
         } else {
             time = njs_timeclip(njs_number(&args[1]));
@@ -499,7 +499,7 @@ njs_date_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
         }
 
-        time = njs_date_string_parse(&args[1]);
+        time = njs_date_string_parse(vm, &args[1]);
 
     } else {
         time = NAN;
@@ -545,7 +545,7 @@ njs_date_utc_offset_parse(const u_char *start, const u_char *end)
 }
 
 static double
-njs_date_string_parse(njs_value_t *date)
+njs_date_string_parse(njs_vm_t *vm, njs_value_t *date)
 {
     size_t         ms_length;
     int64_t        ext, utc_off;

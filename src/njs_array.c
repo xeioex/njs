@@ -823,7 +823,7 @@ njs_array_prototype_slice_copy(njs_vm_t *vm, njs_value_t *this,
 
             string_slice.start = start;
             string_slice.length = length;
-            string_slice.string_length = njs_string_prop(&string, this);
+            string_slice.string_length = njs_string_prop(vm, &string, this);
 
             njs_string_slice_string_prop(&string, &string, &string_slice);
 
@@ -1672,7 +1672,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    (void) njs_string_prop(&separator, value);
+    (void) njs_string_prop(vm, &separator, value);
 
     if (njs_slow_path(!njs_is_object(this))) {
         njs_value_assign(retval, &njs_atom.vs_);
@@ -1711,7 +1711,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 length += ret;
 
             } else {
-                (void) njs_string_prop(&string, value);
+                (void) njs_string_prop(vm, &string, value);
                 length += string.length;
                 njs_chb_append(&chain, string.start, string.size);
             }
@@ -1780,8 +1780,9 @@ njs_array_indices_handler(const void *first, const void *second, void *ctx)
         return diff != 0;
     }
 
-    njs_string_get(vm, val1, &str1);
-    njs_string_get(vm, val2, &str2);
+    /* properties from njs_value_own_enumerate() are always intialized. */
+    njs_string_get_unsafe(val1, &str1);
+    njs_string_get_unsafe(val2, &str2);
 
     cmp_res = strncmp((const char *) str1.start, (const char *) str2.start,
                       njs_min(str1.length, str2.length));

@@ -968,7 +968,7 @@ njs_number_parse_int(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return ret;
     }
 
-    (void) njs_string_trim(value, &string, NJS_TRIM_START);
+    (void) njs_string_trim(vm, value, &string, NJS_TRIM_START);
 
     if (string.size == 0) {
         goto done;
@@ -1046,7 +1046,7 @@ njs_number_parse_float(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return ret;
     }
 
-    (void) njs_string_trim(value, &string, NJS_TRIM_START);
+    (void) njs_string_trim(vm, value, &string, NJS_TRIM_START);
 
     p = string.start;
     end = p + string.size;

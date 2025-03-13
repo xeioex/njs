@@ -30,7 +30,7 @@ njs_symbol_descriptive_string(njs_vm_t *vm, njs_value_t *dst,
         description = &njs_atom.vs_;
     }
 
-    (void) njs_string_prop(&string, description);
+    (void) njs_string_prop(vm, &string, description);
 
     string.length += njs_length("Symbol()");
 

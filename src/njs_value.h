@@ -530,10 +530,22 @@ typedef struct {
     (njs_is_number(value) || njs_is_key(value))
 
 
-#define njs_string_get(vm, value, str)                                        \
+#define njs_string_get_unsafe(value, str)                                     \
     do {                                                                      \
+        njs_assert((value)->string.data != NULL);                             \
         (str)->length = (value)->string.data->size;                           \
         (str)->start = (u_char *) (value)->string.data->start;                \
+    } while (0)
+
+
+#define njs_string_get(vm, value, str)                                        \
+    do {                                                                      \
+        if (njs_slow_path((value)->string.data == NULL)) {                    \
+            njs_assert((value)->atom_id != 0);                                \
+            njs_atom_to_value(vm, value, (value)->atom_id);                   \
+        }                                                                     \
+                                                                              \
+        njs_string_get_unsafe(value, str);                                    \
     } while (0)
 
 
@@ -950,7 +962,7 @@ njs_int_t njs_primitive_value_to_string(njs_vm_t *vm, njs_value_t *dst,
     const njs_value_t *src);
 njs_int_t njs_primitive_value_to_chain(njs_vm_t *vm, njs_chb_t *chain,
     const njs_value_t *src);
-double njs_string_to_number(const njs_value_t *value);
+double njs_string_to_number(njs_vm_t *vm, const njs_value_t *value);
 njs_int_t njs_int64_to_string(njs_vm_t *vm, njs_value_t *value, int64_t i64);
 
 njs_bool_t njs_string_eq(const njs_value_t *v1, const njs_value_t *v2);
