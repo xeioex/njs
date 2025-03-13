@@ -230,7 +230,7 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
         njs_set_object_value(retval, ov);
     }
 
-    ret = njs_get_prop_name_by_atom_id(vm, &self_name, atom_id);
+    ret = njs_atom_to_string(vm, &self_name, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }

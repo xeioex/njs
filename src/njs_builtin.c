@@ -380,7 +380,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
     do {
         symbol = 0;
 
-        ret = njs_get_prop_name_by_atom_id(vm, &key, path[n]->prop_atom_id);
+        ret = njs_atom_to_string(vm, &key, path[n]->prop_atom_id);
         if (ret != NJS_OK) {
             return NJS_ERROR;
         }
@@ -791,7 +791,7 @@ njs_global_this_prop_handler(njs_vm_t *vm, njs_object_prop_t *prop,
         return NJS_DECLINED;
     }
 
-    ret = njs_get_prop_name_by_atom_id(vm, &prop_name, atom_id);
+    ret = njs_atom_to_string(vm, &prop_name, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -877,7 +877,7 @@ njs_global_this_object(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
         njs_value_assign(retval, setval);
     }
 
-    ret = njs_get_prop_name_by_atom_id(vm, &self_name, atom_id);
+    ret = njs_atom_to_string(vm, &self_name, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -936,7 +936,7 @@ njs_top_level_object(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
         object->__proto__ = njs_vm_proto(vm, NJS_OBJ_TYPE_OBJECT);
     }
 
-    ret = njs_get_prop_name_by_atom_id(vm, &self_name, atom_id);
+    ret = njs_atom_to_string(vm, &self_name, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -1000,7 +1000,7 @@ njs_top_level_constructor(njs_vm_t *vm, njs_object_prop_t *self,
         return NJS_OK;
     }
 
-    ret = njs_get_prop_name_by_atom_id(vm, &self_name, atom_id);
+    ret = njs_atom_to_string(vm, &self_name, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
