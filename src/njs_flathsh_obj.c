@@ -263,10 +263,7 @@ njs_flathsh_obj_find(const njs_flathsh_obj_t *fh, njs_flathsh_obj_query_t *fhq)
     while (elt_num != 0) {
         e = &elts[elt_num - 1];
 
-        /* TODO: need to be replaced by atomic test. */
-
-        if (e->key_hash == fhq->key_hash)
-        {
+        if (e->key_hash == fhq->key_hash) {
             fhq->value = e->value;
             return NJS_OK;
         }
