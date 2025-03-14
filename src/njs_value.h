@@ -372,7 +372,6 @@ typedef struct {
     /* scratch is used to get the value of an NJS_PROPERTY_HANDLER property. */
     njs_object_prop_t           scratch;
 
-    njs_value_t                 key;
     njs_flathsh_obj_t           *own_whiteout;
 
     uint8_t                     temp;
@@ -987,6 +986,8 @@ njs_bool_t njs_string_eq(njs_vm_t *vm, const njs_value_t *v1,
 
 njs_int_t njs_property_query(njs_vm_t *vm, njs_property_query_t *pq,
     njs_value_t *value, njs_value_t *key);
+njs_int_t njs_property_query_atom(njs_vm_t *vm, njs_property_query_t *pq,
+    njs_value_t *value, uint32_t atom_id);
 
 njs_int_t njs_value_property(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *retval);
