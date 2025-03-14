@@ -2119,8 +2119,7 @@ njs_vmcode_proto_init(njs_vm_t *vm, njs_value_t *value, njs_value_t *unused,
     njs_object_prop_t        *prop;
     njs_flathsh_obj_query_t  lhq;
 
-    lhq.key_hash = njs_atom.vs___proto__.atom_id;
-
+    lhq.key_hash = NJS_ATOM___proto__;
     lhq.proto = &njs_object_hash_proto;
     lhq.pool = vm->mem_pool;
 

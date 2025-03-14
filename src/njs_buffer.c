@@ -1993,7 +1993,7 @@ njs_buffer_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     str.length = end - start;
 
     if (njs_slow_path(str.length == 0)) {
-        njs_value_assign(retval, &njs_atom.vs_);
+        njs_set_empty_string(vm, retval);
         return NJS_OK;
     }
 

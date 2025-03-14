@@ -3551,7 +3551,7 @@ njs_string_encode_uri(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     };
 
     if (nargs < 2) {
-        njs_value_assign(retval, &njs_atom.vs_undefined);
+        njs_atom_to_value(vm, retval, NJS_ATOM_undefined);
         return NJS_OK;
     }
 
@@ -4110,7 +4110,7 @@ njs_string_atob(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (size == 0) {
-        njs_value_assign(retval, &njs_atom.vs_);
+        njs_set_empty_string(vm, retval);
         return NJS_OK;
     }
 

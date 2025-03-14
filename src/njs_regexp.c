@@ -676,7 +676,7 @@ njs_regexp_prototype_source(njs_vm_t *vm, njs_value_t *args,
 
     if (njs_slow_path(!njs_is_regexp(this))) {
         if (njs_object(this) == njs_vm_proto(vm, NJS_OBJ_TYPE_REGEXP)) {
-            njs_value_assign(retval, &njs_atom.vs_spec_EMPTY_REGEXP);
+            njs_atom_to_value(vm, retval, NJS_ATOM_spec_EMPTY_REGEXP);
             return NJS_OK;
         }
 

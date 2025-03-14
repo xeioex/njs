@@ -1621,7 +1621,7 @@ njs_array_prototype_to_string(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     if (njs_is_object(njs_argument(args, 0))) {
         lhq.proto = &njs_object_hash_proto;
-        lhq.key_hash = njs_atom.vs_join.atom_id;
+        lhq.key_hash = NJS_ATOM_join;
 
         ret = njs_object_property(vm, njs_object(njs_argument(args, 0)), &lhq,
                                   &value);
@@ -1675,7 +1675,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     (void) njs_string_prop(vm, &separator, value);
 
     if (njs_slow_path(!njs_is_object(this))) {
-        njs_value_assign(retval, &njs_atom.vs_);
+        njs_set_empty_string(vm, retval);
         return NJS_OK;
     }
 
@@ -1687,7 +1687,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (njs_slow_path(len == 0)) {
-        njs_value_assign(retval, &njs_atom.vs_);
+        njs_set_empty_string(vm, retval);
         return NJS_OK;
     }
 
