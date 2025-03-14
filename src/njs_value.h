@@ -786,7 +786,6 @@ extern const njs_value_t  njs_value_true;
 extern const njs_value_t  njs_value_zero;
 extern const njs_value_t  njs_value_nan;
 extern const njs_value_t  njs_value_invalid;
-extern const njs_value_t  njs_value_empty_string;
 
 njs_inline void
 njs_set_boolean(njs_value_t *value, unsigned yn)
@@ -820,8 +819,7 @@ njs_set_string(njs_value_t *value, uint32_t atom_id)
 }
 
 
-#define njs_set_empty_string(value) \
-    njs_set_string(value, NJS_ATOM_)
+#define njs_set_empty_string(vm, value) njs_atom_to_value(vm, value, NJS_ATOM_)
 
 
 njs_inline void

@@ -630,7 +630,11 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
         return ret;
     }
 
-    message_value = (ret == NJS_OK) ? &value2 : njs_value_arg(&njs_atom.vs_);
+    if (ret != NJS_OK) {
+        njs_set_empty_string(vm, &value2);
+    }
+
+    message_value = &value2;
 
     if (njs_slow_path(!njs_is_string(message_value))) {
         ret = njs_value_to_string(vm, &value2, message_value);
