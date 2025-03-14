@@ -136,10 +136,9 @@ njs_atom_hash_init(njs_vm_t *vm)
 /*
  * value is always key: string or number or symbol.
  *
- * symbol always contians atom_id by construction. do nothing;
+ * symbol always contain atom_id by construction. do nothing;
  * number if short number it is atomized by "| 0x80000000";
  * string if represents short number it is atomized by "| 0x80000000";
- *
  * for string and symbol atom_ids common range is uint32_t < 0x80000000.
  */
 
@@ -175,10 +174,11 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
             /* TODO: if (<<value is string>>) <<try release>>(string) */
             *value = *entry;
         }
+
         break;
 
     case NJS_NUMBER:
-        num = value->data.u.number;
+        num = njs_number(value);
         if (njs_fast_path(njs_key_is_integer_index(num, value)) &&
             ((uint32_t) num) < 0x80000000)
         {
@@ -209,9 +209,13 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
                 value->atom_id = val_str.atom_id;
             }
         }
+
         break;
+
+    case NJS_SYMBOL:
     default:
-        /* NJS_SYMBOL: do nothing. */
+        /* do nothing. */
+        break;
     }
 
     return NJS_OK;
@@ -228,12 +232,10 @@ njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value)
     lhq.proto = &njs_lexer_hash_proto;
     lhq.pool = vm->atom_hash_mem_pool;
 
-
     value->string.atom_id = (*vm->atom_hash_atom_id)++;
 
     if (value->type == NJS_SYMBOL) {
         lhq.key_hash = value->string.atom_id;
-
         lhq.value = (void *) value;
 
         ret = njs_flathsh_insert(vm->atom_hash, &lhq);

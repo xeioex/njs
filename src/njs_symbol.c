@@ -26,11 +26,14 @@ njs_symbol_descriptive_string(njs_vm_t *vm, njs_value_t *dst,
 
     description = njs_symbol_description(value);
 
-    if (njs_is_undefined(description)) {
-        description = &njs_value_empty_string;
-    }
+    if (!njs_is_undefined(description)) {
+        (void) njs_string_prop(vm, &string, description);
 
-    (void) njs_string_prop(vm, &string, description);
+    } else {
+        string.start = (u_char *) "";
+        string.size = 0;
+        string.length = 0;
+    }
 
     string.length += njs_length("Symbol()");
 
@@ -135,6 +138,7 @@ njs_symbol_for(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
+
     node->key = retval->atom_id;
 
     njs_rbtree_insert(&vm->global_symbols, &node->node);

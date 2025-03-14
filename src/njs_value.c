@@ -26,7 +26,6 @@ const njs_value_t  njs_value_true =         njs_value(NJS_BOOLEAN, 1, 1.0);
 const njs_value_t  njs_value_zero =         njs_value(NJS_NUMBER, 0, 0.0);
 const njs_value_t  njs_value_nan =          njs_value(NJS_NUMBER, 0, NAN);
 const njs_value_t  njs_value_invalid =      njs_value(NJS_INVALID, 0, 0.0);
-const njs_value_t  njs_value_empty_string =  njs_ascii_strval();
 
 /*
  * A hint value is 0 for numbers and 1 for strings.  The value chooses

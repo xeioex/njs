@@ -1062,10 +1062,11 @@ static njs_int_t
 njs_generate_var_statement_after(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
-    njs_int_t                ret;
-    njs_variable_t           *var;
-    njs_parser_node_t        *lvalue, *expr;
-    njs_vmcode_move_t        *move;
+    njs_int_t          ret;
+    njs_string_t       name;
+    njs_variable_t     *var;
+    njs_parser_node_t  *lvalue, *expr;
+    njs_vmcode_move_t  *move;
 
     lvalue = node->left;
     expr = node->right;
@@ -1095,12 +1096,9 @@ njs_generate_var_statement_after(njs_vm_t *vm, njs_generator_t *generator,
     if (expr->token_type == NJS_TOKEN_FUNCTION_EXPRESSION
          || expr->token_type == NJS_TOKEN_ASYNC_FUNCTION_EXPRESSION)
     {
-        ret = njs_values_same(vm, &expr->u.value.data.u.lambda->name,
-                              njs_value_arg(&njs_value_empty_string));
-        if (njs_slow_path(ret < 0)) {
-            return NJS_ERROR;
-        }
-        if (ret) {
+        njs_string_get_unsafe(&expr->u.value.data.u.lambda->name, &name);
+
+        if (name.length == 0) {
             expr->u.value.data.u.lambda->name =
                             *((njs_value_t *)node->left->u.reference.unique_id);
         }

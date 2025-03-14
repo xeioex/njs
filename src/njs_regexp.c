@@ -131,9 +131,6 @@ njs_regexp_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             if (njs_slow_path(ret != NJS_OK)) {
                 return ret;
             }
-
-        } else {
-            pattern = njs_value_arg(&njs_value_empty_string);
         }
 
         re_flags = 0;
@@ -160,7 +157,12 @@ njs_regexp_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    njs_string_get(vm, pattern, &string);
+    if (njs_is_defined(pattern)) {
+        njs_string_get(vm, pattern, &string);
+
+    } else {
+        string = njs_str_value("");
+    }
 
     return njs_regexp_create(vm, retval, string.start, string.length,
                              re_flags);
@@ -510,7 +512,7 @@ njs_regexp_alloc(njs_vm_t *vm, njs_regexp_pattern_t *pattern)
         regexp->object.error_data = 0;
         njs_set_number(&regexp->last_index, 0);
         regexp->pattern = pattern;
-        njs_set_empty_string(&regexp->string);
+        njs_set_empty_string(vm, &regexp->string);
         return regexp;
     }
 

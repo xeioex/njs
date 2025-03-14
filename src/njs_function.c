@@ -168,7 +168,7 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
             }
 
         } else {
-            njs_value_assign(njs_prop_value(prop), &njs_atom.vs_);
+            njs_set_empty_string(vm, njs_prop_value(prop));
         }
     }
 
@@ -264,7 +264,7 @@ njs_function_arguments_object_init(njs_vm_t *vm, njs_native_frame_t *frame)
     ret = njs_object_prop_define(vm, &value,
                                  njs_value_arg(&njs_atom.vs_length), &length,
                                  NJS_OBJECT_PROP_VALUE_CW,
-                                 njs_atom.vs_length.atom_id);
+                                 NJS_ATOM_length);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -1385,7 +1385,7 @@ njs_function_prototype_bind(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     if (!njs_is_string(&name)) {
-        name = njs_atom.vs_;
+        njs_set_empty_string(vm, &name);
     }
 
     ret = njs_function_name_set(vm, function, &name, "bound");
