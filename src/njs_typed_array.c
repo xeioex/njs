@@ -2107,7 +2107,7 @@ njs_typed_array_prototype_join(njs_vm_t *vm, njs_value_t *args,
     }
 
     if (length == 0) {
-        njs_value_assign(retval, &njs_atom.vs_);
+        njs_set_empty_string(vm, retval);
         return NJS_OK;
     }
 

@@ -1341,7 +1341,7 @@ njs_json_stringify_array(njs_json_stringify_t *stringify)
     }
 
     item = njs_array_push(stringify->vm, properties);
-    njs_value_assign(item, &njs_atom.vs_);
+    njs_set_empty_string(stringify->vm, item);
 
     for (i = 0; i < length; i++) {
         ret = njs_value_property_i64(stringify->vm, &stringify->replacer, i,
@@ -1622,9 +1622,7 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
     }
 
     lhq.value = prop;
-
-    lhq.key_hash = njs_atom.vs_.atom_id;
-
+    lhq.key_hash = NJS_ATOM_; /* empty string */
     lhq.replace = 0;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

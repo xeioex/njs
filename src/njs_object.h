@@ -146,35 +146,34 @@ njs_inline njs_int_t
 njs_primitive_value_to_key(njs_vm_t *vm, njs_value_t *dst,
     const njs_value_t *src)
 {
-    const njs_value_t  *value;
-
     switch (src->type) {
-
     case NJS_NULL:
-        value = &njs_atom.vs_null;
-        break;
+        njs_atom_to_value(vm, dst, NJS_ATOM_null);
+        return NJS_OK;
 
     case NJS_UNDEFINED:
-        value = &njs_atom.vs_undefined;
-        break;
+        njs_atom_to_value(vm, dst, NJS_ATOM_undefined);
+        return NJS_OK;
 
     case NJS_BOOLEAN:
-        value = njs_is_true(src) ? &njs_atom.vs_true : &njs_atom.vs_false;
-        break;
+        if (njs_is_true(src)) {
+            njs_atom_to_value(vm, dst, NJS_ATOM_true);
+
+        } else {
+            njs_atom_to_value(vm, dst, NJS_ATOM_false);
+        }
+
+        return NJS_OK;
 
     case NJS_NUMBER:
     case NJS_SYMBOL:
     case NJS_STRING:
-        value = src;
-        break;
+        *dst = *src;
+        return NJS_OK;
 
     default:
         return NJS_ERROR;
     }
-
-    *dst = *value;
-
-    return NJS_OK;
 }
 
 

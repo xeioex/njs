@@ -1211,7 +1211,7 @@ njs_function_instance_name(njs_vm_t *vm, njs_object_prop_t *prop,
         return NJS_OK;
     }
 
-    njs_value_assign(retval, &njs_atom.vs_);
+    njs_set_empty_string(vm, retval);
 
     return NJS_OK;
 }

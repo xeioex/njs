@@ -103,8 +103,12 @@ njs_boolean_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         }
     }
 
-    njs_value_assign(retval, njs_is_true(value) ? &njs_atom.vs_true
-                                                : &njs_atom.vs_false);
+    if (njs_is_true(value)) {
+        njs_atom_to_value(vm, retval, NJS_ATOM_true);
+
+    } else {
+        njs_atom_to_value(vm, retval, NJS_ATOM_false);
+    }
 
     return NJS_OK;
 }

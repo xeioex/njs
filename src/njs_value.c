@@ -624,24 +624,9 @@ njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
         return NJS_ERROR;
     }
 
-
     ret = njs_primitive_value_to_key(vm, &pq->key, key);
 
     if (njs_fast_path(ret == NJS_OK)) {
-        if (njs_is_symbol(key)) {
-            pq->lhq.key_hash = njs_symbol_key(key);
-
-        } else {
-            if (key->atom_id == 0) {
-                ret = njs_atom_atomize_key(vm, key);
-                if (ret != NJS_OK) {
-                    return ret;
-                }
-            }
-
-            pq->lhq.key_hash = key->atom_id;
-        }
-
         ret = njs_object_property_query(vm, pq, obj, key);
 
         if (njs_slow_path(ret == NJS_DECLINED && obj->slots != NULL)) {
@@ -728,6 +713,7 @@ njs_object_property_query(njs_vm_t *vm, njs_property_query_t *pq,
                 return ret;
             }
         }
+
         pq->lhq.key_hash = key->atom_id;
 
         ret = njs_flathsh_obj_find(&proto->hash, &pq->lhq);
@@ -1270,8 +1256,7 @@ slow_path:
             switch (prop->type) {
             case NJS_PROPERTY:
                 if (njs_is_array(value)) {
-                    if (njs_slow_path(pq.lhq.key_hash ==
-                                      njs_atom.vs_length.atom_id)) {
+                    if (njs_slow_path(pq.lhq.key_hash == NJS_ATOM_length)) {
                         return njs_array_length_set(vm, value, prop, setval);
                     }
                 }
