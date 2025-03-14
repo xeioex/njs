@@ -345,24 +345,14 @@ set_prop:
         } else {
 
             if ((flags & NJS_OBJECT_PROP_CREATE)) {
-                ret = njs_primitive_value_to_key(vm, &pq.key, name);
-                if (njs_slow_path(ret != NJS_OK)) {
-                    return NJS_ERROR;
-                }
-
-                if (njs_is_symbol(name)) {
-                    pq.lhq.key_hash = njs_symbol_key(name);
-
-                } else {
-                    if (!pq.key.atom_id) {
-                        ret = njs_atom_atomize_key(vm, &pq.key);
-                        if (ret != NJS_OK) {
-                            return NJS_ERROR;
-                        }
+                if (name->atom_id == 0) {
+                    ret = njs_atom_atomize_key(vm, name);
+                    if (ret != NJS_OK) {
+                        return NJS_ERROR;
                     }
-                    pq.lhq.key_hash = pq.key.atom_id;
                 }
 
+                pq.lhq.key_hash = name->atom_id;
                 pq.lhq.proto = &njs_object_hash_proto;
             }
 
@@ -636,7 +626,7 @@ done:
 
 exception:
 
-    njs_key_string_get(vm, &pq.key,  &pq.lhq.key);
+    njs_key_string_get(vm, name, &pq.lhq.key);
     njs_type_error(vm, "Cannot redefine property: \"%V\"", &pq.lhq.key);
 
     return NJS_ERROR;
