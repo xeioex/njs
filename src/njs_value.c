@@ -1027,10 +1027,9 @@ njs_external_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 
 
 njs_int_t
-njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_property_atom(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *retval)
 {
-    double                num;
     uint32_t              index;
     njs_int_t             ret;
     njs_array_t          *array;
@@ -1038,16 +1037,8 @@ njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
     njs_typed_array_t     *tarray;
     njs_property_query_t  pq;
 
-    njs_assert(njs_is_index_or_key(key));
-
-    if (njs_fast_path(njs_is_number(key))) {
-        num = njs_number(key);
-
-        if (njs_slow_path(!njs_number_is_integer_index(num))) {
-            goto slow_path;
-        }
-
-        index = (uint32_t) num;
+    if (njs_fast_path(njs_atom_is_number(atom_id))) {
+        index = njs_atom_number(atom_id);
 
         if (njs_is_typed_array(value)) {
             tarray = njs_typed_array(value);
@@ -1091,7 +1082,7 @@ slow_path:
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query_atom(vm, &pq, value, atom_id);
 
     switch (ret) {
 
@@ -1117,7 +1108,7 @@ slow_path:
         case NJS_PROPERTY_HANDLER:
             pq.scratch = *prop;
             prop = &pq.scratch;
-            ret = njs_prop_handler(prop)(vm, prop, pq.lhq.key_hash, value, NULL,
+            ret = njs_prop_handler(prop)(vm, prop, atom_id, value, NULL,
                                          njs_prop_value(prop));
 
             if (njs_slow_path(ret != NJS_OK)) {
@@ -1154,6 +1145,23 @@ slow_path:
     }
 
     return NJS_OK;
+}
+
+
+njs_int_t
+njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+    njs_value_t *retval)
+{
+    njs_int_t  ret;
+
+    if (key->atom_id == 0) {
+        ret = njs_atom_atomize_key(vm, key);
+        if (ret != NJS_OK) {
+            return ret;
+        }
+    }
+
+    return njs_value_property_atom(vm, value, key->atom_id, retval);
 }
 
 

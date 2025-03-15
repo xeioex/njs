@@ -359,6 +359,8 @@ NJS_EXPORT njs_int_t njs_external_property(njs_vm_t *vm,
     njs_value_t *setval, njs_value_t *retval);
 NJS_EXPORT njs_int_t njs_value_property(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *retval);
+NJS_EXPORT njs_int_t njs_value_property_atom(njs_vm_t *vm, njs_value_t *value,
+    uint32_t atom_id, njs_value_t *retval);
 NJS_EXPORT njs_int_t njs_value_property_set(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *setval);
 NJS_EXPORT uintptr_t njs_vm_meta(njs_vm_t *vm, njs_uint_t index);
