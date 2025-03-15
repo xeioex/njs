@@ -985,6 +985,13 @@ njs_parser_primary_expression_test(njs_parser_t *parser,
         }
 
         njs_set_number(&node->u.value, token->number);
+
+        if (njs_number_is_integer_index(token->number)
+            && token->number < 0x80000000)
+        {
+            node->u.value.atom_id = njs_number_atom((uint32_t) token->number);
+        }
+
         node->token_line = token->line;
 
         parser->node = node;
@@ -2291,7 +2298,7 @@ njs_parser_property(njs_parser_t *parser, njs_lexer_token_t *token,
                 return NJS_ERROR;
             }
 
-            node->u.operation = NJS_VMCODE_PROPERTY_GET;
+            node->u.operation = NJS_VMCODE_PROPERTY_GET_FAST;
             node->token_line = token->line;
 
             prop_node = njs_parser_node_string(parser->vm, token, parser);
