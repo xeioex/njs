@@ -165,8 +165,7 @@ njs_error_stack(njs_vm_t *vm, njs_value_t *value, njs_value_t *stack)
 {
     njs_int_t  ret;
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_stack),
-                             stack);
+    ret = njs_value_property(vm, value, NJS_ATOM_stack, stack);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
@@ -604,8 +603,7 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
         }
     }
 
-    ret = njs_value_property(vm, (njs_value_t *) error,
-                             njs_value_arg(&njs_atom.vs_name), &value1);
+    ret = njs_value_property(vm, (njs_value_t *) error, NJS_ATOM_name, &value1);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -623,8 +621,7 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
 
     (void) njs_string_prop(vm, &name, name_value);
 
-    ret = njs_value_property(vm,  (njs_value_t *) error,
-                             njs_value_arg(&njs_atom.vs_message),
+    ret = njs_value_property(vm,  (njs_value_t *) error, NJS_ATOM_message,
                              &value2);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;

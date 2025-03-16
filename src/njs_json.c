@@ -849,7 +849,7 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, holder, name, &val);
+    ret = njs_value_property_val(vm, holder, name, &val);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1129,7 +1129,7 @@ njs_json_stringify_iterator(njs_json_stringify_t *stringify,
             key = &state->keys->start[state->index];
         }
 
-        ret = njs_value_property(stringify->vm, &state->value, key, value);
+        ret = njs_value_property_val(stringify->vm, &state->value, key, value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }
@@ -1772,8 +1772,7 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
             str = njs_str_value("");
         }
 
-        ret = njs_value_property(stringify->vm, value,
-                                 njs_value_arg(&njs_atom.vs_name), &tag);
+        ret = njs_value_property(stringify->vm, value, NJS_ATOM_name, &tag);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }

@@ -2703,7 +2703,7 @@ njs_string_prototype_split(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     value = njs_lvalue_arg(&limit_lvalue, args, nargs, 2);
 
     if (!njs_is_null_or_undefined(separator)) {
-        ret = njs_value_method(vm, separator, njs_value_arg(&njs_atom.vw_split),
+        ret = njs_value_method(vm, separator, NJS_ATOM_SYMBOL_split,
                                &splitter);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
@@ -2914,7 +2914,7 @@ njs_string_get_substitution(njs_vm_t *vm, njs_value_t *matched,
 
             p = r + 1;
 
-            ret = njs_value_property(vm, groups, &name, &value);
+            ret = njs_value_property_val(vm, groups, &name, &value);
             if (njs_slow_path(ret == NJS_ERROR)) {
                 goto exception;
             }
@@ -3015,8 +3015,7 @@ njs_string_prototype_replace(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     replace = njs_lvalue_arg(&replace_lvalue, args, nargs, 2);
 
     if (!njs_is_null_or_undefined(search)) {
-        ret = njs_value_method(vm, search, njs_value_arg(&njs_atom.vw_replace),
-                               &replacer);
+        ret = njs_value_method(vm, search, NJS_ATOM_SYMBOL_replace, &replacer);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
         }
@@ -3029,9 +3028,7 @@ njs_string_prototype_replace(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 && njs_function(&replacer)->u.native ==
                 njs_regexp_prototype_symbol_replace)
             {
-                ret = njs_value_property(vm, search,
-                                         njs_value_arg(&njs_atom.vs_flags),
-                                         &value);
+                ret = njs_value_property(vm, search, NJS_ATOM_flags, &value);
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     return NJS_ERROR;
                 }

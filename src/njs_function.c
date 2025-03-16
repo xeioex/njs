@@ -1378,8 +1378,7 @@ njs_function_prototype_bind(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     function->context = njs_function(&args[0]);
 
-    ret = njs_value_property(vm, &args[0], njs_value_arg(&njs_atom.vs_name),
-                             &name);
+    ret = njs_value_property(vm, &args[0], NJS_ATOM_name, &name);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }

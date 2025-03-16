@@ -354,15 +354,13 @@ njs_buffer_from_object(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
 
 next:
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_length),
-                             &length);
+    ret = njs_value_property(vm, value, NJS_ATOM_length, &length);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
     if (ret == NJS_DECLINED) {
-        ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_type),
-                                 &val);
+        ret = njs_value_property(vm, value, NJS_ATOM_type, &val);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
         }
@@ -378,8 +376,7 @@ next:
             return NJS_DECLINED;
         }
 
-        ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_data),
-                                 &val);
+        ret = njs_value_property(vm, value, NJS_ATOM_data, &val);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
         }

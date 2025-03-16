@@ -258,7 +258,7 @@ NEXT_LBL;
         get = (njs_vmcode_prop_get_t *) pc;
         njs_vmcode_operand(vm, get->value, retval);
 
-        ret = njs_value_property_atom(vm, value1, value2->atom_id, retval);
+        ret = njs_value_property(vm, value1, value2->atom_id, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto error;
         }
@@ -298,7 +298,7 @@ NEXT_LBL;
             value2 = &primitive1;
         }
 
-        ret = njs_value_property(vm, value1, value2, retval);
+        ret = njs_value_property_val(vm, value1, value2, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto error;
         }
@@ -423,7 +423,7 @@ NEXT_LBL;
         get = (njs_vmcode_prop_get_t *) pc;
         njs_vmcode_operand(vm, get->value, retval);
 
-        ret = njs_value_property(vm, value1, value2, retval);
+        ret = njs_value_property_val(vm, value1, value2, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto error;
         }
@@ -1446,7 +1446,7 @@ NEXT_LBL;
             value2 = &primitive1;
         }
 
-        ret = njs_value_property(vm, value1, value2, &dst);
+        ret = njs_value_property_val(vm, value1, value2, &dst);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto error;
         }
@@ -2257,8 +2257,7 @@ njs_vmcode_instance_of(njs_vm_t *vm, njs_value_t *object,
     }
 
     if (njs_is_object(object)) {
-        ret = njs_value_property(vm, constructor,
-                                 njs_value_arg(&njs_atom.vs_prototype), &value);
+        ret = njs_value_property(vm, constructor, NJS_ATOM_prototype, &value);
 
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
@@ -2601,8 +2600,7 @@ njs_function_new_object(njs_vm_t *vm, njs_value_t *constructor)
         constructor = &bound;
     }
 
-    ret = njs_value_property(vm, constructor,
-                             njs_value_arg(&njs_atom.vs_prototype), &proto);
+    ret = njs_value_property(vm, constructor, NJS_ATOM_prototype, &proto);
 
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NULL;

@@ -279,7 +279,7 @@ njs_object_string_tag(njs_vm_t *vm, njs_value_t *value, njs_value_t *tag)
 {
     njs_int_t  ret;
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vw_toStringTag), tag);
+    ret = njs_value_property(vm, value, NJS_ATOM_SYMBOL_toStringTag, tag);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }

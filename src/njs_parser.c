@@ -1289,8 +1289,7 @@ njs_parser_regexp_literal(njs_parser_t *parser, njs_lexer_token_t *token,
 
             if (njs_slow_path(pattern == NULL)) {
                 retval = njs_vm_exception(parser->vm);
-                ret = njs_value_property(parser->vm, &retval,
-                                         njs_value_arg(&njs_atom.vs_message),
+                ret = njs_value_property(parser->vm, &retval, NJS_ATOM_message,
                                          &retval);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NJS_ERROR;

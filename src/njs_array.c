@@ -904,7 +904,7 @@ njs_array_prototype_slice_copy(njs_vm_t *vm, njs_value_t *this,
     }
 
     for (n = 0; n < keys->length; n++) {
-        ret = njs_value_property(vm, this, &keys->start[n], &val);
+        ret = njs_value_property_val(vm, this, &keys->start[n], &val);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto done;
         }
@@ -1898,8 +1898,7 @@ njs_is_concat_spreadable(njs_vm_t *vm, njs_value_t *value)
         return NJS_DECLINED;
     }
 
-    ret = njs_value_property(vm, value,
-                             njs_value_arg(&njs_atom.vw_isConcatSpreadable),
+    ret = njs_value_property(vm, value, NJS_ATOM_SYMBOL_isConcatSpreadable,
                              &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
@@ -1987,7 +1986,7 @@ njs_array_prototype_concat(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
 
             for (k = 0; k < keys->length; k++) {
-                ret = njs_value_property(vm, e, &keys->start[k], &value);
+                ret = njs_value_property_val(vm, e, &keys->start[k], &value);
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     return ret;
                 }
@@ -2787,7 +2786,7 @@ njs_sort_indexed_properties(njs_vm_t *vm, njs_value_t *obj, int64_t length,
                 if (njs_slow_path(ret != NJS_OK)) {
                     goto exception;
                 }
-                ret = njs_value_property(vm, obj, &key, &p->value);
+                ret = njs_value_property_val(vm, obj, &key, &p->value);
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     goto exception;
                 }
@@ -2830,7 +2829,7 @@ njs_sort_indexed_properties(njs_vm_t *vm, njs_value_t *obj, int64_t length,
             ilength = njs_min(keys->length, length);
 
             for (i = 0; i < ilength; i++) {
-                ret = njs_value_property(vm, obj, &keys->start[i], &p->value);
+                ret = njs_value_property_val(vm, obj, &keys->start[i], &p->value);
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     goto exception;
                 }

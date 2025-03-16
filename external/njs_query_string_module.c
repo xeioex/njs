@@ -294,8 +294,8 @@ njs_query_string_append(njs_vm_t *vm, njs_value_t *object, const u_char *key,
         }
     }
 
-    ret = njs_value_property(vm, object, njs_value_arg(&name),
-                             njs_value_arg(&retval));
+    ret = njs_value_property_val(vm, object, njs_value_arg(&name),
+                                 njs_value_arg(&retval));
 
     if (ret == NJS_OK) {
         if (njs_value_is_array(njs_value_arg(&retval))) {
@@ -764,8 +764,8 @@ njs_query_string_stringify(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     for (n = 0; n < keys_length; n++, string++) {
-        ret = njs_value_property(vm, object, njs_value_arg(string),
-                                 njs_value_arg(&value));
+        ret = njs_value_property_val(vm, object, njs_value_arg(string),
+                                     njs_value_arg(&value));
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto failed;
         }
@@ -775,9 +775,9 @@ njs_query_string_stringify(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
             for (i = 0; i < len; i++) {
                 njs_value_number_set(njs_value_arg(&key), i);
-                ret = njs_value_property(vm, njs_value_arg(&value),
-                                         njs_value_arg(&key),
-                                         njs_value_arg(&result));
+                ret = njs_value_property_val(vm, njs_value_arg(&value),
+                                             njs_value_arg(&key),
+                                             njs_value_arg(&result));
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     goto failed;
                 }

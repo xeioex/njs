@@ -888,7 +888,7 @@ njs_vm_value(njs_vm_t *vm, const njs_str_t *path, njs_value_t *retval)
             return NJS_ERROR;
         }
 
-        ret = njs_value_property(vm, &value, &key, njs_value_arg(retval));
+        ret = njs_value_property_val(vm, &value, &key, njs_value_arg(retval));
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }
@@ -1387,7 +1387,7 @@ njs_vm_object_prop(njs_vm_t *vm, njs_value_t *value, const njs_str_t *prop,
         return NULL;
     }
 
-    ret = njs_value_property(vm, value, &key, njs_value_arg(retval));
+    ret = njs_value_property_val(vm, value, &key, njs_value_arg(retval));
     if (njs_slow_path(ret != NJS_OK)) {
         return NULL;
     }

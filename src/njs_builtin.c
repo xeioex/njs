@@ -536,9 +536,7 @@ njs_builtin_match_native_function(njs_vm_t *vm, njs_function_t *function,
     for (i = NJS_OBJ_TYPE_HIDDEN_MIN; i < NJS_OBJ_TYPE_HIDDEN_MAX; i++) {
         njs_set_object(&value, &njs_vm_ctor(vm, i).object);
 
-        ret = njs_value_property(vm, &value,
-                                 njs_value_arg(&njs_atom.vs_name), &tag);
-
+        ret = njs_value_property(vm, &value, NJS_ATOM_name, &tag);
         if (ret == NJS_OK && njs_is_string(&tag)) {
             njs_string_get(vm, &tag, &ctx.match);
         }

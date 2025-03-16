@@ -44,7 +44,7 @@ typedef struct njs_external_s         njs_external_t;
  */
 
 typedef struct {
-    uint64_t                        filler[2];
+    uint32_t                        filler[4];
 } njs_opaque_value_t;
 
 /* sizeof(njs_value_t) is 16 bytes. */
@@ -62,6 +62,7 @@ extern const njs_value_t            njs_value_undefined;
     memcpy(dst, src, sizeof(njs_opaque_value_t))
 
 #define njs_value_arg(val) ((njs_value_t *) val)
+#define njs_value_atom(val) (((njs_opaque_value_t *) (val))->filler[0])
 
 #define njs_lvalue_arg(lvalue, args, nargs, n)                                \
     ((n < nargs) ? njs_argument(args, n)                                      \
@@ -357,10 +358,27 @@ NJS_EXPORT njs_external_ptr_t njs_vm_external(njs_vm_t *vm,
 NJS_EXPORT njs_int_t njs_external_property(njs_vm_t *vm,
     njs_object_prop_t *prop, uint32_t unused, njs_value_t *value,
     njs_value_t *setval, njs_value_t *retval);
+NJS_EXPORT njs_int_t njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value);
 NJS_EXPORT njs_int_t njs_value_property(njs_vm_t *vm, njs_value_t *value,
-    njs_value_t *key, njs_value_t *retval);
-NJS_EXPORT njs_int_t njs_value_property_atom(njs_vm_t *vm, njs_value_t *value,
     uint32_t atom_id, njs_value_t *retval);
+
+
+njs_inline njs_int_t
+njs_value_property_val(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+    njs_value_t *retval)
+{
+    njs_int_t  ret;
+
+    if (njs_value_atom(key) == 0) {
+        ret = njs_atom_atomize_key(vm, key);
+        if (ret != NJS_OK) {
+            return ret;
+        }
+    }
+
+    return njs_value_property(vm, value, njs_value_atom(key), retval);
+}
+
 NJS_EXPORT njs_int_t njs_value_property_set(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *setval);
 NJS_EXPORT uintptr_t njs_vm_meta(njs_vm_t *vm, njs_uint_t index);

@@ -169,7 +169,7 @@ njs_value_own_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags)
             dst = values->start;
 
             while (k < end) {
-                ret = njs_value_property(vm, value, k++, dst++);
+                ret = njs_value_property_val(vm, value, k++, dst++);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NULL;
                 }
@@ -196,7 +196,7 @@ njs_value_own_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags)
                     return NULL;
                 }
 
-                ret = njs_value_property(vm, value, k, &entry->start[1]);
+                ret = njs_value_property_val(vm, value, k, &entry->start[1]);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NULL;
                 }
@@ -231,8 +231,7 @@ njs_value_of(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
         return NJS_DECLINED;
     }
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_valueOf),
-                             retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_valueOf, retval);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
@@ -1027,7 +1026,7 @@ njs_external_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 
 
 njs_int_t
-njs_value_property_atom(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
+njs_value_property(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *retval)
 {
     uint32_t              index;
@@ -1145,23 +1144,6 @@ slow_path:
     }
 
     return NJS_OK;
-}
-
-
-njs_int_t
-njs_value_property(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
-    njs_value_t *retval)
-{
-    njs_int_t  ret;
-
-    if (key->atom_id == 0) {
-        ret = njs_atom_atomize_key(vm, key);
-        if (ret != NJS_OK) {
-            return ret;
-        }
-    }
-
-    return njs_value_property_atom(vm, value, key->atom_id, retval);
 }
 
 
@@ -1693,8 +1675,7 @@ njs_value_species_constructor(njs_vm_t *vm, njs_value_t *object,
     njs_int_t    ret;
     njs_value_t  constructor, retval;
 
-    ret = njs_value_property(vm, object, njs_value_arg(&njs_atom.vs_constructor),
-                             &constructor);
+    ret = njs_value_property(vm, object, NJS_ATOM_constructor, &constructor);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1708,8 +1689,8 @@ njs_value_species_constructor(njs_vm_t *vm, njs_value_t *object,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, &constructor,
-                             njs_value_arg(&njs_atom.vw_species), &retval);
+    ret = njs_value_property(vm, &constructor, NJS_ATOM_SYMBOL_species,
+                             &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1736,7 +1717,7 @@ default_constructor:
 
 
 njs_int_t
-njs_value_method(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_method(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *retval)
 {
     njs_int_t  ret;
@@ -1746,7 +1727,7 @@ njs_value_method(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
         return ret;
     }
 
-    ret = njs_value_property(vm, value, key, retval);
+    ret = njs_value_property(vm, value, atom_id, retval);
     if (njs_slow_path(ret != NJS_OK)) {
         return (ret == NJS_DECLINED) ? NJS_OK : ret;
     }

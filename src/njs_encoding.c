@@ -376,16 +376,14 @@ njs_text_decoder_arg_options(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_fatal),
-                             &retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_fatal, &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
     data->fatal = njs_bool(&retval);
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_ignoreBOM),
-                             &retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_ignoreBOM, &retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -521,8 +519,7 @@ njs_text_decoder_decode(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return NJS_ERROR;
         }
 
-        ret = njs_value_property(vm, options,
-                                 njs_value_arg(&njs_atom.vs_stream), retval);
+        ret = njs_value_property(vm, options, NJS_ATOM_stream, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }

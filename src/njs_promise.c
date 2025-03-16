@@ -391,8 +391,7 @@ njs_promise_value_constructor(njs_vm_t *vm, njs_value_t *value,
         return NJS_OK;
     }
 
-    ret = njs_value_property(vm, value, njs_value_arg(&njs_atom.vs_constructor),
-                             dst);
+    ret = njs_value_property(vm, value, NJS_ATOM_constructor, dst);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -545,8 +544,7 @@ njs_promise_invoke_then(njs_vm_t *vm, njs_value_t *promise, njs_value_t *args,
     njs_int_t    ret;
     njs_value_t  function;
 
-    ret = njs_value_property(vm, promise, njs_value_arg(&njs_atom.vs_then),
-                             &function);
+    ret = njs_value_property(vm, promise, NJS_ATOM_then, &function);
     if (njs_slow_path(ret != NJS_OK)) {
         if (ret == NJS_DECLINED) {
             goto failed;
@@ -608,8 +606,7 @@ njs_promise_resolve_function(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         goto fulfill;
     }
 
-    ret = njs_value_property(vm, resolution, njs_value_arg(&njs_atom.vs_then),
-                             &then);
+    ret = njs_value_property(vm, resolution, NJS_ATOM_then, &then);
     if (njs_slow_path(ret == NJS_ERROR)) {
         if (njs_slow_path(njs_is_memory_error(vm, &vm->exception))) {
             return NJS_ERROR;
@@ -683,8 +680,7 @@ njs_promise_resolve(njs_vm_t *vm, njs_value_t *constructor, njs_value_t *x,
     njs_promise_capability_t  *capability;
 
     if (njs_is_promise(x)) {
-        ret = njs_value_property(vm, x, njs_value_arg(&njs_atom.vs_constructor),
-                                 &value);
+        ret = njs_value_property(vm, x, NJS_ATOM_constructor, &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return NJS_ERROR;
         }
@@ -1160,8 +1156,7 @@ njs_promise_all(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, promise_ctor,
-                             njs_value_arg(&njs_atom.vs_resolve), &resolve);
+    ret = njs_value_property(vm, promise_ctor, NJS_ATOM_resolve, &resolve);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -1654,8 +1649,7 @@ njs_promise_race(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, promise_ctor,
-                             njs_value_arg(&njs_atom.vs_resolve), &resolve);
+    ret = njs_value_property(vm, promise_ctor, NJS_ATOM_resolve, &resolve);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }

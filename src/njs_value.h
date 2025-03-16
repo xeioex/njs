@@ -989,8 +989,6 @@ njs_int_t njs_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 njs_int_t njs_property_query_atom(njs_vm_t *vm, njs_property_query_t *pq,
     njs_value_t *value, uint32_t atom_id);
 
-njs_int_t njs_value_property(njs_vm_t *vm, njs_value_t *value,
-    njs_value_t *key, njs_value_t *retval);
 njs_int_t njs_value_property_set(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *setval);
 njs_int_t njs_value_property_delete(njs_vm_t *vm, njs_value_t *value,
@@ -1004,7 +1002,7 @@ njs_int_t njs_value_construct(njs_vm_t *vm, njs_value_t *constructor,
 njs_int_t njs_value_species_constructor(njs_vm_t *vm, njs_value_t *object,
     njs_value_t *default_constructor, njs_value_t *dst);
 
-njs_int_t njs_value_method(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_int_t njs_value_method(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *retval);
 
 
@@ -1032,7 +1030,7 @@ njs_value_property_i64(njs_vm_t *vm, njs_value_t *value, int64_t index,
 
     njs_set_number(&key, index);
 
-    return njs_value_property(vm, value, &key, retval);
+    return njs_value_property_val(vm, value, &key, retval);
 }
 
 

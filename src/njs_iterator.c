@@ -612,7 +612,8 @@ njs_iterator_object_handler(njs_vm_t *vm, njs_iterator_handler_t handler,
     njs_value_t  prop, *entry;
 
     if (key != NULL) {
-        ret = njs_value_property(vm, njs_value_arg(&args->value), key, &prop);
+        ret = njs_value_property_val(vm, njs_value_arg(&args->value), key,
+                                     &prop);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }

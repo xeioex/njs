@@ -565,8 +565,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
 
     p = &dst[0];
 
-    ret = njs_value_property(vm, this, njs_value_arg(&njs_atom.vs_global),
-                             &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_global, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -575,8 +574,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'g';
     }
 
-    ret = njs_value_property(vm, this, njs_value_arg(&njs_atom.vs_ignoreCase),
-                             &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_ignoreCase, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -585,8 +583,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'i';
     }
 
-    ret = njs_value_property(vm, this, njs_value_arg(&njs_atom.vs_multiline),
-                             &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_multiline, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -595,8 +592,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'm';
     }
 
-    ret = njs_value_property(vm, this, njs_value_arg(&njs_atom.vs_sticky),
-                             &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_sticky, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -710,7 +706,7 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, r, njs_value_arg(&njs_atom.vs_source), &source);
+    ret = njs_value_property(vm, r, NJS_ATOM_source, &source);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -720,7 +716,7 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, r, njs_value_arg(&njs_atom.vs_flags), &flags);
+    ret = njs_value_property(vm, r, NJS_ATOM_flags, &flags);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -869,8 +865,7 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
     regexp->string = *s;
     pattern = regexp->pattern;
 
-    ret = njs_value_property(vm, r, njs_value_arg(&njs_atom.vs_lastIndex),
-                             &value);
+    ret = njs_value_property(vm, r, NJS_ATOM_lastIndex, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1246,7 +1241,7 @@ njs_regexp_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s, unsigned flags,
     njs_value_t  exec;
     njs_value_t  arguments[2];
 
-    ret = njs_value_property(vm, r, njs_value_arg(&njs_atom.vs_exec), &exec);
+    ret = njs_value_property(vm, r, NJS_ATOM_exec, &exec);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1340,7 +1335,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         }
     }
 
-    ret = njs_value_property(vm, rx, njs_value_arg(&njs_atom.vs_global), &value);
+    ret = njs_value_property(vm, rx, NJS_ATOM_global, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1406,8 +1401,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             continue;
         }
 
-        ret = njs_value_property(vm, rx,
-                                 njs_value_arg(&njs_atom.vs_lastIndex), &value);
+        ret = njs_value_property(vm, rx, NJS_ATOM_lastIndex, &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1447,8 +1441,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             goto exception;
         }
 
-        ret = njs_value_property(vm, r, njs_value_arg(&njs_atom.vs_index),
-                                 &value);
+        ret = njs_value_property(vm, r, NJS_ATOM_index, &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1491,8 +1484,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             }
         }
 
-        ret = njs_value_property(vm, r, njs_value_arg(&njs_atom.vs_groups),
-                                 &groups);
+        ret = njs_value_property(vm, r, NJS_ATOM_groups, &groups);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1624,7 +1616,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
         return ret;
     }
 
-    ret = njs_value_property(vm, rx, njs_value_arg(&njs_atom.vs_flags), retval);
+    ret = njs_value_property(vm, rx, NJS_ATOM_flags, retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1732,8 +1724,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
             continue;
         }
 
-        ret = njs_value_property(vm, rx, njs_value_arg(&njs_atom.vs_lastIndex),
-                                 retval);
+        ret = njs_value_property(vm, rx, NJS_ATOM_lastIndex, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return NJS_ERROR;
         }
