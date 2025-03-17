@@ -24,14 +24,12 @@ typedef struct {
 } qjs_hash_alg_t;
 
 typedef struct {
-    JSContext      *cx;
     njs_hash_t     ctx;
     qjs_hash_alg_t *alg;
 } qjs_digest_t;
 
 typedef struct {
     u_char         opad[64];
-    JSContext      *cx;
     njs_hash_t     ctx;
     qjs_hash_alg_t *alg;
 } qjs_hmac_t;
@@ -190,7 +188,6 @@ qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val, int argc,
         return JS_ThrowOutOfMemory(cx);
     }
 
-    dgst->cx = cx;
     dgst->alg = alg;
     alg->init(&dgst->ctx);
 
@@ -451,7 +448,6 @@ qjs_crypto_create_hmac(JSContext *cx, JSValueConst this_val, int argc,
         return JS_ThrowOutOfMemory(cx);
     }
 
-    hmac->cx = cx;
     hmac->alg = alg;
 
     if (key.length > sizeof(key_buf)) {
@@ -501,7 +497,7 @@ qjs_hash_finalizer(JSRuntime *rt, JSValue val)
 
     dgst = JS_GetOpaque(val, QJS_CORE_CLASS_CRYPTO_HASH);
     if (dgst != NULL) {
-        js_free(dgst->cx, dgst);
+        js_free_rt(rt, dgst);
     }
 }
 
@@ -513,7 +509,7 @@ qjs_hmac_finalizer(JSRuntime *rt, JSValue val)
 
     hmac = JS_GetOpaque(val, QJS_CORE_CLASS_CRYPTO_HMAC);
     if (hmac != NULL) {
-        js_free(hmac->cx, hmac);
+        js_free_rt(rt, hmac);
     }
 }
 
