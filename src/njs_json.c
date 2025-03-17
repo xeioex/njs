@@ -1244,7 +1244,7 @@ njs_object_to_json_function(njs_vm_t *vm, njs_value_t *value)
 
     if (njs_is_object(value)) {
         lhq.proto = &njs_object_hash_proto;
-        lhq.key_hash = njs_atom.vs_toJSON.atom_id;
+        lhq.key_hash = NJS_ATOM_toJSON;
 
         ret = njs_object_property(vm, njs_object(value), &lhq, &retval);
 

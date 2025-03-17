@@ -526,6 +526,11 @@ njs_string_instance_length(njs_vm_t *vm, njs_object_prop_t *prop,
     }
 
     if (njs_is_string(value)) {
+        if (njs_slow_path(value->string.data == NULL)) {
+            njs_assert(value->atom_id != 0);
+            njs_atom_to_value(vm, value, value->atom_id);
+        }
+
         length = value->string.data->length;
     }
 
@@ -547,31 +552,29 @@ njs_string_eq(njs_vm_t *vm, const njs_value_t *v1, const njs_value_t *v2)
         return 0;
     }
 
-    return (memcmp(s1.start, s2.start, s1.length) == 0) ;
+    return (memcmp(s1.start, s2.start, s1.length) == 0);
 }
 
 
 njs_int_t
-njs_string_cmp(const njs_value_t *v1, const njs_value_t *v2)
+njs_string_cmp(njs_vm_t *vm, const njs_value_t *v1, const njs_value_t *v2)
 {
-    size_t     size, size1, size2;
     njs_int_t  ret;
+    njs_str_t  s1, s2;
 
     njs_assert(njs_is_string(v1));
     njs_assert(njs_is_string(v2));
 
-    size1 = v1->string.data->size;
-    size2 = v2->string.data->size;
+    njs_string_get(vm, v1, &s1);
+    njs_string_get(vm, v2, &s2);
 
-    size = njs_min(size1, size2);
-
-    ret = memcmp(v1->string.data->start, v2->string.data->start, size);
+    ret = memcmp(s1.start, s2.start, njs_min(s1.length, s2.length));
 
     if (ret != 0) {
         return ret;
     }
 
-    return (size1 - size2);
+    return (s1.length - s2.length);
 }
 
 

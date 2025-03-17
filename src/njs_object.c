@@ -2500,16 +2500,15 @@ njs_int_t
 njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
 {
     u_char             *p;
+    uint32_t           name;
     njs_int_t          ret;
     njs_value_t        tag;
     njs_string_prop_t  string;
-    const njs_value_t  *name;
 
     if (njs_is_null_or_undefined(this)) {
-        njs_value_assign(retval,
-                         njs_is_null(this) ? &njs_atom.vs__object_Null_
-                                           : &njs_atom.vs__object_Undefined_);
-
+        njs_set_string(retval,
+                       njs_is_null(this) ? NJS_ATOM__object_Null_
+                                         : NJS_ATOM__object_Undefined_);
         return NJS_OK;
     }
 
@@ -2518,36 +2517,36 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
         return ret;
     }
 
-    name = &njs_atom.vs__object_Object_;
+    name = NJS_ATOM__object_Object_;
 
     if (njs_is_array(this)) {
-        name = &njs_atom.vs__object_Array_;
+        name = NJS_ATOM__object_Array_;
 
     } else if (njs_is_object(this)
         && njs_lvlhsh_eq(&njs_object(this)->shared_hash,
                          &vm->shared->arguments_object_instance_hash))
     {
-        name = &njs_atom.vs__object_Arguments_;
+        name = NJS_ATOM__object_Arguments_;
 
     } else if (njs_is_function(this)) {
-        name = &njs_atom.vs__object_Function_;
+        name = NJS_ATOM__object_Function_;
 
     } else if (njs_is_error(this)) {
-        name = &njs_atom.vs__object_Error_;
+        name = NJS_ATOM__object_Error_;
 
     } else if (njs_is_object_value(this)) {
 
         switch (njs_object_value(this)->type) {
         case NJS_BOOLEAN:
-            name = &njs_atom.vs__object_Boolean_;
+            name = NJS_ATOM__object_Boolean_;
             break;
 
         case NJS_NUMBER:
-            name = &njs_atom.vs__object_Number_;
+            name = NJS_ATOM__object_Number_;
             break;
 
         case NJS_STRING:
-            name = &njs_atom.vs__object_String_;
+            name = NJS_ATOM__object_String_;
             break;
 
         default:
@@ -2555,10 +2554,10 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
         }
 
     } else if (njs_is_date(this)) {
-        name = &njs_atom.vs__object_Date_;
+        name = NJS_ATOM__object_Date_;
 
     } else if (njs_is_regexp(this)) {
-        name = &njs_atom.vs__object_RegExp_;
+        name = NJS_ATOM__object_RegExp_;
     }
 
     ret = njs_object_string_tag(vm, this, &tag);
@@ -2567,13 +2566,7 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
     }
 
     if (ret == NJS_DECLINED) {
-        if (njs_slow_path(name == NULL)) {
-            njs_internal_error(vm, "Unknown value type");
-
-            return NJS_ERROR;
-        }
-
-        njs_value_assign(retval, name);
+        njs_set_string(retval, name);
 
         return NJS_OK;
     }

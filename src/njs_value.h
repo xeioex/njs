@@ -812,7 +812,7 @@ njs_inline void
 njs_set_string(njs_value_t *value, uint32_t atom_id)
 {
     value->type = NJS_STRING;
-    value->data.truth = (atom_id != 0);
+    value->data.truth = (atom_id != 0); /* FIXME, should check for empty string */
     value->atom_id = atom_id;
     value->string.data = NULL;
 }

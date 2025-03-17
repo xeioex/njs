@@ -148,7 +148,8 @@ void njs_string_truncate(njs_value_t *value, uint32_t size, uint32_t length);
 uint32_t njs_string_trim(njs_vm_t *vm, const njs_value_t *value,
     njs_string_prop_t *string, unsigned mode);
 void njs_string_copy(njs_value_t *dst, njs_value_t *src);
-njs_int_t njs_string_cmp(const njs_value_t *val1, const njs_value_t *val2);
+njs_int_t njs_string_cmp(njs_vm_t *vm, const njs_value_t *val1,
+    const njs_value_t *val2);
 void njs_string_slice_string_prop(njs_string_prop_t *dst,
     const njs_string_prop_t *string, const njs_slice_prop_t *slice);
 njs_int_t njs_string_slice(njs_vm_t *vm, njs_value_t *dst,

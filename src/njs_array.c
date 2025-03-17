@@ -2720,7 +2720,7 @@ njs_array_compare(const void *a, const void *b, void *c)
         }
     }
 
-    ret = njs_string_cmp(aslot->str, bslot->str);
+    ret = njs_string_cmp(ctx->vm, aslot->str, bslot->str);
 
     if (ret != 0) {
         return ret;

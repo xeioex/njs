@@ -430,7 +430,7 @@ NJS_EXPORT njs_int_t njs_vm_value_string_create(njs_vm_t *vm,
     njs_value_t *value, const u_char *start, uint32_t size);
 NJS_EXPORT njs_int_t njs_vm_value_string_create_chb(njs_vm_t *vm,
     njs_value_t *value, njs_chb_t *chain);
-NJS_EXPORT njs_int_t njs_vm_string_compare(const njs_value_t *v1,
+NJS_EXPORT njs_int_t njs_vm_string_compare(njs_vm_t *vm, const njs_value_t *v1,
     const njs_value_t *v2);
 
 NJS_EXPORT njs_int_t njs_vm_value_array_buffer_set(njs_vm_t *vm,

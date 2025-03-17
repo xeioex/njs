@@ -439,16 +439,16 @@ njs_typed_array_get_string_tag(njs_vm_t *vm, njs_value_t *args,
 {
     njs_value_t  *this;
 
-    static const njs_value_t  *tags[NJS_OBJ_TYPE_TYPED_ARRAY_SIZE] = {
-        &njs_atom.vs_Uint8Array,
-        &njs_atom.vs_Uint8ClampedArray,
-        &njs_atom.vs_Int8Array,
-        &njs_atom.vs_Uint16Array,
-        &njs_atom.vs_Int16Array,
-        &njs_atom.vs_Uint32Array,
-        &njs_atom.vs_Int32Array,
-        &njs_atom.vs_Float32Array,
-        &njs_atom.vs_Float64Array,
+    static const uint32_t  tags[NJS_OBJ_TYPE_TYPED_ARRAY_SIZE] = {
+        NJS_ATOM_Uint8Array,
+        NJS_ATOM_Uint8ClampedArray,
+        NJS_ATOM_Int8Array,
+        NJS_ATOM_Uint16Array,
+        NJS_ATOM_Int16Array,
+        NJS_ATOM_Uint32Array,
+        NJS_ATOM_Int32Array,
+        NJS_ATOM_Float32Array,
+        NJS_ATOM_Float64Array,
     };
 
     this = njs_argument(args, 0);
@@ -458,8 +458,8 @@ njs_typed_array_get_string_tag(njs_vm_t *vm, njs_value_t *args,
         return NJS_OK;
     }
 
-    njs_value_assign(retval,
-                     tags[njs_typed_array_index(njs_typed_array(this)->type)]);
+    njs_set_string(retval,
+                   tags[njs_typed_array_index(njs_typed_array(this)->type)]);
 
     return NJS_OK;
 }

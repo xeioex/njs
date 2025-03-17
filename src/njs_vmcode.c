@@ -2296,37 +2296,37 @@ njs_vmcode_typeof(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
 {
     /* ECMAScript 5.1: null, array and regexp are objects. */
 
-    static const njs_value_t  *types[NJS_VALUE_TYPE_MAX] = {
-        &njs_atom.vs_object,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_boolean,
-        &njs_atom.vs_number,
-        &njs_atom.vs_symbol,
-        &njs_atom.vs_string,
-        &njs_atom.vs_data,
-        &njs_atom.vs_external,
-        &njs_atom.vs_invalid,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_undefined,
-        &njs_atom.vs_undefined,
+    static const uint32_t  types[NJS_VALUE_TYPE_MAX] = {
+        NJS_ATOM_object,
+        NJS_ATOM_undefined,
+        NJS_ATOM_boolean,
+        NJS_ATOM_number,
+        NJS_ATOM_symbol,
+        NJS_ATOM_string,
+        NJS_ATOM_data,
+        NJS_ATOM_external,
+        NJS_ATOM_invalid,
+        NJS_ATOM_undefined,
+        NJS_ATOM_undefined,
+        NJS_ATOM_undefined,
+        NJS_ATOM_undefined,
+        NJS_ATOM_undefined,
+        NJS_ATOM_undefined,
+        NJS_ATOM_undefined,
 
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
-        &njs_atom.vs_function,
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
-        &njs_atom.vs_object,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
+        NJS_ATOM_function,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
+        NJS_ATOM_object,
     };
 
-    njs_value_assign(retval, types[value->type]);
+    njs_set_string(retval, types[value->type]);
 
     return sizeof(njs_vmcode_2addr_t);
 }
@@ -2501,7 +2501,7 @@ njs_primitive_values_compare(njs_vm_t *vm, njs_value_t *val1, njs_value_t *val2)
         num2 = njs_number(val2);
 
     } else {
-        return (njs_string_cmp(val1, val2) < 0) ? 1 : 0;
+        return (njs_string_cmp(vm, val1, val2) < 0) ? 1 : 0;
     }
 
     /* NaN and void values are not comparable with anything. */

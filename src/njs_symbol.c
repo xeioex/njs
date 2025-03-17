@@ -116,7 +116,7 @@ njs_symbol_for(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         node = (njs_rb_symbol_node_t *) rb_node;
 
         if (njs_is_string(&node->name)
-            && njs_string_cmp(value, &node->name) == 0)
+            && njs_string_cmp(vm, value, &node->name) == 0)
         {
             njs_set_symbol(retval, node->key, &node->name);
             return NJS_OK;
