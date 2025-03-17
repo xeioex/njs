@@ -180,10 +180,6 @@ qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val, int argc,
     qjs_digest_t    *dgst;
     qjs_hash_alg_t  *alg;
 
-    if (argc < 1) {
-        return JS_ThrowTypeError(cx, "algorithm must be a string");
-    }
-
     alg = qjs_crypto_algorithm(cx, argv[0]);
     if (alg == NULL) {
         return JS_EXCEPTION;
@@ -526,29 +522,24 @@ static qjs_hash_alg_t *
 qjs_crypto_algorithm(JSContext *cx, JSValueConst val)
 {
     njs_str_t       name;
-    const char      *alg_str;
     qjs_hash_alg_t  *a, *alg;
 
-    alg_str  = JS_ToCString(cx, val);
-    if (alg_str == NULL) {
+    name.start = (u_char *) JS_ToCStringLen(cx, &name.length, val);
+    if (name.start == NULL) {
         JS_ThrowTypeError(cx, "algorithm must be a string");
         return NULL;
     }
 
-    name.start = (u_char *) alg_str;
-    name.length = strlen(alg_str);
-
     alg = NULL;
-    for (a = qjs_hash_algorithms; a->name.start != NULL; a++) {
-        if (name.length == a->name.length &&
-            memcmp(name.start, a->name.start, name.length) == 0)
-        {
+
+    for (a = &qjs_hash_algorithms[0]; a->name.start != NULL; a++) {
+        if (njs_strstr_eq(&name, &a->name)) {
             alg = a;
             break;
         }
     }
 
-    JS_FreeCString(cx, alg_str);
+    JS_FreeCString(cx, (const char *) name.start);
 
     if (alg == NULL) {
         JS_ThrowTypeError(cx, "not supported algorithm");
@@ -561,27 +552,29 @@ qjs_crypto_algorithm(JSContext *cx, JSValueConst val)
 static qjs_crypto_enc_t *
 qjs_crypto_encoding(JSContext *cx, JSValueConst val)
 {
-    const char        *enc_str;
+    njs_str_t         name;
     qjs_crypto_enc_t  *e, *enc;
 
     if (JS_IsNullOrUndefined(val)) {
         return &qjs_encodings[0];
     }
 
-    enc_str = JS_ToCString(cx, val);
-    if (enc_str == NULL) {
+    name.start = (u_char *) JS_ToCStringLen(cx, &name.length, val);
+    if (name.start == NULL) {
         return NULL;
     }
 
     enc = NULL;
+
     for (e = &qjs_encodings[1]; e->name.start != NULL; e++) {
-        if (strcmp(enc_str, (const char *)e->name.start) == 0) {
+        if (njs_strstr_eq(&name, &e->name)) {
             enc = e;
             break;
         }
     }
 
-    JS_FreeCString(cx, enc_str);
+    JS_FreeCString(cx, (const char *) name.start);
+
     if (enc == NULL) {
         JS_ThrowTypeError(cx, "Unknown digest encoding");
     }
