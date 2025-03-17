@@ -1,17 +1,15 @@
+
 /*
- * Copyright (C) NGINX, Inc.
- *
- * This module implements the crypto API for QuickJS.
- *
- * It is a port of njs_crypto_module.c file.
+ * Copyright (C) Vadim Zhestkov
+ * Copyright (C) F5, Inc.
  */
 
 #include <qjs.h>
 #include "njs_hash.h"
 
-typedef void (*njs_hash_init)(njs_hash_t *ctx);
-typedef void (*njs_hash_update)(njs_hash_t *ctx, const void *data, size_t size);
-typedef void (*njs_hash_final)(u_char result[32], njs_hash_t *ctx);
+typedef void (*qjs_hash_init)(njs_hash_t *ctx);
+typedef void (*qjs_hash_update)(njs_hash_t *ctx, const void *data, size_t size);
+typedef void (*qjs_hash_final)(u_char result[32], njs_hash_t *ctx);
 
 typedef JSValue (*qjs_digest_encode)(JSContext *cx, const njs_str_t *src);
 
@@ -20,23 +18,23 @@ typedef struct {
     njs_str_t      name;
 
     size_t         size;
-    njs_hash_init  init;
-    njs_hash_update update;
-    njs_hash_final final;
-} njs_hash_alg_t;
+    qjs_hash_init  init;
+    qjs_hash_update update;
+    qjs_hash_final final;
+} qjs_hash_alg_t;
 
 typedef struct {
     JSContext      *cx;
     njs_hash_t     ctx;
-    njs_hash_alg_t *alg;
-} njs_digest_t;
+    qjs_hash_alg_t *alg;
+} qjs_digest_t;
 
 typedef struct {
     u_char         opad[64];
     JSContext      *cx;
     njs_hash_t     ctx;
-    njs_hash_alg_t *alg;
-} njs_hmac_t;
+    qjs_hash_alg_t *alg;
+} qjs_hmac_t;
 
 
 typedef struct {
@@ -46,11 +44,9 @@ typedef struct {
 } qjs_crypto_enc_t;
 
 
-
-static njs_hash_alg_t * qjs_crypto_algorithm(JSContext *cx, JSValueConst val);
-static qjs_crypto_enc_t * qjs_crypto_encoding(JSContext *cx, JSValueConst val);
-static void qjs_hash_finalizer(JSRuntime *rt, JSValue val);
-static void qjs_hmac_finalizer(JSRuntime *rt, JSValue val);
+static qjs_hash_alg_t *qjs_crypto_algorithm(JSContext *cx, JSValueConst val);
+static qjs_crypto_enc_t *qjs_crypto_encoding(JSContext *cx, JSValueConst val);
+static JSValue qjs_buffer_digest(JSContext *cx, const njs_str_t *src);
 static JSValue qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val,
     int argc, JSValueConst *argv);
 static JS_BOOL qjs_is_typed_array(JSContext *cx, JSValue val);
@@ -62,18 +58,13 @@ static JSValue qjs_hash_prototype_copy(JSContext *cx, JSValueConst this_val,
     int argc, JSValueConst *argv);
 static JSValue qjs_crypto_create_hmac(JSContext *cx, JSValueConst this_val,
     int argc, JSValueConst *argv);
+static void qjs_hash_finalizer(JSRuntime *rt, JSValue val);
+static void qjs_hmac_finalizer(JSRuntime *rt, JSValue val);
 static int qjs_crypto_module_init(JSContext *cx, JSModuleDef *m);
 static JSModuleDef * qjs_crypto_init(JSContext *cx, const char *module_name);
 
 
-static JSValue
-qjs_buffer_digest(JSContext *cx, const njs_str_t *src)
-{
-    return qjs_buffer_create(cx, src->start, src->length);
-}
-
-
-static njs_hash_alg_t njs_hash_algorithms[] = {
+static qjs_hash_alg_t qjs_hash_algorithms[] = {
 
     {
         njs_str("md5"),
@@ -110,7 +101,7 @@ static njs_hash_alg_t njs_hash_algorithms[] = {
 };
 
 
-static qjs_crypto_enc_t njs_encodings[] = {
+static qjs_crypto_enc_t qjs_encodings[] = {
 
     {
         njs_str("buffer"),
@@ -140,107 +131,44 @@ static qjs_crypto_enc_t njs_encodings[] = {
 };
 
 
-static njs_hash_alg_t *
-qjs_crypto_algorithm(JSContext *cx, JSValueConst val)
-{
-    njs_str_t       name;
-    const char      *alg_str;
-    njs_hash_alg_t  *a, *alg;
-
-    alg_str  = JS_ToCString(cx, val);
-    if (njs_slow_path(alg_str == NULL)) {
-        JS_ThrowTypeError(cx, "algorithm must be a string");
-        return NULL;
-    }
-
-    name.start = (u_char *) alg_str;
-    name.length = strlen(alg_str);
-
-    alg = NULL;
-    for (a = njs_hash_algorithms; a->name.start != NULL; a++) {
-        if (name.length == a->name.length &&
-            memcmp(name.start, a->name.start, name.length) == 0)
-        {
-            alg = a;
-            break;
-        }
-    }
-
-    JS_FreeCString(cx, alg_str);
-
-    if (njs_slow_path(alg == NULL)) {
-        JS_ThrowTypeError(cx, "not supported algorithm");
-    }
-
-    return alg;
-}
+static const JSCFunctionListEntry qjs_crypto_export[] = {
+    JS_CFUNC_DEF("createHash", 1, qjs_crypto_create_hash),
+    JS_CFUNC_DEF("createHmac", 2, qjs_crypto_create_hmac),
+};
 
 
-static qjs_crypto_enc_t *
-qjs_crypto_encoding(JSContext *cx, JSValueConst val)
-{
-    const char        *enc_str;
-    qjs_crypto_enc_t  *e, *enc;
-
-    if (JS_IsUndefined(val) || JS_IsNull(val)) {
-        return &njs_encodings[0];
-    }
-
-    enc_str = JS_ToCString(cx, val);
-    if (njs_slow_path(enc_str == NULL)) {
-        return NULL;
-    }
-
-    enc = NULL;
-    for (e = &njs_encodings[1]; e->name.start != NULL; e++) {
-        if (strcmp(enc_str, (const char *)e->name.start) == 0) {
-            enc = e;
-            break;
-        }
-    }
-
-    JS_FreeCString(cx, enc_str);
-    if (njs_slow_path(enc == NULL)) {
-        JS_ThrowTypeError(cx, "Unknown digest encoding");
-    }
-
-    return enc;
-}
+static const JSCFunctionListEntry qjs_hash_proto_proto[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Hash", JS_PROP_CONFIGURABLE),
+    JS_CFUNC_MAGIC_DEF("update", 2, qjs_hash_prototype_update, 0),
+    JS_CFUNC_MAGIC_DEF("digest", 1, qjs_hash_prototype_digest, 0),
+    JS_CFUNC_DEF("copy", 0, qjs_hash_prototype_copy),
+    JS_CFUNC_DEF("constructor", 1, qjs_crypto_create_hash),
+};
 
 
-static void
-qjs_hash_finalizer(JSRuntime *rt, JSValue val)
-{
-    njs_digest_t *dgst;
-
-    dgst = JS_GetOpaque(val, QJS_CORE_CLASS_CRYPTO_HASH);
-    if (dgst != NULL) {
-        js_free(dgst->cx, dgst);
-    }
-}
+static const JSCFunctionListEntry qjs_hmac_proto_proto[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Hmac", JS_PROP_CONFIGURABLE),
+    JS_CFUNC_MAGIC_DEF("update", 2, qjs_hash_prototype_update, 1),
+    JS_CFUNC_MAGIC_DEF("digest", 1, qjs_hash_prototype_digest, 1),
+    JS_CFUNC_DEF("constructor", 2, qjs_crypto_create_hmac),
+};
 
 
-static void
-qjs_hmac_finalizer(JSRuntime *rt, JSValue val)
-{
-    njs_hmac_t *hmac;
-
-    hmac = JS_GetOpaque(val, QJS_CORE_CLASS_CRYPTO_HMAC);
-    if (hmac != NULL) {
-        js_free(hmac->cx, hmac);
-    }
-}
-
-
-static JSClassDef js_hash_class = {
+static JSClassDef qjs_hash_class = {
     "Hash",
     .finalizer = qjs_hash_finalizer,
 };
 
 
-static JSClassDef js_hmac_class = {
+static JSClassDef qjs_hmac_class = {
     "Hmac",
     .finalizer = qjs_hmac_finalizer,
+};
+
+
+qjs_module_t qjs_crypto_module = {
+    .name = "crypto",
+    .init = qjs_crypto_init,
 };
 
 
@@ -249,20 +177,20 @@ qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val, int argc,
     JSValueConst *argv)
 {
     JSValue         obj;
-    njs_digest_t    *dgst;
-    njs_hash_alg_t  *alg;
+    qjs_digest_t    *dgst;
+    qjs_hash_alg_t  *alg;
 
     if (argc < 1) {
         return JS_ThrowTypeError(cx, "algorithm must be a string");
     }
 
     alg = qjs_crypto_algorithm(cx, argv[0]);
-    if (njs_slow_path(alg == NULL)) {
+    if (alg == NULL) {
         return JS_EXCEPTION;
     }
 
-    dgst = js_malloc(cx, sizeof(njs_digest_t));
-    if (njs_slow_path(dgst == NULL)) {
+    dgst = js_malloc(cx, sizeof(qjs_digest_t));
+    if (dgst == NULL) {
         return JS_ThrowOutOfMemory(cx);
     }
 
@@ -277,6 +205,7 @@ qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val, int argc,
     }
 
     JS_SetOpaque(obj, dgst);
+
     return obj;
 }
 
@@ -300,20 +229,20 @@ qjs_hash_prototype_update(JSContext *cx, JSValueConst this_val, int argc,
 {
     njs_str_t                    str, content;
     njs_hash_t                   *uctx;
-    njs_hmac_t                   *hctx;
+    qjs_hmac_t                   *hctx;
     qjs_bytes_t                  bytes;
-    njs_digest_t                 *dgst;
+    qjs_digest_t                 *dgst;
     const qjs_buffer_encoding_t  *enc;
 
     void (*update)(njs_hash_t *ctx, const void *data, size_t size);
 
     if (!hmac) {
         dgst = JS_GetOpaque2(cx, this_val, QJS_CORE_CLASS_CRYPTO_HASH);
-        if (njs_slow_path(dgst == NULL)) {
+        if (dgst == NULL) {
             return JS_ThrowTypeError(cx, "\"this\" is not a hash object");
         }
 
-        if (njs_slow_path(dgst->alg == NULL)) {
+        if (dgst->alg == NULL) {
             return JS_ThrowTypeError(cx, "Digest already called");
         }
 
@@ -322,11 +251,11 @@ qjs_hash_prototype_update(JSContext *cx, JSValueConst this_val, int argc,
 
     } else {
         hctx = JS_GetOpaque2(cx, this_val, QJS_CORE_CLASS_CRYPTO_HMAC);
-        if (njs_slow_path(hctx == NULL)) {
+        if (hctx == NULL) {
             return JS_ThrowTypeError(cx, "\"this\" is not a hmac object");
         }
 
-        if (njs_slow_path(hctx->alg == NULL)) {
+        if (hctx->alg == NULL) {
             return JS_ThrowTypeError(cx, "Digest already called");
         }
 
@@ -336,7 +265,7 @@ qjs_hash_prototype_update(JSContext *cx, JSValueConst this_val, int argc,
 
     if (JS_IsString(argv[0])) {
         str.start = (u_char *) JS_ToCStringLen(cx, &str.length, argv[0]);
-        if (njs_slow_path(str.start == NULL)) {
+        if (str.start == NULL) {
             return JS_EXCEPTION;
         }
 
@@ -344,16 +273,17 @@ qjs_hash_prototype_update(JSContext *cx, JSValueConst this_val, int argc,
         if (enc->decode_length != NULL) {
             content.length = enc->decode_length(cx, &str);
             content.start = js_malloc(cx, content.length);
-            if (njs_slow_path(content.start == NULL)) {
+            if (content.start == NULL) {
                 JS_FreeCString(cx, (const char *) str.start);
                 return JS_ThrowOutOfMemory(cx);
             }
 
-            if (njs_slow_path(enc->decode(cx, &str, &content) != 0)) {
+            if (enc->decode(cx, &str, &content) != 0) {
                 JS_FreeCString(cx, (const char *) str.start);
                 JS_FreeCString(cx, (const char *) content.start);
                 return JS_EXCEPTION;
             }
+
             JS_FreeCString(cx, (const char *) str.start);
 
             update(uctx, content.start, content.length);
@@ -385,36 +315,38 @@ qjs_hash_prototype_digest(JSContext *cx, JSValueConst this_val, int argc,
     JSValueConst *argv, int hmac)
 {
     njs_str_t         str;
-    njs_hmac_t        *hctx;
-    njs_digest_t      *dgst;
-    njs_hash_alg_t    *alg;
+    qjs_hmac_t        *hctx;
+    qjs_digest_t      *dgst;
+    qjs_hash_alg_t    *alg;
     qjs_crypto_enc_t  *enc;
     u_char            hash1[32],digest[32];
 
     if (!hmac) {
         dgst = JS_GetOpaque2(cx, this_val, QJS_CORE_CLASS_CRYPTO_HASH);
-        if (njs_slow_path(dgst == NULL)) {
+        if (dgst == NULL) {
             return JS_ThrowTypeError(cx, "\"this\" is not a hash object");
         }
 
         alg = dgst->alg;
-        if (njs_slow_path(alg == NULL)) {
+        if (alg == NULL) {
             return JS_ThrowTypeError(cx, "Digest already called");
         }
+
         dgst->alg = NULL;
 
         alg->final(digest, &dgst->ctx);
 
     } else {
         hctx = JS_GetOpaque2(cx, this_val, QJS_CORE_CLASS_CRYPTO_HMAC);
-        if (njs_slow_path(hctx == NULL)) {
+        if (hctx == NULL) {
             return JS_ThrowTypeError(cx, "\"this\" is not a hctx object");
         }
 
         alg = hctx->alg;
-        if (njs_slow_path(alg == NULL)) {
+        if (alg == NULL) {
             return JS_ThrowTypeError(cx, "Digest already called");
         }
+
         hctx->alg = NULL;
 
         alg->final(hash1, &hctx->ctx);
@@ -433,7 +365,7 @@ qjs_hash_prototype_digest(JSContext *cx, JSValueConst this_val, int argc,
     }
 
     enc = qjs_crypto_encoding(cx, argv[0]);
-    if (njs_slow_path(enc == NULL)) {
+    if (enc == NULL) {
         return JS_EXCEPTION;
     }
 
@@ -446,23 +378,23 @@ qjs_hash_prototype_copy(JSContext *cx, JSValueConst this_val, int argc,
     JSValueConst *argv)
 {
     JSValue       obj;
-    njs_digest_t  *dgst, *copy;
+    qjs_digest_t  *dgst, *copy;
 
     dgst = JS_GetOpaque2(cx, this_val, QJS_CORE_CLASS_CRYPTO_HASH);
-    if (njs_slow_path(dgst == NULL)) {
+    if (dgst == NULL) {
         return JS_EXCEPTION;
     }
 
-    if (njs_slow_path(dgst->alg == NULL)) {
+    if (dgst->alg == NULL) {
         return JS_ThrowTypeError(cx, "Digest already called");
     }
 
-    copy = js_malloc(cx, sizeof(njs_digest_t));
-    if (njs_slow_path(copy == NULL)) {
+    copy = js_malloc(cx, sizeof(qjs_digest_t));
+    if (copy == NULL) {
         return JS_ThrowOutOfMemory(cx);
     }
 
-    memcpy(copy, dgst, sizeof(njs_digest_t));
+    memcpy(copy, dgst, sizeof(qjs_digest_t));
 
     obj = JS_NewObjectClass(cx, QJS_CORE_CLASS_CRYPTO_HASH);
     if (JS_IsException(obj)) {
@@ -471,6 +403,7 @@ qjs_hash_prototype_copy(JSContext *cx, JSValueConst this_val, int argc,
     }
 
     JS_SetOpaque(obj, copy);
+
     return obj;
 }
 
@@ -479,17 +412,17 @@ static JSValue
 qjs_crypto_create_hmac(JSContext *cx, JSValueConst this_val, int argc,
     JSValueConst *argv)
 {
-    int                          i;
-    JS_BOOL                      key_is_string;
-    JSValue                      obj;
-    njs_str_t                    key;
-    njs_hmac_t                   *hmac;
-    qjs_bytes_t                  bytes;
-    njs_hash_alg_t               *alg;
-    u_char                       digest[32], key_buf[64];
+    int             i;
+    JS_BOOL         key_is_string;
+    JSValue         obj;
+    njs_str_t       key;
+    qjs_hmac_t      *hmac;
+    qjs_bytes_t     bytes;
+    qjs_hash_alg_t  *alg;
+    u_char          digest[32], key_buf[64];
 
     alg = qjs_crypto_algorithm(cx, argv[0]);
-    if (njs_slow_path(alg == NULL)) {
+    if (alg == NULL) {
         return JS_EXCEPTION;
     }
 
@@ -513,13 +446,15 @@ qjs_crypto_create_hmac(JSContext *cx, JSValueConst this_val, int argc,
                                  "key is not a string or Buffer-like object");
     }
 
-    hmac = js_malloc(cx, sizeof(njs_hmac_t));
-    if (njs_slow_path(hmac == NULL)) {
+    hmac = js_malloc(cx, sizeof(qjs_hmac_t));
+    if (hmac == NULL) {
         if (key_is_string) {
             JS_FreeCString(cx, (const char *) key.start);
         }
+
         return JS_ThrowOutOfMemory(cx);
     }
+
     hmac->cx = cx;
     hmac->alg = alg;
 
@@ -558,29 +493,108 @@ qjs_crypto_create_hmac(JSContext *cx, JSValueConst this_val, int argc,
     }
 
     JS_SetOpaque(obj, hmac);
+
     return obj;
 }
 
 
-static const JSCFunctionListEntry qjs_crypto_export[] = {
-    JS_CFUNC_DEF("createHash", 1, qjs_crypto_create_hash),
-    JS_CFUNC_DEF("createHmac", 2, qjs_crypto_create_hmac),
-};
+static void
+qjs_hash_finalizer(JSRuntime *rt, JSValue val)
+{
+    qjs_digest_t  *dgst;
 
-static const JSCFunctionListEntry qjs_hash_proto_funcs[] = {
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Hash", JS_PROP_CONFIGURABLE),
-    JS_CFUNC_MAGIC_DEF("update", 2, qjs_hash_prototype_update, 0),
-    JS_CFUNC_MAGIC_DEF("digest", 1, qjs_hash_prototype_digest, 0),
-    JS_CFUNC_DEF("copy", 0, qjs_hash_prototype_copy),
-    JS_CFUNC_DEF("constructor", 1, qjs_crypto_create_hash),
-};
+    dgst = JS_GetOpaque(val, QJS_CORE_CLASS_CRYPTO_HASH);
+    if (dgst != NULL) {
+        js_free(dgst->cx, dgst);
+    }
+}
 
-static const JSCFunctionListEntry qjs_hmac_proto_funcs[] = {
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Hmac", JS_PROP_CONFIGURABLE),
-    JS_CFUNC_MAGIC_DEF("update", 2, qjs_hash_prototype_update, 1),
-    JS_CFUNC_MAGIC_DEF("digest", 1, qjs_hash_prototype_digest, 1),
-    JS_CFUNC_DEF("constructor", 2, qjs_crypto_create_hmac),
-};
+
+static void
+qjs_hmac_finalizer(JSRuntime *rt, JSValue val)
+{
+    qjs_hmac_t  *hmac;
+
+    hmac = JS_GetOpaque(val, QJS_CORE_CLASS_CRYPTO_HMAC);
+    if (hmac != NULL) {
+        js_free(hmac->cx, hmac);
+    }
+}
+
+
+static qjs_hash_alg_t *
+qjs_crypto_algorithm(JSContext *cx, JSValueConst val)
+{
+    njs_str_t       name;
+    const char      *alg_str;
+    qjs_hash_alg_t  *a, *alg;
+
+    alg_str  = JS_ToCString(cx, val);
+    if (alg_str == NULL) {
+        JS_ThrowTypeError(cx, "algorithm must be a string");
+        return NULL;
+    }
+
+    name.start = (u_char *) alg_str;
+    name.length = strlen(alg_str);
+
+    alg = NULL;
+    for (a = qjs_hash_algorithms; a->name.start != NULL; a++) {
+        if (name.length == a->name.length &&
+            memcmp(name.start, a->name.start, name.length) == 0)
+        {
+            alg = a;
+            break;
+        }
+    }
+
+    JS_FreeCString(cx, alg_str);
+
+    if (alg == NULL) {
+        JS_ThrowTypeError(cx, "not supported algorithm");
+    }
+
+    return alg;
+}
+
+
+static qjs_crypto_enc_t *
+qjs_crypto_encoding(JSContext *cx, JSValueConst val)
+{
+    const char        *enc_str;
+    qjs_crypto_enc_t  *e, *enc;
+
+    if (JS_IsNullOrUndefined(val)) {
+        return &qjs_encodings[0];
+    }
+
+    enc_str = JS_ToCString(cx, val);
+    if (enc_str == NULL) {
+        return NULL;
+    }
+
+    enc = NULL;
+    for (e = &qjs_encodings[1]; e->name.start != NULL; e++) {
+        if (strcmp(enc_str, (const char *)e->name.start) == 0) {
+            enc = e;
+            break;
+        }
+    }
+
+    JS_FreeCString(cx, enc_str);
+    if (enc == NULL) {
+        JS_ThrowTypeError(cx, "Unknown digest encoding");
+    }
+
+    return enc;
+}
+
+
+static JSValue
+qjs_buffer_digest(JSContext *cx, const njs_str_t *src)
+{
+    return qjs_buffer_create(cx, src->start, src->length);
+}
 
 
 static int
@@ -608,53 +622,47 @@ qjs_crypto_module_init(JSContext *cx, JSModuleDef *m)
 static JSModuleDef *
 qjs_crypto_init(JSContext *cx, const char *module_name)
 {
-    JSValue      hash_proto, hmac_proto;
+    JSValue      proto;
     JSModuleDef  *m;
 
     if (!JS_IsRegisteredClass(JS_GetRuntime(cx),
                               QJS_CORE_CLASS_CRYPTO_HASH))
     {
-        /* hash */
-
         if (JS_NewClass(JS_GetRuntime(cx), QJS_CORE_CLASS_CRYPTO_HASH,
-                        &js_hash_class) < 0)
+                        &qjs_hash_class) < 0)
         {
             return NULL;
         }
 
-
-        hash_proto = JS_NewObject(cx);
-        if (JS_IsException(hash_proto)) {
+        proto = JS_NewObject(cx);
+        if (JS_IsException(proto)) {
             return NULL;
         }
 
-        JS_SetPropertyFunctionList(cx, hash_proto, qjs_hash_proto_funcs,
-                                   njs_nitems(qjs_hash_proto_funcs));
+        JS_SetPropertyFunctionList(cx, proto, qjs_hash_proto_proto,
+                                   njs_nitems(qjs_hash_proto_proto));
 
-        JS_SetClassProto(cx, QJS_CORE_CLASS_CRYPTO_HASH, hash_proto);
-
-
-        /* hmac */
+        JS_SetClassProto(cx, QJS_CORE_CLASS_CRYPTO_HASH, proto);
 
         if (JS_NewClass(JS_GetRuntime(cx), QJS_CORE_CLASS_CRYPTO_HMAC,
-                        &js_hmac_class) < 0)
+                        &qjs_hmac_class) < 0)
         {
             return NULL;
         }
 
-        hmac_proto = JS_NewObject(cx);
-        if (JS_IsException(hmac_proto)) {
+        proto = JS_NewObject(cx);
+        if (JS_IsException(proto)) {
             return NULL;
         }
 
-        JS_SetPropertyFunctionList(cx, hmac_proto, qjs_hmac_proto_funcs,
-                                   njs_nitems(qjs_hmac_proto_funcs));
+        JS_SetPropertyFunctionList(cx, proto, qjs_hmac_proto_proto,
+                                   njs_nitems(qjs_hmac_proto_proto));
 
-        JS_SetClassProto(cx, QJS_CORE_CLASS_CRYPTO_HMAC, hmac_proto);
+        JS_SetClassProto(cx, QJS_CORE_CLASS_CRYPTO_HMAC, proto);
     }
 
     m = JS_NewCModule(cx, module_name, qjs_crypto_module_init);
-    if (njs_slow_path(m == NULL)) {
+    if (m == NULL) {
         return NULL;
     }
 
@@ -670,9 +678,3 @@ qjs_crypto_init(JSContext *cx, const char *module_name)
 
     return m;
 }
-
-
-qjs_module_t qjs_crypto_module = {
-    .name = "crypto",
-    .init = qjs_crypto_init,
-};
