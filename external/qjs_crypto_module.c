@@ -257,12 +257,16 @@ qjs_hash_prototype_update(JSContext *cx, JSValueConst this_val, int argc,
     }
 
     if (JS_IsString(argv[0])) {
+        enc = qjs_buffer_encoding(cx, argv[1], 1);
+        if (enc == NULL) {
+            return JS_EXCEPTION;
+        }
+
         str.start = (u_char *) JS_ToCStringLen(cx, &str.length, argv[0]);
         if (str.start == NULL) {
             return JS_EXCEPTION;
         }
 
-        enc = qjs_buffer_encoding(cx, argv[1], 1);
         if (enc->decode_length != NULL) {
             content.length = enc->decode_length(cx, &str);
             content.start = js_malloc(cx, content.length);
