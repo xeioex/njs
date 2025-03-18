@@ -322,7 +322,7 @@ qjs_hash_prototype_digest(JSContext *cx, JSValueConst this_val, int argc,
     } else {
         hctx = JS_GetOpaque2(cx, this_val, QJS_CORE_CLASS_CRYPTO_HMAC);
         if (hctx == NULL) {
-            return JS_ThrowTypeError(cx, "\"this\" is not a hctx object");
+            return JS_ThrowTypeError(cx, "\"this\" is not a hmac object");
         }
 
         alg = hctx->alg;
