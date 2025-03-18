@@ -104,6 +104,20 @@ typedef struct {
     u_char                      *start;
 } qjs_bytes_t;
 
+
+njs_inline int
+qjs_is_typed_array(JSContext *cx, JSValue val)
+{
+    JS_BOOL  exception;
+
+    val = JS_GetTypedArrayBuffer(cx, val, NULL, NULL, NULL);
+    exception = JS_IsException(val);
+    JS_FreeValue(cx, val);
+
+    return !exception;
+}
+
+
 int qjs_to_bytes(JSContext *ctx, qjs_bytes_t *data, JSValueConst value);
 void qjs_bytes_free(JSContext *ctx, qjs_bytes_t *data);
 JSValue qjs_typed_array_data(JSContext *ctx, JSValueConst value,

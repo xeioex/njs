@@ -47,7 +47,6 @@ static qjs_crypto_enc_t *qjs_crypto_encoding(JSContext *cx, JSValueConst val);
 static JSValue qjs_buffer_digest(JSContext *cx, const njs_str_t *src);
 static JSValue qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val,
     int argc, JSValueConst *argv);
-static JS_BOOL qjs_is_typed_array(JSContext *cx, JSValue val);
 static JSValue qjs_hash_prototype_update(JSContext *cx, JSValueConst this_val,
     int argc, JSValueConst *argv, int hmac);
 static JSValue qjs_hash_prototype_digest(JSContext *cx, JSValueConst this_val,
@@ -200,19 +199,6 @@ qjs_crypto_create_hash(JSContext *cx, JSValueConst this_val, int argc,
     JS_SetOpaque(obj, dgst);
 
     return obj;
-}
-
-
-static JS_BOOL
-qjs_is_typed_array(JSContext *cx, JSValue val)
-{
-    JS_BOOL  exception;
-
-    val = JS_GetTypedArrayBuffer(cx, val, NULL, NULL, NULL);
-    exception = JS_IsException(val);
-    JS_FreeValue(cx, val);
-
-    return !exception;
 }
 
 
