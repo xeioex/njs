@@ -127,8 +127,6 @@ JSValue qjs_typed_array_data(JSContext *ctx, JSValueConst value,
     JS_NewStringLen(ctx, (const char *) (data), len)
 JSValue qjs_string_create_chb(JSContext *cx, njs_chb_t *chain);
 
-/* qjs_base64_encoded_length(512) */
-#define QJS_ENCODE_BUF_LEN 686
 JSValue qjs_string_hex(JSContext *cx, const njs_str_t *src);
 JSValue qjs_string_base64(JSContext *cx, const njs_str_t *src);
 JSValue qjs_string_base64url(JSContext *cx, const njs_str_t *src);
