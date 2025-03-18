@@ -5,15 +5,6 @@ flags: [async]
 
 import cr from 'crypto';
 
-
-function p(args, default_opts) {
-    let params = merge({}, default_opts);
-    params = merge(params, args);
-
-    return params;
-}
-
-
 let createHash_tsuite = {
     name: "createHash tests",
     skip: () => !cr.createHash,
@@ -25,8 +16,6 @@ let createHash_tsuite = {
 
         return 'SUCCESS';
     },
-    prepare_args: p,
-    opts: { },
 
     tests: [
 
@@ -294,8 +283,6 @@ let createHmac_tsuite = {
 
         return 'SUCCESS';
     },
-    prepare_args: p,
-    opts: { },
 
     tests: [
 
