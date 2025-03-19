@@ -562,9 +562,6 @@ njs_string_cmp(njs_vm_t *vm, const njs_value_t *v1, const njs_value_t *v2)
     njs_int_t  ret;
     njs_str_t  s1, s2;
 
-    njs_assert(njs_is_string(v1));
-    njs_assert(njs_is_string(v2));
-
     njs_string_get(vm, v1, &s1);
     njs_string_get(vm, v2, &s2);
 

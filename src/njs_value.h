@@ -541,6 +541,8 @@ typedef struct {
     do {                                                                      \
         njs_value_t  _dst;                                                    \
                                                                               \
+        njs_assert(njs_is_string(value));                                     \
+                                                                              \
         if (njs_slow_path((value)->string.data == NULL)) {                    \
             njs_assert((value)->atom_id != 0);                                \
             njs_atom_to_value(vm, &_dst, (value)->atom_id);                   \
