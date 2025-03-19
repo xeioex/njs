@@ -3497,9 +3497,40 @@ ngx_headers_js_ext_prop(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t atom_id,
 
 
 static ngx_int_t
-ngx_string_compare(const void *s1, const void *s2)
+ngx_string_compare(const void *s1, const void *s2, void *ctx)
 {
-    return njs_vm_string_compare(s1, s2);
+    return njs_vm_string_compare(ctx, s1, s2);
+}
+
+
+static void
+ngx_js_sort(void *base, size_t n, size_t size,
+    ngx_int_t (*cmp)(const void *, const void *, void *), void *ctx)
+{
+    u_char  *p1, *p2, *p;
+
+    p = ngx_alloc(size, ngx_cycle->log);
+    if (p == NULL) {
+        return;
+    }
+
+    for (p1 = (u_char *) base + size;
+         p1 < (u_char *) base + n * size;
+         p1 += size)
+    {
+        ngx_memcpy(p, p1, size);
+
+        for (p2 = p1;
+             p2 > (u_char *) base && cmp(p2 - size, p, ctx) > 0;
+             p2 -= size)
+        {
+            ngx_memcpy(p2, p2 - size, size);
+        }
+
+        ngx_memcpy(p2, p, size);
+    }
+
+    ngx_free(p);
 }
 
 
@@ -3576,8 +3607,8 @@ ngx_headers_js_ext_keys(njs_vm_t *vm, njs_value_t *value, njs_value_t *keys)
 
     start = njs_vm_array_start(vm, keys);
 
-    ngx_sort(start, (size_t) length, sizeof(njs_opaque_value_t),
-             ngx_string_compare);
+    ngx_js_sort(start, (size_t) length, sizeof(njs_opaque_value_t),
+                ngx_string_compare, vm);
 
     return NJS_OK;
 }
