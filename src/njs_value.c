@@ -44,9 +44,9 @@ njs_value_to_primitive(njs_vm_t *vm, njs_value_t *dst, njs_value_t *value,
     njs_value_t              method, retval;
     njs_flathsh_obj_query_t  lhq;
 
-    static const njs_value_t *hashes[] = {
-        &njs_atom.vs_valueOf,
-        &njs_atom.vs_toString,
+    static const uint32_t atoms[] = {
+        NJS_ATOM_valueOf,
+        NJS_ATOM_toString,
     };
 
     if (njs_is_primitive(value)) {
@@ -63,7 +63,7 @@ njs_value_to_primitive(njs_vm_t *vm, njs_value_t *dst, njs_value_t *value,
         if (njs_is_object(value) && tries < 2) {
             hint ^= tries++;
 
-            lhq.key_hash = hashes[hint]->atom_id;
+            lhq.key_hash = atoms[hint];
 
             ret = njs_object_property(vm, njs_object(value), &lhq, &method);
 
