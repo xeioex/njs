@@ -149,9 +149,8 @@ njs_json_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
 
         return njs_json_internalize_property(vm, njs_function(reviver),
-                                             &wrapper,
-                                             njs_value_arg(&njs_atom.vs_), 0,
-                                             retval);
+                               &wrapper, njs_value_arg(&njs_value_string_empty),
+                               0, retval);
     }
 
     njs_value_assign(retval, &value);

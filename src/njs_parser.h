@@ -80,7 +80,6 @@ struct njs_parser_s {
     njs_parser_scope_t              *scope;
     njs_variable_type_t             var_type;
     njs_int_t                       ret;
-    uintptr_t                       undefined_id;
 
     uint8_t                         use_lhs;
 

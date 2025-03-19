@@ -787,6 +787,8 @@ extern const njs_value_t  njs_value_true;
 extern const njs_value_t  njs_value_zero;
 extern const njs_value_t  njs_value_nan;
 extern const njs_value_t  njs_value_invalid;
+extern const njs_value_t  njs_value_string_empty;
+extern const njs_value_t  njs_value_string_undefined;
 
 njs_inline void
 njs_set_boolean(njs_value_t *value, unsigned yn)

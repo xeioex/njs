@@ -265,7 +265,7 @@ njs_builtin_objects_create(njs_vm_t *vm)
         } else if (njs_object_type_init[i] == &njs_number_type_init) {
             prototype->object_value.value = njs_value(NJS_NUMBER, 0, 0.0);
         } else if (njs_object_type_init[i] == &njs_string_type_init) {
-            prototype->object_value.value = njs_atom.vs_;
+            prototype->object_value.value = njs_value_string_empty;
         }
 
         ret = njs_object_hash_init(vm, &prototype->object.shared_hash,
@@ -389,7 +389,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
             symbol = 1;
             key = *njs_symbol_description(&key);
             if (njs_is_undefined(&key)) {
-                key = njs_atom.vs_;
+                key = njs_value_string_empty;
             }
         }
 

@@ -570,8 +570,6 @@ njs_parser(njs_vm_t *vm, njs_parser_t *parser)
         parser->ret = NJS_OK;
     }
 
-    parser->undefined_id = (uintptr_t) &njs_atom.vs_undefined;
-
     njs_queue_init(&parser->stack);
 
     parser->target = NULL;
@@ -7190,7 +7188,7 @@ njs_parser_function_expression(njs_parser_t *parser, njs_lexer_token_t *token,
         }
 
     } else {
-        unique_id = (uintptr_t) &njs_atom.vs_; /* empty string */
+        unique_id = (uintptr_t) &njs_value_string_empty;
     }
 
     if (token->type != NJS_TOKEN_OPEN_PARENTHESIS) {
@@ -7436,7 +7434,7 @@ njs_parser_arrow_function(njs_parser_t *parser, njs_lexer_token_t *token,
 
     node->left = name;
 
-    unique_id = (uintptr_t) &njs_atom.vs_; /* empty string */
+    unique_id = (uintptr_t) &njs_value_string_empty;
 
     var = njs_variable_scope_add(parser, parser->scope, parser->scope,
                                  unique_id, NJS_VARIABLE_FUNCTION, 1);
@@ -8382,7 +8380,7 @@ njs_parser_reference(njs_parser_t *parser, njs_lexer_token_t *token)
         }
 
         if (parser->vm->options.module) {
-            token->unique_id = (uintptr_t) &njs_atom.vs_undefined;
+            token->unique_id = (uintptr_t) &njs_value_undefined;
 
         } else if (!scope->arrow_function) {
             index = njs_scope_index(scope->type, 0, NJS_LEVEL_LOCAL,
