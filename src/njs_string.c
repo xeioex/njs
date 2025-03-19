@@ -196,18 +196,6 @@ njs_string_alloc(njs_vm_t *vm, njs_value_t *value, uint64_t size,
 }
 
 
-uint32_t
-njs_string_length(njs_value_t *string)
-{
-    uint32_t  length, size;
-
-    size = string->string.data->size;
-    length = string->string.data->length;
-
-    return (length == 0) ? size : length;
-}
-
-
 size_t
 njs_string_prop(njs_vm_t *vm, njs_string_prop_t *string,
     const njs_value_t *value)

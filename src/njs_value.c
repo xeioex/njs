@@ -1513,16 +1513,22 @@ njs_primitive_value_to_string(njs_vm_t *vm, njs_value_t *dst,
     switch (src->type) {
 
     case NJS_NULL:
-        value = &njs_atom.vs_null;
-        break;
+        njs_set_string(dst, NJS_ATOM_null);
+        return NJS_OK;
 
     case NJS_UNDEFINED:
-        value = &njs_atom.vs_undefined;
-        break;
+        njs_set_string(dst, NJS_ATOM_undefined);
+        return NJS_OK;
 
     case NJS_BOOLEAN:
-        value = njs_is_true(src) ? &njs_atom.vs_true : &njs_atom.vs_false;
-        break;
+        if (njs_is_true(src)) {
+            njs_set_string(dst, NJS_ATOM_true);
+
+        } else {
+            njs_set_string(dst, NJS_ATOM_false);
+        }
+
+        return NJS_OK;
 
     case NJS_NUMBER:
         return njs_number_to_string(vm, dst, src);

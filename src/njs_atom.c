@@ -46,7 +46,7 @@ njs_atom_hash_test(njs_flathsh_query_t *lhq, void *data)
 
         if (memcmp(start, lhq->key.start, lhq->key.length) == 0) {
            return NJS_OK;
-        } 
+        }
     }
 
     if (name->type == NJS_SYMBOL && ((njs_value_t *)lhq->value)->type ==

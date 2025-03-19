@@ -399,7 +399,7 @@ njs_query_string_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return ret;
         }
 
-        if (njs_string_length(njs_value_arg(&val_sep)) != 0) {
+        if (njs_value_string_length(vm, njs_value_arg(&val_sep)) != 0) {
             njs_value_string_get(vm, njs_value_arg(&val_sep), &sep);
         }
     }
@@ -411,7 +411,7 @@ njs_query_string_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return ret;
         }
 
-        if (njs_string_length(njs_value_arg(&val_eq)) != 0) {
+        if (njs_value_string_length(vm, njs_value_arg(&val_eq)) != 0) {
             njs_value_string_get(vm, njs_value_arg(&val_eq), &eq);
         }
     }
@@ -705,7 +705,7 @@ njs_query_string_stringify(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return ret;
         }
 
-        if (njs_string_length(arg) > 0) {
+        if (njs_value_string_length(vm, arg) > 0) {
             njs_value_string_get(vm, arg, &sep);
         }
     }
@@ -717,7 +717,7 @@ njs_query_string_stringify(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             return ret;
         }
 
-        if (njs_string_length(arg) > 0) {
+        if (njs_value_string_length(vm, arg) > 0) {
             njs_value_string_get(vm, arg, &eq);
         }
     }

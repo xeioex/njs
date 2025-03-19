@@ -361,24 +361,6 @@ NJS_EXPORT njs_int_t njs_external_property(njs_vm_t *vm,
 NJS_EXPORT njs_int_t njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value);
 NJS_EXPORT njs_int_t njs_value_property(njs_vm_t *vm, njs_value_t *value,
     uint32_t atom_id, njs_value_t *retval);
-
-
-njs_inline njs_int_t
-njs_value_property_val(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
-    njs_value_t *retval)
-{
-    njs_int_t  ret;
-
-    if (njs_value_atom(key) == 0) {
-        ret = njs_atom_atomize_key(vm, key);
-        if (ret != NJS_OK) {
-            return ret;
-        }
-    }
-
-    return njs_value_property(vm, value, njs_value_atom(key), retval);
-}
-
 NJS_EXPORT njs_int_t njs_value_property_set(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *setval);
 NJS_EXPORT uintptr_t njs_vm_meta(njs_vm_t *vm, njs_uint_t index);
@@ -556,6 +538,34 @@ NJS_EXPORT njs_int_t njs_vm_query_string_parse(njs_vm_t *vm, u_char *start,
 
 NJS_EXPORT njs_int_t njs_vm_promise_create(njs_vm_t *vm, njs_value_t *retval,
     njs_value_t *callbacks);
+
+
+njs_inline njs_int_t
+njs_value_property_val(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+    njs_value_t *retval)
+{
+    njs_int_t  ret;
+
+    if (njs_value_atom(key) == 0) {
+        ret = njs_atom_atomize_key(vm, key);
+        if (ret != NJS_OK) {
+            return ret;
+        }
+    }
+
+    return njs_value_property(vm, value, njs_value_atom(key), retval);
+}
+
+
+njs_inline size_t
+njs_value_string_length(njs_vm_t *vm, njs_value_t *value)
+{
+    njs_str_t  str;
+
+    njs_value_string_get(vm, value, &str);
+
+    return str.length;
+}
 
 
 #endif /* _NJS_H_INCLUDED_ */

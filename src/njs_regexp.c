@@ -1397,7 +1397,9 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             goto exception;
         }
 
-        if (njs_string_length(&value) != 0) {
+        njs_string_get(vm, &value, &m);
+
+        if (m.length != 0) {
             continue;
         }
 

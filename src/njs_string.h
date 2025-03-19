@@ -112,7 +112,6 @@ njs_int_t njs_string_create(njs_vm_t *vm, njs_value_t *value, const u_char *src,
 njs_int_t njs_string_create_chb(njs_vm_t *vm, njs_value_t *value,
     njs_chb_t *chain);
 
-uint32_t njs_string_length(njs_value_t *string);
 size_t njs_string_prop(njs_vm_t *vm, njs_string_prop_t *string,
     const njs_value_t *value);
 
