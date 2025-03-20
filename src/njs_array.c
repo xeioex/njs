@@ -158,6 +158,7 @@ njs_array_convert_to_slow_array(njs_vm_t *vm, njs_array_t *array)
             if (njs_slow_path(ret != NJS_OK)) {
                 return NJS_ERROR;
             }
+
             prop = njs_object_property_add(vm, &value, &index, 0);
             if (njs_slow_path(prop == NULL)) {
                 return NJS_ERROR;
