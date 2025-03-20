@@ -261,10 +261,8 @@ njs_function_arguments_object_init(njs_vm_t *vm, njs_native_frame_t *frame)
     njs_set_object(&value, arguments);
     njs_set_number(&length, frame->nargs);
 
-    ret = njs_object_prop_define(vm, &value,
-                                 njs_value_arg(&njs_atom.vs_length), &length,
-                                 NJS_OBJECT_PROP_VALUE_CW,
-                                 NJS_ATOM_length);
+    ret = njs_object_prop_define(vm, &value, NJS_ATOM_length, &length,
+                                 NJS_OBJECT_PROP_VALUE_CW);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }

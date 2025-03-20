@@ -1546,8 +1546,13 @@ njs_object_define_property(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     value = njs_argument(args, 1);
     name = njs_lvalue_arg(&lvalue, args, nargs, 2);
 
-    ret = njs_object_prop_define(vm, value, name, desc,
-                                 NJS_OBJECT_PROP_DESCRIPTOR, name->atom_id);
+    ret = njs_value_to_key(vm, name, name);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return NJS_ERROR;
+    }
+
+    ret = njs_object_prop_define_val(vm, value, name, desc,
+                                     NJS_OBJECT_PROP_DESCRIPTOR);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -1591,8 +1596,6 @@ njs_object_define_properties(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
 
     for (i = 0; i < length; i++) {
-        pq.lhq.key_hash = 0;
-
         ret = njs_property_query(vm, &pq, descs, &keys->start[i]);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto done;
@@ -1609,9 +1612,8 @@ njs_object_define_properties(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             goto done;
         }
 
-        ret = njs_object_prop_define(vm, value, &keys->start[i], &desc,
-                                     NJS_OBJECT_PROP_DESCRIPTOR,
-                                     (&keys->start[i])->atom_id);
+        ret = njs_object_prop_define(vm, value, keys->start[i].atom_id, &desc,
+                                     NJS_OBJECT_PROP_DESCRIPTOR);
         if (njs_slow_path(ret != NJS_OK)) {
             goto done;
         }

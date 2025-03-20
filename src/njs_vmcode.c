@@ -1315,8 +1315,8 @@ NEXT_LBL;
             goto error;
         }
 
-        ret = njs_object_prop_define(vm, value1, &name, function,
-                                     accessor->type, 0);
+        ret = njs_object_prop_define_val(vm, value1, &name, function,
+                                         accessor->type);
         if (njs_slow_path(ret != NJS_OK)) {
             goto error;
         }
