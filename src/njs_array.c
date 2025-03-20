@@ -139,8 +139,7 @@ njs_int_t
 njs_array_convert_to_slow_array(njs_vm_t *vm, njs_array_t *array)
 {
     uint32_t           i, length;
-    njs_int_t          ret;
-    njs_value_t        index, value;
+    njs_value_t        value;
     njs_object_prop_t  *prop;
 
     if (njs_slow_path(!array->object.fast_array)) {
@@ -154,12 +153,7 @@ njs_array_convert_to_slow_array(njs_vm_t *vm, njs_array_t *array)
 
     for (i = 0; i < length; i++) {
         if (njs_is_valid(&array->start[i])) {
-            ret = njs_uint32_to_string(vm, &index, i);
-            if (njs_slow_path(ret != NJS_OK)) {
-                return NJS_ERROR;
-            }
-
-            prop = njs_object_property_add(vm, &value, &index, 0);
+            prop = njs_object_property_add(vm, &value, njs_number_atom(i), 0);
             if (njs_slow_path(prop == NULL)) {
                 return NJS_ERROR;
             }
@@ -187,8 +181,7 @@ njs_array_length_redefine(njs_vm_t *vm, njs_value_t *value, uint32_t length,
         return NJS_ERROR;
     }
 
-    prop = njs_object_property_add(vm, value,
-                                   njs_value_arg(&njs_atom.vs_length), 1);
+    prop = njs_object_property_add(vm, value, NJS_ATOM_length, 1);
     if (njs_slow_path(prop == NULL)) {
         njs_internal_error(vm, "njs_array_length_redefine() "
                            "cannot redefine \"length\"");

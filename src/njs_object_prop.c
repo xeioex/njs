@@ -136,19 +136,12 @@ found:
 
 
 njs_object_prop_t *
-njs_object_property_add(njs_vm_t *vm, njs_value_t *object, njs_value_t *key,
+njs_object_property_add(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
     njs_bool_t replace)
 {
     njs_int_t                ret;
     njs_object_prop_t        *prop;
     njs_flathsh_obj_query_t  lhq;
-
-    if (!key->atom_id) {
-        ret = njs_atom_atomize_key(vm, key);
-        if (ret != NJS_OK) {
-            return NULL;
-        }
-    }
 
     prop = njs_object_prop_alloc(vm, &njs_value_invalid, 1);
     if (njs_slow_path(prop == NULL)) {
@@ -156,9 +149,7 @@ njs_object_property_add(njs_vm_t *vm, njs_value_t *object, njs_value_t *key,
     }
 
     lhq.value = prop;
-
-    lhq.key_hash = key->atom_id;
-
+    lhq.key_hash = atom_id;
     lhq.replace = replace;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

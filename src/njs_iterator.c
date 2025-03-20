@@ -223,14 +223,12 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
 
     njs_set_object(retval, object);
 
-    prop_value = njs_object_property_add(vm, retval,
-                                         njs_value_arg(&njs_atom.vs_value), 0);
+    prop_value = njs_object_property_add(vm, retval, NJS_ATOM_value, 0);
     if (njs_slow_path(prop_value == NULL)) {
         return NJS_ERROR;
     }
 
-    prop_done = njs_object_property_add(vm, retval,
-                                        njs_value_arg(&njs_atom.vs_done), 0);
+    prop_done = njs_object_property_add(vm, retval, NJS_ATOM_done, 0);
     if (njs_slow_path(prop_done == NULL)) {
         return NJS_ERROR;
     }
