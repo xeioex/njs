@@ -458,8 +458,8 @@ njs_typed_array_get_string_tag(njs_vm_t *vm, njs_value_t *args,
         return NJS_OK;
     }
 
-    njs_set_string(retval,
-                   tags[njs_typed_array_index(njs_typed_array(this)->type)]);
+    njs_atom_to_value(vm, retval,
+                      tags[njs_typed_array_index(njs_typed_array(this)->type)]);
 
     return NJS_OK;
 }

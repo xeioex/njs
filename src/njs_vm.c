@@ -1280,9 +1280,7 @@ njs_vm_object_alloc(njs_vm_t *vm, njs_value_t *retval, ...)
         }
 
         lhq.value = prop;
-
-        lhq.key_hash =  name->atom_id;
-
+        lhq.key_hash = name->atom_id;
         lhq.replace = 0;
         lhq.pool = vm->mem_pool;
         lhq.proto = &njs_object_hash_proto;

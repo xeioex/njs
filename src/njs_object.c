@@ -2507,9 +2507,9 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
     njs_string_prop_t  string;
 
     if (njs_is_null_or_undefined(this)) {
-        njs_set_string(retval,
-                       njs_is_null(this) ? NJS_ATOM__object_Null_
-                                         : NJS_ATOM__object_Undefined_);
+        njs_atom_to_value(vm, retval,
+                          njs_is_null(this) ? NJS_ATOM__object_Null_
+                                            : NJS_ATOM__object_Undefined_);
         return NJS_OK;
     }
 
@@ -2567,7 +2567,7 @@ njs_object_to_string(njs_vm_t *vm, njs_value_t *this, njs_value_t *retval)
     }
 
     if (ret == NJS_DECLINED) {
-        njs_set_string(retval, name);
+        njs_atom_to_value(vm, retval, name);
 
         return NJS_OK;
     }

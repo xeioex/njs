@@ -1494,19 +1494,19 @@ njs_primitive_value_to_string(njs_vm_t *vm, njs_value_t *dst,
     switch (src->type) {
 
     case NJS_NULL:
-        njs_set_string(dst, NJS_ATOM_null);
+        njs_atom_to_value(vm, dst, NJS_ATOM_null);
         return NJS_OK;
 
     case NJS_UNDEFINED:
-        njs_set_string(dst, NJS_ATOM_undefined);
+        njs_atom_to_value(vm, dst, NJS_ATOM_undefined);
         return NJS_OK;
 
     case NJS_BOOLEAN:
         if (njs_is_true(src)) {
-            njs_set_string(dst, NJS_ATOM_true);
+            njs_atom_to_value(vm, dst, NJS_ATOM_true);
 
         } else {
-            njs_set_string(dst, NJS_ATOM_false);
+            njs_atom_to_value(vm, dst, NJS_ATOM_false);
         }
 
         return NJS_OK;

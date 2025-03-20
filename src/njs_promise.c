@@ -1195,7 +1195,7 @@ njs_promise_perform_all(njs_vm_t *vm, njs_value_t *iterator,
 {
     int64_t       length;
     njs_int_t     ret;
-    njs_value_t   argument;
+    njs_value_t   argument, message;
     njs_object_t  *error;
 
     if (njs_slow_path(!njs_is_object(pargs->constructor))) {
@@ -1235,12 +1235,12 @@ njs_promise_perform_all(njs_vm_t *vm, njs_value_t *iterator,
         njs_mp_free(vm->mem_pool, pargs->remaining);
 
         njs_set_array(&argument, pargs->args.data);
+        njs_atom_to_value(&message, NJS_ATOM_All_promises_were_fulfilled);
 
         if (handler == njs_promise_perform_any_handler) {
             error = njs_error_alloc(vm,
                                 njs_vm_proto(vm, NJS_OBJ_TYPE_AGGREGATE_ERROR),
-                                NULL, &njs_atom.vs_All_promises_were_rejected,
-                                &argument);
+                                NULL, &message, &argument);
             if (njs_slow_path(error == NULL)) {
                 return NJS_ERROR;
             }
@@ -1451,9 +1451,9 @@ njs_promise_all_settled_element_functions(njs_vm_t *vm,
 {
     njs_int_t                  ret;
     uint32_t                   set_atom_id;
+    njs_value_t                status;
     njs_value_t                obj_value, arr_value;
     njs_object_t               *obj;
-    const njs_value_t          *status;
     njs_promise_all_context_t  *context;
 
     context = vm->top_frame->function->context;
@@ -1473,16 +1473,16 @@ njs_promise_all_settled_element_functions(njs_vm_t *vm,
     njs_set_object(&obj_value, obj);
 
     if (rejected) {
-        status = &njs_atom.vs_rejected;
+        njs_atom_to_value(vm, &status, NJS_ATOM_rejected);
         set_atom_id = NJS_ATOM_reason;
 
     } else {
-        status = &njs_atom.vs_fulfilled;
+        njs_atom_to_value(vm, &status, NJS_ATOM_fulfilled);
         set_atom_id = NJS_ATOM_value;
     }
 
     ret = njs_value_property_set(vm, &obj_value, NJS_ATOM_status,
-                                 njs_value_arg(status));
+                                 njs_value_arg(&status));
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }

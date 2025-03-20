@@ -164,6 +164,7 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_int_t             ret;
     njs_str_t             str;
     njs_value_t           *this, *input, *dest, value, read, written;
+    njs_object_t          *object;
     const u_char          *start, *end;
     njs_typed_array_t     *array;
     njs_unicode_decode_t  ctx;
@@ -225,8 +226,26 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         to = njs_utf8_encode(to, cp);
     }
 
-    return njs_vm_object_alloc(vm, retval, &njs_atom.vs_read, &read,
-                               &njs_atom.vs_written, &written, NULL);
+    object = njs_object_alloc(vm);
+    if (njs_slow_path(object == NULL)) {
+        return NJS_ERROR;
+    }
+
+    njs_set_object(retval, object);
+
+    ret = njs_object_prop_define(vm, retval, NJS_ATOM_read, &read,
+                                 NJS_OBJECT_PROP_VALUE_CW);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    ret = njs_object_prop_define(vm, retval, NJS_ATOM_written, &written,
+                                 NJS_OBJECT_PROP_VALUE_CW);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    return NJS_OK;
 }
 
 
@@ -409,7 +428,7 @@ njs_text_decoder_encoding(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused
 
     switch (data->encoding) {
     case NJS_ENCODING_UTF8:
-        *retval = njs_atom.vs_utf_8;
+        njs_atom_to_value(vm, retval, NJS_ATOM_utf_8);
         break;
 
     default:

@@ -224,15 +224,15 @@ njs_number_to_string(njs_vm_t *vm, njs_value_t *string,
     num = njs_number(number);
 
     if (isnan(num)) {
-        njs_set_string(string, NJS_ATOM_NaN);
+        njs_atom_to_value(vm, string, NJS_ATOM_NaN);
 
     } else if (isinf(num)) {
 
         if (num < 0) {
-            njs_set_string(string, NJS_ATOM__Infinity);
+            njs_atom_to_value(vm, string, NJS_ATOM__Infinity);
 
         } else {
-            njs_set_string(string, NJS_ATOM_Infinity);
+            njs_atom_to_value(vm, string, NJS_ATOM_Infinity);
         }
 
     } else {

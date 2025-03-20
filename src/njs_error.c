@@ -608,15 +608,17 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
         return ret;
     }
 
-    name_value = (ret == NJS_OK) ? &value1 : njs_value_arg(&njs_atom.vs_Error);
+    if (ret == NJS_DECLINED) {
+        njs_atom_to_value(vm, &value1, NJS_ATOM_Error);
+    }
+
+    name_value = &value1;
 
     if (njs_slow_path(!njs_is_string(name_value))) {
         ret = njs_value_to_string(vm, &value1, name_value);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
         }
-
-        name_value = &value1;
     }
 
     (void) njs_string_prop(vm, &name, name_value);
@@ -627,7 +629,7 @@ njs_error_to_string2(njs_vm_t *vm, njs_value_t *retval,
         return ret;
     }
 
-    if (ret != NJS_OK) {
+    if (ret == NJS_DECLINED) {
         njs_set_empty_string(vm, &value2);
     }
 
