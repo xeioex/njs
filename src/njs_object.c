@@ -1692,7 +1692,6 @@ njs_object_get_own_property_descriptors(njs_vm_t *vm, njs_value_t *args,
     for (i = 0; i < length; i++) {
         key = &names->start[i];
         if (!key->atom_id) {
-
             ret = njs_atom_atomize_key(vm, key);
             if (ret != NJS_OK) {
                 ret = NJS_ERROR;

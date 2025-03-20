@@ -204,6 +204,7 @@ njs_string_prop(njs_vm_t *vm, njs_string_prop_t *string,
     njs_value_t  s;
 
     if (njs_slow_path(value->string.data == NULL)) {
+        njs_assert(value->atom_id != 0);
         (void) njs_atom_to_value(vm, &s, value->atom_id);
         value = &s;
     }

@@ -174,6 +174,21 @@ njs_int_t njs_string_get_substitution(njs_vm_t *vm, njs_value_t *matched,
     njs_value_t *groups, njs_value_t *replacement, njs_value_t *retval);
 
 
+njs_inline njs_int_t
+njs_atom_string_create(njs_vm_t *vm, njs_value_t *value, const u_char *src,
+    size_t size)
+{
+    njs_int_t  ret;
+
+    ret = njs_string_create(vm, value, src, size);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    return njs_atom_atomize_key(vm, value);
+}
+
+
 njs_inline njs_bool_t
 njs_is_ascii_string(njs_string_prop_t *string)
 {

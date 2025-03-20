@@ -185,7 +185,6 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
             value->atom_id = njs_number_atom(((uint32_t) num));
 
         } else {
-            /* convert num to string, and atomize it. */
             ret = njs_number_to_string(vm, &val_str, value);
             if (ret != NJS_OK) {
                 return ret;

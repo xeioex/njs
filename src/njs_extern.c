@@ -71,16 +71,11 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
             lhq.key_hash = external->name.symbol;
 
         } else {
-            ret = njs_string_create(vm, &prop_name,
-                                    external->name.string.start,
-                                    external->name.string.length);
+            ret = njs_atom_string_create(vm, &prop_name,
+                                         external->name.string.start,
+                                         external->name.string.length);
             if (njs_slow_path(ret != NJS_OK)) {
                 return NJS_ERROR;
-            }
-
-            ret = njs_atom_atomize_key(vm, &prop_name);
-            if (ret != NJS_OK) {
-                return ret;
             }
 
             lhq.key_hash = prop_name.atom_id;

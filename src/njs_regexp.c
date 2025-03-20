@@ -1107,13 +1107,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         do {
             group = &pattern->groups[i];
 
-            ret = njs_string_create(vm, &name, group->name.start,
-                                    group->name.length);
-            if (njs_slow_path(ret != NJS_OK)) {
-                goto fail;
-            }
-
-            ret = njs_atom_atomize_key(vm, &name);
+            ret = njs_atom_string_create(vm, &name, group->name.start,
+                                         group->name.length);
             if (njs_slow_path(ret != NJS_OK)) {
                 goto fail;
             }
@@ -1124,7 +1119,6 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
             }
 
             lhq.key_hash = name.atom_id;
-
             lhq.value = prop;
 
             ret = njs_flathsh_obj_insert(&groups->hash, &lhq);
