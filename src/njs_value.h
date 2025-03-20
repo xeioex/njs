@@ -989,10 +989,7 @@ njs_bool_t njs_string_eq(njs_vm_t *vm, const njs_value_t *v1,
     const njs_value_t *v2);
 
 njs_int_t njs_property_query(njs_vm_t *vm, njs_property_query_t *pq,
-    njs_value_t *value, njs_value_t *key);
-njs_int_t njs_property_query_atom(njs_vm_t *vm, njs_property_query_t *pq,
     njs_value_t *value, uint32_t atom_id);
-
 njs_int_t njs_value_property_set(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *key, njs_value_t *setval);
 njs_int_t njs_value_property_delete(njs_vm_t *vm, njs_value_t *value,
@@ -1023,6 +1020,23 @@ njs_property_query_init(njs_property_query_t *pq, njs_prop_query_t query,
             pq->own_whiteout = NULL;
             pq->temp = 0;
         }
+}
+
+
+njs_inline njs_int_t
+njs_property_query_val(njs_vm_t *vm, njs_property_query_t *pq,
+    njs_value_t *value, njs_value_t *key)
+{
+    njs_int_t  ret;
+
+    if (njs_value_atom(key) == 0) {
+        ret = njs_atom_atomize_key(vm, key);
+        if (ret != NJS_OK) {
+            return ret;
+        }
+    }
+
+    return njs_property_query(vm, pq, value, key->atom_id);
 }
 
 

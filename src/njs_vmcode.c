@@ -2193,7 +2193,7 @@ njs_vmcode_property_in(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query_val(vm, &pq, value, key);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }

@@ -1341,7 +1341,7 @@ njs_object_make_shared(njs_vm_t *vm, njs_object_t *object)
         njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
         key = &s->keys->start[s->index++];
 
-        ret = njs_property_query(vm, &pq, &s->value, key);
+        ret = njs_property_query_val(vm, &pq, &s->value, key);
         if (njs_slow_path(ret != NJS_OK)) {
             if (ret == NJS_DECLINED) {
                 continue;
@@ -1456,7 +1456,7 @@ njs_object_traverse(njs_vm_t *vm, njs_object_t *object, void *ctx,
         njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
         key = &s->keys->start[s->index++];
 
-        ret = njs_property_query(vm, &pq, &s->value, key);
+        ret = njs_property_query_val(vm, &pq, &s->value, key);
         if (njs_slow_path(ret != NJS_OK)) {
             if (ret == NJS_DECLINED) {
                 continue;
@@ -1596,7 +1596,7 @@ njs_object_define_properties(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
 
     for (i = 0; i < length; i++) {
-        ret = njs_property_query(vm, &pq, descs, &keys->start[i]);
+        ret = njs_property_query_val(vm, &pq, descs, &keys->start[i]);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto done;
         }
@@ -2055,7 +2055,7 @@ njs_object_assign(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
             njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 1);
 
-            ret = njs_property_query(vm, &pq, source, key);
+            ret = njs_property_query_val(vm, &pq, source, key);
             if (njs_slow_path(ret != NJS_OK)) {
                 goto exception;
             }
@@ -2615,7 +2615,7 @@ njs_object_prototype_has_own_property(njs_vm_t *vm, njs_value_t *args,
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 1);
 
-    ret = njs_property_query(vm, &pq, value, property);
+    ret = njs_property_query_val(vm, &pq, value, property);
 
     switch (ret) {
     case NJS_OK:
@@ -2661,7 +2661,7 @@ njs_object_prototype_prop_is_enumerable(njs_vm_t *vm, njs_value_t *args,
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 1);
 
-    ret = njs_property_query(vm, &pq, value, property);
+    ret = njs_property_query_val(vm, &pq, value, property);
 
     switch (ret) {
     case NJS_OK:

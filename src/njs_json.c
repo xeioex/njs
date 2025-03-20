@@ -2048,7 +2048,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
 
         state->key = key;
 
-        ret = njs_property_query(vm, &pq, &state->value, key);
+        ret = njs_property_query_val(vm, &pq, &state->value, key);
         if (njs_slow_path(ret != NJS_OK)) {
             if (ret == NJS_DECLINED) {
                 continue;

@@ -556,23 +556,6 @@ njs_value_is_data_view(const njs_value_t *value)
 
 njs_int_t
 njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
-    njs_value_t *key)
-{
-    njs_int_t  ret;
-
-    if (key->atom_id == 0) {
-        ret = njs_atom_atomize_key(vm, key);
-        if (ret != NJS_OK) {
-            return ret;
-        }
-    }
-
-    return njs_property_query_atom(vm, pq, value, key->atom_id);
-}
-
-
-njs_int_t
-njs_property_query_atom(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
     uint32_t atom_id)
 {
     uint32_t        index;
@@ -1083,7 +1066,7 @@ slow_path:
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
 
-    ret = njs_property_query_atom(vm, &pq, value, atom_id);
+    ret = njs_property_query(vm, &pq, value, atom_id);
 
     switch (ret) {
 
@@ -1215,7 +1198,7 @@ slow_path:
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 0, 0);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query_val(vm, &pq, value, key);
 
     switch (ret) {
 
@@ -1430,7 +1413,7 @@ slow_path:
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_DELETE, 0, 1);
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query_val(vm, &pq, value, key);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }

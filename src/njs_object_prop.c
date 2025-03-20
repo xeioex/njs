@@ -184,7 +184,7 @@ again:
 
     ret = (flags & NJS_OBJECT_PROP_CREATE)
                 ? NJS_DECLINED
-                : njs_property_query_atom(vm, &pq, object, atom_id);
+                : njs_property_query(vm, &pq, object, atom_id);
 
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
@@ -828,7 +828,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         }
     }
 
-    ret = njs_property_query(vm, &pq, value, key);
+    ret = njs_property_query_val(vm, &pq, value, key);
 
     switch (ret) {
     case NJS_OK:
