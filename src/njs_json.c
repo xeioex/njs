@@ -876,7 +876,7 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
                                                     NULL, 0);
 
                 } else {
-                    ret = njs_value_property_set(vm, &val, &keys->start[k],
+                    ret = njs_value_property_val_set(vm, &val, &keys->start[k],
                                                  &new_elem);
                 }
 
@@ -893,7 +893,7 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
             }
 
             for (k = 0; k < length; k++) {
-                ret = njs_int64_to_string(vm, &index, k);
+                ret = njs_int64_to_string(vm, &index, k); /* ATOMIZE me */
                 if (njs_slow_path(ret != NJS_OK)) {
                     return NJS_ERROR;
                 }
@@ -909,7 +909,7 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
                     ret = njs_value_property_delete(vm, &val, &index, NULL, 0);
 
                 } else {
-                    ret = njs_value_property_set(vm, &val, &index, &new_elem);
+                    ret = njs_value_property_val_set(vm, &val, &index, &new_elem);
                 }
 
                 if (njs_slow_path(ret == NJS_ERROR)) {

@@ -937,9 +937,7 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
             }
 
             njs_set_number(&value, index);
-            ret = njs_value_property_set(vm, r,
-                                         njs_value_arg(&njs_atom.vs_lastIndex),
-                                         &value);
+            ret = njs_value_property_set(vm, r, NJS_ATOM_lastIndex, &value);
             if (njs_slow_path(ret != NJS_OK)) {
                 njs_regex_match_data_free(match_data, vm->regex_generic_ctx);
                 return NJS_ERROR;
@@ -974,9 +972,7 @@ not_found:
 
     if (pattern->global || pattern->sticky) {
         njs_set_number(&value, 0);
-        ret = njs_value_property_set(vm, r,
-                                     njs_value_arg(&njs_atom.vs_lastIndex),
-                                     &value);
+        ret = njs_value_property_set(vm, r, NJS_ATOM_lastIndex, &value);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1338,9 +1334,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
 
     if (global) {
         njs_set_number(&value, 0);
-        ret = njs_value_property_set(vm, rx,
-                                     njs_value_arg(&njs_atom.vs_lastIndex),
-                                     &value);
+        ret = njs_value_property_set(vm, rx, NJS_ATOM_lastIndex, &value);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1408,9 +1402,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         }
 
         njs_set_number(&value, last_index + 1);
-        ret = njs_value_property_set(vm, rx,
-                                     njs_value_arg(&njs_atom.vs_lastIndex),
-                                     &value);
+        ret = njs_value_property_set(vm, rx, NJS_ATOM_lastIndex, &value);
         if (njs_slow_path(ret != NJS_OK)) {
             goto exception;
         }
@@ -1703,9 +1695,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
 
     while (q < length) {
         njs_set_number(&setval, q);
-        ret = njs_value_property_set(vm, rx,
-                                     njs_value_arg(&njs_atom.vs_lastIndex),
-                                     &setval);
+        ret = njs_value_property_set(vm, rx, NJS_ATOM_lastIndex, &setval);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }

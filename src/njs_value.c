@@ -1133,31 +1133,21 @@ slow_path:
 
 
 njs_int_t
-njs_value_property_set(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
+njs_value_property_set(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
     njs_value_t *setval)
 {
-    double                    num;
     uint32_t                  index;
     njs_int_t                 ret;
     njs_array_t               *array;
-    njs_value_t               retval;
+    njs_value_t               retval, key;
     njs_object_prop_t         *prop;
     njs_typed_array_t         *tarray;
     njs_property_query_t      pq;
     njs_flathsh_obj_elt_t     *elt;
     njs_flathsh_obj_descr_t   *h;
 
-    njs_assert(njs_is_index_or_key(key));
-
-    if (njs_fast_path(njs_is_number(key))) {
-
-        num = njs_number(key);
-
-        if (njs_slow_path(!njs_number_is_integer_index(num))) {
-            goto slow_path;
-        }
-
-        index = (uint32_t) num;
+    if (njs_fast_path(njs_atom_is_number(atom_id))) {
+        index = njs_atom_number(atom_id);
 
         if (njs_is_typed_array(value)) {
             tarray = njs_typed_array(value);
@@ -1198,7 +1188,7 @@ slow_path:
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 0, 0);
 
-    ret = njs_property_query_val(vm, &pq, value, key);
+    ret = njs_property_query(vm, &pq, value, atom_id);
 
     switch (ret) {
 
@@ -1207,7 +1197,7 @@ slow_path:
 
         if (njs_is_data_descriptor(prop)) {
             if (!prop->writable) {
-                njs_key_string_get(vm, key,  &pq.lhq.key);
+                njs_atom_string_get(vm, atom_id, &pq.lhq.key);
                 njs_type_error(vm,
                              "Cannot assign to read-only property \"%V\" of %s",
                                &pq.lhq.key, njs_type_string(value->type));
@@ -1220,7 +1210,7 @@ slow_path:
                                          value, setval, 1, &retval);
             }
 
-            njs_key_string_get(vm, key, &pq.lhq.key);
+            njs_atom_string_get(vm, atom_id, &pq.lhq.key);
             njs_type_error(vm,
                      "Cannot set property \"%V\" of %s which has only a getter",
                            &pq.lhq.key, njs_type_string(value->type));
@@ -1228,7 +1218,7 @@ slow_path:
         }
 
         if (prop->type == NJS_PROPERTY_HANDLER) {
-            ret = njs_prop_handler(prop)(vm, prop, pq.lhq.key_hash, value,
+            ret = njs_prop_handler(prop)(vm, prop, atom_id, value,
                                          setval, &retval);
             if (njs_slow_path(ret != NJS_DECLINED)) {
                 return ret;
@@ -1239,7 +1229,7 @@ slow_path:
             switch (prop->type) {
             case NJS_PROPERTY:
                 if (njs_is_array(value)) {
-                    if (njs_slow_path(pq.lhq.key_hash == NJS_ATOM_length)) {
+                    if (njs_slow_path(atom_id == NJS_ATOM_length)) {
                         return njs_array_length_set(vm, value, prop, setval);
                     }
                 }
@@ -1320,10 +1310,16 @@ slow_path:
         }
 
         if (njs_slow_path(pq.own && njs_is_typed_array(value)
-                          && njs_is_string(key)))
+                          && !njs_atom_is_number(atom_id)))
         {
             /* Integer-Indexed Exotic Objects [[DefineOwnProperty]]. */
-            if (!isnan(njs_string_to_index(key))) {
+
+            ret = njs_atom_to_value(vm, &key, atom_id);
+            if (njs_slow_path(ret != NJS_OK)) {
+                return ret;
+            }
+
+            if (!isnan(njs_string_to_index(&key))) {
                 return NJS_OK;
             }
         }
@@ -1347,7 +1343,7 @@ slow_path:
 
     pq.lhq.replace = 0;
     pq.lhq.value = prop;
-    pq.lhq.key_hash = key->atom_id;
+    pq.lhq.key_hash = atom_id;
     pq.lhq.pool = vm->mem_pool;
 
     ret = njs_flathsh_obj_insert(njs_object_hash(value), &pq.lhq);
@@ -1364,7 +1360,7 @@ found:
 
 fail:
 
-    njs_key_string_get(vm, key, &pq.lhq.key);
+    njs_atom_string_get(vm, atom_id, &pq.lhq.key);
     njs_type_error(vm, "Cannot add property \"%V\", object is not extensible",
                    &pq.lhq.key);
 

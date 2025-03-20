@@ -9,18 +9,6 @@
 #define _NJS_ATOM_H_INCLUDED_
 
 
-#define njs_atom_is_number(atom_id) \
-    ((atom_id & 0x80000000))
-
-
-#define njs_atom_number(atom_id) \
-    (atom_id & 0x7FFFFFFF)
-
-
-#define njs_number_atom(n) \
-    (n | 0x80000000)
-
-
 #ifdef NJS_DEF_VW
     #undef NJS_DEF_VW
     #undef NJS_DEF_VS
@@ -60,7 +48,6 @@ njs_int_t njs_atom_hash_init(njs_vm_t *vm);
 njs_int_t njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value);
 
 extern const njs_atom_values_t    njs_atom;
-extern const njs_flathsh_proto_t  njs_atom_hash_proto;
 
 
 /* Returns string or symbol. */

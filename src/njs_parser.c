@@ -9249,14 +9249,12 @@ njs_parser_error(njs_vm_t *vm, njs_object_type_t type, njs_str_t *file,
     njs_error_new(vm, &error, njs_vm_proto(vm, type), msg, p - msg);
 
     njs_set_number(&value, line);
-    njs_value_property_set(vm, &error, njs_value_arg(&njs_atom.vs_lineNumber),
-                           &value);
+    njs_value_property_set(vm, &error, NJS_ATOM_lineNumber, &value);
 
     if (file->length != 0) {
         ret = njs_string_create(vm, &value, file->start, file->length);
         if (ret == NJS_OK) {
-            njs_value_property_set(vm, &error,
-                                   njs_value_arg(&njs_atom.vs_fileName), &value);
+            njs_value_property_set(vm, &error, NJS_ATOM_fileName, &value);
         }
     }
 

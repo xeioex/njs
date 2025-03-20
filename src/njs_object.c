@@ -2070,7 +2070,7 @@ njs_object_assign(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                 goto exception;
             }
 
-            ret = njs_value_property_set(vm, value, key, &setval);
+            ret = njs_value_property_set(vm, value, key->atom_id, &setval);
             if (njs_slow_path(ret != NJS_OK)) {
                 goto exception;
             }

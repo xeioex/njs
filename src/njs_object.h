@@ -301,8 +301,7 @@ njs_object_length_set(njs_vm_t *vm, njs_value_t *value, int64_t length)
 
     njs_value_number_set(&index, length);
 
-    return njs_value_property_set(vm, value, njs_value_arg(&njs_atom.vs_length),
-                                  &index);
+    return njs_value_property_set(vm, value, NJS_ATOM_length, &index);
 }
 
 

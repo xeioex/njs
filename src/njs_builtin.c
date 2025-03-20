@@ -726,33 +726,28 @@ njs_ext_memory_stats(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused,
 
     njs_set_number(&value, mp_stat.size);
 
-    ret = njs_value_property_set(vm, &object,
-                                 njs_value_arg(&njs_atom.vs_size), &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_size, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.nblocks);
 
-    ret = njs_value_property_set(vm, &object,
-                                 njs_value_arg(&njs_atom.vs_nblocks), &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_nblocks, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.cluster_size);
 
-    ret = njs_value_property_set(vm, &object,
-                                njs_value_arg(&njs_atom.vs_cluster_size),
-                                &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_cluster_size, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.page_size);
 
-    ret = njs_value_property_set(vm, &object,
-                                 njs_value_arg(&njs_atom.vs_page_size), &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_page_size, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }

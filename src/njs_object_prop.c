@@ -259,12 +259,13 @@ set_prop:
         if (njs_slow_path(njs_is_typed_array(object)
                           && !njs_atom_is_number(atom_id)))
         {
+            /* Integer-Indexed Exotic Objects [[DefineOwnProperty]]. */
+
             ret = njs_atom_to_value(vm, &key, atom_id);
             if (njs_slow_path(ret != NJS_OK)) {
                 return ret;
             }
 
-            /* Integer-Indexed Exotic Objects [[DefineOwnProperty]]. */
             if (!isnan(njs_string_to_index(&key))) {
                 njs_type_error(vm, "Invalid typed array index");
                 return NJS_ERROR;

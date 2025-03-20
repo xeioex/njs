@@ -331,8 +331,8 @@ njs_query_string_append(njs_vm_t *vm, njs_value_t *object, const u_char *key,
         njs_value_assign(&value, &array);
     }
 
-    return njs_value_property_set(vm, object, njs_value_arg(&name),
-                                  njs_value_arg(&value));
+    return njs_value_property_val_set(vm, object, njs_value_arg(&name),
+                                      njs_value_arg(&value));
 }
 
 

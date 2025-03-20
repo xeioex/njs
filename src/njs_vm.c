@@ -1403,12 +1403,13 @@ njs_vm_object_prop_set(njs_vm_t *vm, njs_value_t *value, const njs_str_t *prop,
         return NJS_ERROR;
     }
 
-    ret = njs_vm_value_string_create(vm, &key, prop->start, prop->length);
+    ret = njs_atom_string_create(vm, &key, prop->start, prop->length);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
-    ret = njs_value_property_set(vm, value, &key, njs_value_arg(setval));
+    ret = njs_value_property_set(vm, value, key.atom_id,
+                                 njs_value_arg(setval));
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }

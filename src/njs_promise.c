@@ -1450,9 +1450,10 @@ njs_promise_all_settled_element_functions(njs_vm_t *vm,
     njs_value_t *retval)
 {
     njs_int_t                  ret;
+    uint32_t                   set_atom_id;
     njs_value_t                obj_value, arr_value;
     njs_object_t               *obj;
-    const njs_value_t          *status, *set;
+    const njs_value_t          *status;
     njs_promise_all_context_t  *context;
 
     context = vm->top_frame->function->context;
@@ -1473,21 +1474,20 @@ njs_promise_all_settled_element_functions(njs_vm_t *vm,
 
     if (rejected) {
         status = &njs_atom.vs_rejected;
-        set = &njs_atom.vs_reason;
+        set_atom_id = NJS_ATOM_reason;
 
     } else {
         status = &njs_atom.vs_fulfilled;
-        set = &njs_atom.vs_value;
+        set_atom_id = NJS_ATOM_value;
     }
 
-    ret = njs_value_property_set(vm, &obj_value,
-                                 njs_value_arg(&njs_atom.vs_status),
+    ret = njs_value_property_set(vm, &obj_value, NJS_ATOM_status,
                                  njs_value_arg(status));
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
-    ret = njs_value_property_set(vm, &obj_value, njs_value_arg(set),
+    ret = njs_value_property_set(vm, &obj_value, set_atom_id,
                                  njs_arg(args, nargs, 1));
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;

@@ -2364,7 +2364,7 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     njs_set_object(&object, obj);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&njs_atom.vs_type),
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_type,
                                  njs_value_arg(&njs_atom.vs_Buffer));
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
@@ -2391,8 +2391,7 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     njs_set_array(&array, arr);
 
-    ret = njs_value_property_set(vm, &object, njs_value_arg(&njs_atom.vs_data),
-                                 &array);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_data, &array);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }

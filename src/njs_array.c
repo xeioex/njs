@@ -903,7 +903,7 @@ njs_array_prototype_slice_copy(njs_vm_t *vm, njs_value_t *this,
             goto done;
         }
 
-        ret = njs_value_property_set(vm, &self, &keys->start[n], &val);
+        ret = njs_value_property_val_set(vm, &self, &keys->start[n], &val);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto done;
         }

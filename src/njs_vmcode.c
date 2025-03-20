@@ -1290,7 +1290,7 @@ NEXT_LBL;
             value2 = &primitive2;
         }
 
-        ret = njs_value_property_set(vm, value1, value2, retval);
+        ret = njs_value_property_val_set(vm, value1, value2, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto error;
         }
