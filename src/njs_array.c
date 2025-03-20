@@ -1656,7 +1656,7 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     if (njs_slow_path(!njs_is_string(value))) {
         if (njs_is_undefined(value)) {
-            value = njs_value_arg(&njs_atom.vs_spec_COMMA);
+            value = NULL;
 
         } else {
             ret = njs_value_to_string(vm, value, value);
@@ -1666,7 +1666,14 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    (void) njs_string_prop(vm, &separator, value);
+    if (value != NULL) {
+        (void) njs_string_prop(vm, &separator, value);
+
+    } else {
+        separator.start = (u_char *) ",";
+        separator.length = 1;
+        separator.size = 1;
+    }
 
     if (njs_slow_path(!njs_is_object(this))) {
         njs_set_empty_string(vm, retval);

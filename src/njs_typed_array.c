@@ -2047,11 +2047,15 @@ njs_typed_array_to_chain(njs_vm_t *vm, njs_chb_t *chain,
     uint32_t           i;
     njs_string_prop_t  separator;
 
-    if (sep == NULL) {
-        sep = njs_value_arg(&njs_atom.vs_spec_COMMA);
+    if (sep != NULL && njs_is_string(sep)) {
+        (void) njs_string_prop(vm, &separator, sep);
+
+    } else {
+        separator.start = (u_char *) ",";
+        separator.size = 1;
+        separator.length = 1;
     }
 
-    (void) njs_string_prop(vm, &separator, sep);
 
     length = njs_typed_array_length(array);
 
@@ -2095,10 +2099,7 @@ njs_typed_array_prototype_join(njs_vm_t *vm, njs_value_t *args,
     separator = njs_arg(args, nargs, 1);
 
     if (njs_slow_path(!njs_is_string(separator))) {
-        if (njs_is_undefined(separator)) {
-            separator = njs_value_arg(&njs_atom.vs_spec_COMMA);
-
-        } else {
+        if (njs_is_defined(separator)) {
             ret = njs_value_to_string(vm, separator, separator);
             if (njs_slow_path(ret != NJS_OK)) {
                 return ret;

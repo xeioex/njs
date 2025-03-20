@@ -999,6 +999,7 @@ njs_function_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_int_t               ret;
     njs_str_t               str, file;
     njs_uint_t              i;
+    njs_value_t             name;
     njs_parser_t            parser;
     njs_vm_code_t           *code;
     njs_function_t          *function;
@@ -1136,8 +1137,9 @@ njs_function_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     function->global_this = 1;
     function->args_count = lambda->nargs - lambda->rest_parameters;
 
-    ret = njs_function_name_set(vm, function,
-                                njs_value_arg(&njs_atom.vs_anonymous), NULL);
+    njs_atom_to_value(vm, &name, NJS_ATOM_anonymous);
+
+    ret = njs_function_name_set(vm, function, &name, NULL);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }

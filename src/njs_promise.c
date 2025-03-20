@@ -1235,7 +1235,7 @@ njs_promise_perform_all(njs_vm_t *vm, njs_value_t *iterator,
         njs_mp_free(vm->mem_pool, pargs->remaining);
 
         njs_set_array(&argument, pargs->args.data);
-        njs_atom_to_value(&message, NJS_ATOM_All_promises_were_fulfilled);
+        njs_atom_to_value(vm, &message, NJS_ATOM_All_promises_were_rejected);
 
         if (handler == njs_promise_perform_any_handler) {
             error = njs_error_alloc(vm,
@@ -1587,7 +1587,7 @@ njs_promise_any_reject_element_functions(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
 {
     njs_int_t                  ret;
-    njs_value_t                argument, arr_value;
+    njs_value_t                argument, message, arr_value;
     njs_object_t               *error;
     njs_promise_all_context_t  *context;
 
@@ -1611,10 +1611,11 @@ njs_promise_any_reject_element_functions(njs_vm_t *vm, njs_value_t *args,
     if (--(*context->remaining_elements) == 0) {
         njs_mp_free(vm->mem_pool, context->remaining_elements);
 
+        njs_atom_to_value(vm, &message, NJS_ATOM_All_promises_were_rejected);
+
         error = njs_error_alloc(vm,
                                 njs_vm_proto(vm, NJS_OBJ_TYPE_AGGREGATE_ERROR),
-                                NULL, &njs_atom.vs_All_promises_were_rejected,
-                                &arr_value);
+                                NULL, &message, &arr_value);
         if (njs_slow_path(error == NULL)) {
             return NJS_ERROR;
         }

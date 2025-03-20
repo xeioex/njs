@@ -865,7 +865,7 @@ njs_internal_error_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     if (nargs >= 1 && njs_is_object(&args[0])) {
         /* MemoryError is a nonextensible internal error. */
         if (!njs_object(&args[0])->extensible) {
-            njs_value_assign(retval, &njs_atom.vs_MemoryError);
+            njs_atom_to_value(vm, retval, NJS_ATOM_MemoryError);
             return NJS_OK;
         }
     }

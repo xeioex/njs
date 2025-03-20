@@ -1956,7 +1956,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
     njs_int_t             ret;
     njs_chb_t             chain;
     njs_str_t             str;
-    njs_value_t           *key, *val, tag, exception;
+    njs_value_t           *key, *val, s, tag, exception;
     njs_json_state_t      *state;
     njs_string_prop_t     string;
     njs_object_prop_t     *prop;
@@ -2102,15 +2102,17 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
         if (njs_is_accessor_descriptor(prop)) {
             if (njs_prop_getter(prop) != NULL) {
                 if (njs_prop_setter(prop) != NULL) {
-                    val = njs_value_arg(&njs_atom.vs__Getter_Setter_);
+                    njs_atom_to_value(vm, &s, NJS_ATOM__Getter_Setter_);
 
                 } else {
-                    val = njs_value_arg(&njs_atom.vs__Getter_);
+                    njs_atom_to_value(vm, &s, NJS_ATOM__Getter_);
                 }
 
             } else {
-                val = njs_value_arg(&njs_atom.vs__Setter_);
+                njs_atom_to_value(vm, &s, NJS_ATOM__Setter_);
             }
+
+            val = &s;
         }
 
         if (njs_dump_is_recursive(val)) {
