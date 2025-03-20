@@ -1182,7 +1182,7 @@ njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
     while (njs_rbtree_is_there_successor(variables, rb_node)) {
         node = (njs_variable_node_t *) rb_node;
 
-        njs_lexer_entry(vm, node->variable->unique_id, lex_entry);
+        njs_lexer_entry(vm, node->variable->atom_id, lex_entry);
         if (njs_slow_path(lex_entry == NULL)) {
             return NULL;
         }

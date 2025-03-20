@@ -262,8 +262,10 @@ njs_builtin_objects_create(njs_vm_t *vm)
 
         if (njs_object_type_init[i] == &njs_boolean_type_init) {
             prototype->object_value.value = njs_value(NJS_BOOLEAN, 0, 0.0);
+
         } else if (njs_object_type_init[i] == &njs_number_type_init) {
             prototype->object_value.value = njs_value(NJS_NUMBER, 0, 0.0);
+
         } else if (njs_object_type_init[i] == &njs_string_type_init) {
             prototype->object_value.value = njs_value_string_empty;
         }
@@ -765,46 +767,17 @@ njs_global_this_prop_handler(njs_vm_t *vm, njs_object_prop_t *prop,
     uint32_t atom_id, njs_value_t *global, njs_value_t *setval,
     njs_value_t *retval)
 {
-    njs_int_t            ret;
-    njs_value_t          *value, prop_name;
+    njs_value_t          *value;
     njs_variable_t       *var;
     njs_function_t       *function;
     njs_rbtree_node_t    *rb_node;
-    njs_lvlhsh_query_t   lhq;
     njs_variable_node_t  *node, var_node;
 
     if (retval == NULL) {
         return NJS_DECLINED;
     }
 
-    ret = njs_atom_to_value(vm, &prop_name, atom_id);
-    if (ret != NJS_OK) {
-        return NJS_ERROR;
-    }
-
-    if (njs_slow_path(prop_name.type == NJS_SYMBOL)) {
-        return NJS_DECLINED;
-    }
-
-    njs_string_get(vm, &prop_name, &lhq.key);
-
-    lhq.key_hash = njs_djb_hash(lhq.key.start, lhq.key.length);
-    lhq.proto = &njs_lexer_hash_proto;
-
-    ret = njs_lvlhsh_find(vm->atom_hash, &lhq);
-
-    if (njs_slow_path(ret != NJS_OK || lhq.value == NULL)) {
-        ret = njs_lvlhsh_find(&vm->atom_hash_shared_cell, &lhq);
-        if (njs_slow_path(ret != NJS_OK || lhq.value == NULL)) {
-            return NJS_DECLINED;
-        }
-    }
-
-    var_node.key = (uintptr_t) lhq.value;
-
-    if (njs_slow_path(lhq.key_hash == NJS_ATOM_this)) {
-        return NJS_DECLINED;
-    }
+    var_node.key = atom_id;
 
     if (njs_slow_path(vm->global_scope == NULL)) {
         return NJS_DECLINED;

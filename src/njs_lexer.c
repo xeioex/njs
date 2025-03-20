@@ -784,9 +784,9 @@ njs_lexer_keyword_find(njs_vm_t *vm, u_char *key, size_t size, size_t length,
 static njs_int_t
 njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token)
 {
-    u_char                           *p, c;
-    uint32_t                         hash_id;
-    const njs_value_t                *entry;
+    u_char             *p, c;
+    uint32_t           hash_id;
+    const njs_value_t  *entry;
 
     /* TODO: UTF-8 */
 
@@ -840,9 +840,8 @@ njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token)
         token->type = entry->string.token_id;
         token->keyword_type = entry->string.token_type;
     }
-    token->atom_id = entry->atom_id;
 
-    token->unique_id = (uintptr_t) entry;
+    token->atom_id = entry->atom_id;
 
     return NJS_OK;
 }

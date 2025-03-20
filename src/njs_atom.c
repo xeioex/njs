@@ -100,7 +100,6 @@ njs_atom_hash_init(njs_vm_t *vm)
 
         if (value->type == NJS_SYMBOL) {
             lhq.key_hash = value->string.atom_id;
-
             lhq.value = (void *) value;
 
             ret = njs_flathsh_insert(vm->atom_hash, &lhq);
@@ -109,7 +108,6 @@ njs_atom_hash_init(njs_vm_t *vm)
                 return NJS_ERROR;
             }
         }
-
 
         if (value->type == NJS_STRING) {
             start = value->string.data->start;
@@ -171,7 +169,6 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
                 return NJS_ERROR;
             }
 
-            /* TODO: if (<<value is string>>) <<try release>>(string) */
             *value = *entry;
         }
 
