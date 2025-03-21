@@ -1981,6 +1981,7 @@ njs_vmcode_template_literal(njs_vm_t *vm, njs_value_t *retval)
 {
     njs_array_t     *array;
     njs_jump_off_t  ret;
+    njs_value_t     arguments[1];
 
     static const njs_function_t  concat = {
           .native = 1,
@@ -1991,9 +1992,10 @@ njs_vmcode_template_literal(njs_vm_t *vm, njs_value_t *retval)
 
     array = njs_array(retval);
 
-    ret = njs_function_call(vm, (njs_function_t *) &concat,
-                            &njs_value_string_empty, array->start,
-                            array->length, retval);
+    njs_set_empty_string(vm, &arguments[0]);
+
+    ret = njs_function_call(vm, (njs_function_t *) &concat, &arguments[0],
+                            array->start, array->length, retval);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
