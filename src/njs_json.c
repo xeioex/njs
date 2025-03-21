@@ -2033,7 +2033,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
             continue;
         }
 
-        njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
+        njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0);
 
         key = &state->keys->start[state->index++];
 

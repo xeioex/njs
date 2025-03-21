@@ -1063,7 +1063,7 @@ njs_value_property(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
 
 slow_path:
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0);
 
     ret = njs_property_query(vm, &pq, value, atom_id);
 
@@ -1185,7 +1185,7 @@ slow_path:
         return NJS_ERROR;
     }
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 0, 0);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 0);
 
     ret = njs_property_query(vm, &pq, value, atom_id);
 
@@ -1406,7 +1406,7 @@ njs_value_property_delete(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 
 slow_path:
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_DELETE, 0, 1);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_DELETE, 1);
 
     ret = njs_property_query_val(vm, &pq, value, key);
     if (njs_slow_path(ret != NJS_OK)) {

@@ -998,10 +998,9 @@ njs_int_t njs_value_method(njs_vm_t *vm, njs_value_t *value, uint32_t atom_id,
 
 njs_inline void
 njs_property_query_init(njs_property_query_t *pq, njs_prop_query_t query,
-    uint32_t hash, uint8_t own)
+    uint8_t own)
 {
         pq->query = query;
-        pq->lhq.key_hash = hash;
         pq->own = own;
 
         if (query == NJS_PROPERTY_QUERY_SET) {

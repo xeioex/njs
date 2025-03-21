@@ -2191,7 +2191,7 @@ njs_vmcode_property_in(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
         key = &primitive;
     }
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 0);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0);
 
     ret = njs_property_query_val(vm, &pq, value, key);
     if (njs_slow_path(ret == NJS_ERROR)) {

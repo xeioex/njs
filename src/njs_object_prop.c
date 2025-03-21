@@ -180,7 +180,7 @@ njs_object_prop_define(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
 
 again:
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, atom_id, 1);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 1);
 
     ret = (flags & NJS_OBJECT_PROP_CREATE)
                 ? NJS_DECLINED
@@ -820,7 +820,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
     njs_property_query_t     pq;
     njs_flathsh_obj_query_t  lhq;
 
-    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 0, 1);
+    njs_property_query_init(&pq, NJS_PROPERTY_QUERY_GET, 1);
 
     if (njs_slow_path(!njs_is_key(key))) {
         ret = njs_value_to_key(vm, key, key);
