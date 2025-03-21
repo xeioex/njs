@@ -64,9 +64,9 @@ extern const njs_value_t            njs_value_undefined;
 #define njs_value_arg(val) ((njs_value_t *) val)
 #define njs_value_atom(val) (((njs_opaque_value_t *) (val))->filler[0])
 
-#define njs_atom_is_number(atom_id) ((atom_id & 0x80000000))
-#define njs_atom_number(atom_id) (atom_id & 0x7FFFFFFF)
-#define njs_number_atom(n) (n | 0x80000000)
+#define njs_atom_is_number(atom_id) ((atom_id) & 0x80000000)
+#define njs_atom_number(atom_id) ((atom_id) & 0x7FFFFFFF)
+#define njs_number_atom(n) ((n) | 0x80000000)
 
 #define njs_lvalue_arg(lvalue, args, nargs, n)                                \
     ((n < nargs) ? njs_argument(args, n)                                      \

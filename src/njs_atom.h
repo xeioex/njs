@@ -38,7 +38,13 @@ njs_atom_to_value(njs_vm_t *vm, njs_value_t *dst, uint32_t atom_id)
         num = njs_atom_number(atom_id);
         size = njs_dtoa(num, (char *) buf);
 
-        return njs_string_new(vm, dst, buf, size, size);
+        if (njs_string_new(vm, dst, buf, size, size) != NJS_OK) {
+            return NJS_ERROR;
+        }
+
+        dst->atom_id = atom_id;
+
+        return NJS_OK;
     }
 
     if (atom_id < vm->atom_hash_atom_id_shared_cell) {

@@ -63,7 +63,7 @@ static const u_char *njs_json_skip_space(const u_char *start,
     const u_char *end);
 
 static njs_int_t njs_json_internalize_property(njs_vm_t *vm,
-    njs_function_t *reviver, njs_value_t *holder, njs_value_t *name,
+    njs_function_t *reviver, njs_value_t *holder, uint32_t atom_id,
     njs_int_t depth, njs_value_t *retval);
 static void njs_json_parse_exception(njs_json_parse_ctx_t *ctx,
     const char *msg, const u_char *pos);
@@ -149,8 +149,7 @@ njs_json_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
 
         return njs_json_internalize_property(vm, njs_function(reviver),
-                               &wrapper, njs_value_arg(&njs_value_string_empty),
-                               0, retval);
+                               &wrapper, NJS_ATOM_, 0, retval);
     }
 
     njs_value_assign(retval, &value);
@@ -394,20 +393,13 @@ njs_json_parse_object(njs_json_parse_ctx_t *ctx, njs_value_t *value,
             return NULL;
         }
 
-        ret = njs_atom_atomize_key(ctx->vm, &prop_name);
-        if (ret != NJS_OK) {
-            return NULL;
-        }
-
         prop = njs_object_prop_alloc(ctx->vm, &prop_value, 1);
         if (njs_slow_path(prop == NULL)) {
             goto memory_error;
         }
 
         lhq.value = prop;
-
         lhq.key_hash = prop_name.atom_id;
-
         lhq.replace = 1;
         lhq.pool = ctx->pool;
         lhq.proto = &njs_object_hash_proto;
@@ -739,7 +731,7 @@ njs_json_parse_string(njs_json_parse_ctx_t *ctx, njs_value_t *value,
         start = dst;
     }
 
-    ret = njs_string_create(ctx->vm, value, (u_char *) start, size);
+    ret = njs_atom_string_create(ctx->vm, value, (u_char *) start, size);
     if (njs_slow_path(ret != NJS_OK)) {
         return NULL;
     }
@@ -834,7 +826,7 @@ njs_json_skip_space(const u_char *start, const u_char *end)
 
 static njs_int_t
 njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
-    njs_value_t *holder, njs_value_t *name, njs_int_t depth,
+    njs_value_t *holder, uint32_t atom_id, njs_int_t depth,
     njs_value_t *retval)
 {
     int64_t       k, length;
@@ -848,7 +840,7 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property_val(vm, holder, name, &val);
+    ret = njs_value_property(vm, holder, atom_id, &val);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -864,8 +856,8 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
 
             for (k = 0; k < keys->length; k++) {
                 ret = njs_json_internalize_property(vm, reviver, &val,
-                                                    &keys->start[k], depth,
-                                                    &new_elem);
+                                                    keys->start[k].atom_id,
+                                                    depth, &new_elem);
 
                 if (njs_slow_path(ret != NJS_OK)) {
                     goto done;
@@ -898,7 +890,8 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
                     return NJS_ERROR;
                 }
 
-                ret = njs_json_internalize_property(vm, reviver, &val, &index,
+                ret = njs_json_internalize_property(vm, reviver, &val,
+                                                    njs_number_atom(k),
                                                     depth, &new_elem);
 
                 if (njs_slow_path(ret != NJS_OK)) {
@@ -920,7 +913,7 @@ njs_json_internalize_property(njs_vm_t *vm, njs_function_t *reviver,
     }
 
     njs_value_assign(&arguments[0], holder);
-    njs_value_assign(&arguments[1], name);
+    njs_atom_to_value(vm, &arguments[1], atom_id);
     njs_value_assign(&arguments[2], &val);
 
     ret = njs_function_apply(vm, reviver, arguments, 3, retval);
@@ -2070,7 +2063,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
         njs_dump_empty(stringify, state, &chain, 1);
 
         if (!state->array || isnan(njs_key_to_index(key))) {
-            njs_key_string_get(vm, key, &pq.lhq.key);
+            njs_atom_string_get(vm, key->atom_id, &pq.lhq.key);
             njs_chb_append(&chain, pq.lhq.key.start, pq.lhq.key.length);
             njs_chb_append_literal(&chain, ":");
             if (stringify->space.length != 0) {

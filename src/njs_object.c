@@ -910,7 +910,6 @@ njs_get_own_ordered_keys(njs_vm_t *vm, const njs_object_t *object,
     njs_flathsh_obj_query_t  lhq;
     const njs_flathsh_obj_t  *hash;
 
-
     items_length = items->length;
 
     items_string = njs_array_alloc(vm, 1, 0, NJS_ARRAY_SPARE);
