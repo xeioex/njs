@@ -7,20 +7,20 @@
 
 /* Well known symbols. */
 
-NJS_DEF_VW(invalid)
-NJS_DEF_VW(asyncIterator)
-NJS_DEF_VW(hasInstance)
-NJS_DEF_VW(isConcatSpreadable)
-NJS_DEF_VW(iterator)
-NJS_DEF_VW(match)
-NJS_DEF_VW(matchAll)
-NJS_DEF_VW(replace)
-NJS_DEF_VW(search)
-NJS_DEF_VW(species)
-NJS_DEF_VW(split)
-NJS_DEF_VW(toPrimitive)
-NJS_DEF_VW(toStringTag)
-NJS_DEF_VW(unscopables)
+NJS_DEF_VW(invalid, "Symbol.invalid")
+NJS_DEF_VW(asyncIterator, "Symbol.asyncIterator")
+NJS_DEF_VW(hasInstance, "Symbol.hasInstance")
+NJS_DEF_VW(isConcatSpreadable, "Symbol.isConcatSpreadable")
+NJS_DEF_VW(iterator, "Symbol.iterator")
+NJS_DEF_VW(match, "Symbol.match")
+NJS_DEF_VW(matchAll, "Symbol.matchAll")
+NJS_DEF_VW(replace, "Symbol.replace")
+NJS_DEF_VW(search, "Symbol.search")
+NJS_DEF_VW(species, "Symbol.species")
+NJS_DEF_VW(split, "Symbol.split")
+NJS_DEF_VW(toPrimitive, "Symbol.toPrimitive")
+NJS_DEF_VW(toStringTag, "Symbol.toStringTag")
+NJS_DEF_VW(unscopables, "Symbol.unscopables")
 
 /* Tokens. */
 

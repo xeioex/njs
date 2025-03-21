@@ -1637,7 +1637,7 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
 
 static const njs_object_prop_init_t  njs_json_object_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(JSON),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("JSON"),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_NATIVE(parse, njs_json_parse, 2, 0),

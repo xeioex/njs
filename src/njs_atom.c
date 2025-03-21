@@ -6,6 +6,7 @@
 
 
 #include <njs_main.h>
+#include <njs_atom_map.h>
 
 
 #ifdef NJS_DEF_VW
@@ -13,8 +14,21 @@
     #undef NJS_DEF_VS
 #endif
 
-#define NJS_DEF_VW(name) njs_symval(name),
-#define NJS_DEF_VS(name) njs_ascii_strval(name),
+#define NJS_DEF_VW(_id, _s) njs_symval(_id, _s),
+#define NJS_DEF_VS(s) (njs_value_t) {                                         \
+    .string = {                                                               \
+        .type = NJS_STRING,                                                   \
+        .truth = njs_length(njs_tbl_str_vs_ ## s) ? 1 : 0,                    \
+        .atom_id = NJS_ATOM_ ## s,                                            \
+        .token_type = njs_tbl_typ_vs_ ## s,                                   \
+        .token_id = njs_tbl_tok_vs_ ## s,                                     \
+        .data = & (njs_string_t) {                                            \
+            .start = (u_char *) njs_tbl_str_vs_ ## s,                         \
+            .length = njs_length(njs_tbl_str_vs_ ## s),                       \
+            .size = njs_length(njs_tbl_str_vs_ ## s),                         \
+        },                                                                    \
+    }                                                                         \
+},
 
 const njs_value_t njs_atom[] = {
     #include <njs_atom_defs.h>

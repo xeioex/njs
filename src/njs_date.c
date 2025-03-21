@@ -1128,7 +1128,7 @@ static const njs_object_prop_init_t  njs_date_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(7),
 
-    NJS_DECLARE_PROP_NAME(Date),
+    NJS_DECLARE_PROP_NAME("Date"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),

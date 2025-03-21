@@ -380,27 +380,24 @@ typedef struct {
 }
 
 
-#define njs_symval(name) {                                                    \
+#define njs_symval(_sym_id, _s) {                                             \
     .data = {                                                                 \
         .type = NJS_SYMBOL,                                                   \
         .truth = 1,                                                           \
-        .magic32 = NJS_ATOM_SYMBOL_ ## name,                                  \
-        .u = { .value = (njs_value_t *) &njs_ascii_strval(Symbol_ ## name) }  \
+        .magic32 = NJS_ATOM_SYMBOL_ ## _sym_id,                               \
+        .u = { .value = (njs_value_t *) &njs_ascii_strval(_s) }               \
     }                                                                         \
 }
 
 
-#define njs_ascii_strval(s) (njs_value_t) {                                   \
+#define njs_ascii_strval(_s) (njs_value_t) {                                  \
     .string = {                                                               \
         .type = NJS_STRING,                                                   \
-        .truth = njs_length(njs_tbl_str_vs_ ## s) ? 1 : 0,                    \
-        .atom_id = NJS_ATOM_ ## s,                                            \
-        .token_type = njs_tbl_typ_vs_ ## s,                                   \
-        .token_id = njs_tbl_tok_vs_ ## s,                                     \
-        .data = & (njs_string_t) {                                             \
-            .start = (u_char *) njs_tbl_str_vs_ ## s,                         \
-            .length = njs_length(njs_tbl_str_vs_ ## s),                       \
-            .size = njs_length(njs_tbl_str_vs_ ## s),                         \
+        .truth = njs_length(_s) ? 1 : 0,                                      \
+        .data = & (njs_string_t) {                                            \
+            .start = (u_char *) _s,                                           \
+            .length = njs_length(_s),                                         \
+            .size = njs_length(_s),                                           \
         },                                                                    \
     }                                                                         \
 }

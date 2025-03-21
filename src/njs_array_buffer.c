@@ -143,7 +143,7 @@ static const njs_object_prop_init_t  njs_array_buffer_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(ArrayBuffer),
+    NJS_DECLARE_PROP_NAME("ArrayBuffer"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),
@@ -274,7 +274,7 @@ static const njs_object_prop_init_t  njs_array_buffer_prototype_properties[] =
     NJS_DECLARE_PROP_NATIVE(slice, njs_array_buffer_prototype_slice,
                             2, 0),
 
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(ArrayBuffer),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("ArrayBuffer"),
                            NJS_OBJECT_PROP_VALUE_C),
 };
 

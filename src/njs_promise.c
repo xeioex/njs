@@ -1731,7 +1731,7 @@ static const njs_object_prop_init_t  njs_promise_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(Promise),
+    NJS_DECLARE_PROP_NAME("Promise"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),
@@ -1768,7 +1768,7 @@ static const njs_object_prop_init_t  njs_promise_prototype_properties[] =
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(Promise),
+    NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("Promise"),
                            NJS_OBJECT_PROP_VALUE_C),
 
     NJS_DECLARE_PROP_NATIVE(then, njs_promise_prototype_then, 2, 0),

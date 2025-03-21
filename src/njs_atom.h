@@ -16,14 +16,12 @@
 
 
 enum {
-#define NJS_DEF_VW(name) NJS_ATOM_SYMBOL_ ## name,
+#define NJS_DEF_VW(name, str) NJS_ATOM_SYMBOL_ ## name,
 #define NJS_DEF_VS(name) NJS_ATOM_ ## name,
 #include <njs_atom_defs.h>
     NJS_ATOM_SIZE,
 };
 
-
-#include <njs_atom_map.h>
 
 njs_int_t njs_atom_hash_init(njs_vm_t *vm);
 njs_int_t njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value);

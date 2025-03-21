@@ -1835,7 +1835,7 @@ static const njs_object_prop_init_t  njs_regexp_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(2),
 
-    NJS_DECLARE_PROP_NAME(RegExp),
+    NJS_DECLARE_PROP_NAME("RegExp"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),

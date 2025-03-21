@@ -1161,7 +1161,7 @@ static const njs_object_prop_init_t  njs_function_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
-    NJS_DECLARE_PROP_NAME(Function),
+    NJS_DECLARE_PROP_NAME("Function"),
 
     NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
                              0, 0),
@@ -1435,7 +1435,7 @@ static const njs_object_prop_init_t  njs_function_prototype_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
-    NJS_DECLARE_PROP_NAME(),
+    NJS_DECLARE_PROP_NAME(""),
 
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
