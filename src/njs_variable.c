@@ -148,9 +148,9 @@ static njs_parser_scope_t *
 njs_variable_scope_find(njs_parser_t *parser, njs_parser_scope_t *scope,
      uintptr_t atom_id, njs_variable_type_t type)
 {
+    njs_str_t           entry;
     njs_bool_t          module;
     njs_variable_t      *var;
-    njs_lexer_entry_t   entry;
     njs_parser_scope_t  *root;
 
     root = njs_variable_scope(scope, atom_id, &var, type);
@@ -241,8 +241,7 @@ failed:
 
     njs_lexer_entry(parser->vm, atom_id, &entry);
 
-    njs_parser_syntax_error(parser, "\"%V\" has already been declared",
-                            &entry.name);
+    njs_parser_syntax_error(parser, "\"%V\" has already been declared", &entry);
     return NULL;
 }
 

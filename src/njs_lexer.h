@@ -219,12 +219,6 @@ typedef enum {
 
 
 typedef struct {
-    njs_str_t                       name;
-} njs_lexer_entry_t;
-
-
-typedef struct {
-    njs_lexer_entry_t               entry;
     njs_token_type_t                type;
     njs_bool_t                      reserved;
 } njs_keyword_t;
@@ -298,12 +292,12 @@ njs_int_t njs_lexer_keywords(njs_arr_t *array);
 
 
 njs_inline void
-njs_lexer_entry(njs_vm_t *vm, uintptr_t atom_id, njs_lexer_entry_t *lex_entry)
+njs_lexer_entry(njs_vm_t *vm, uintptr_t atom_id, njs_str_t *entry)
 {
     njs_value_t  value;
 
     njs_atom_to_value(vm, &value, atom_id);
-    njs_string_get(vm, &value, &lex_entry->name);
+    njs_string_get(vm, &value, entry);
 }
 
 

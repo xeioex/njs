@@ -5407,9 +5407,8 @@ static njs_int_t
 njs_generate_reference_error(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
-    njs_vmcode_error_t       *ref_err;
-    njs_lexer_entry_t        lex_entr;
-    njs_lexer_entry_t        *lex_entry = &lex_entr;
+    njs_str_t           entry;
+    njs_vmcode_error_t  *ref_err;
 
     if (njs_slow_path(!node->u.reference.not_defined)) {
         njs_internal_error(vm, "variable is not defined but not_defined "
@@ -5421,9 +5420,10 @@ njs_generate_reference_error(njs_vm_t *vm, njs_generator_t *generator,
                       NULL);
 
     ref_err->type = NJS_OBJ_TYPE_REF_ERROR;
-    njs_lexer_entry(vm, node->u.reference.atom_id, lex_entry);
 
-    return njs_name_copy(vm, &ref_err->u.name, &lex_entry->name);
+    njs_lexer_entry(vm, node->u.reference.atom_id, &entry);
+
+    return njs_name_copy(vm, &ref_err->u.name, &entry);
 }
 
 
