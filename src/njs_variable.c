@@ -148,11 +148,10 @@ static njs_parser_scope_t *
 njs_variable_scope_find(njs_parser_t *parser, njs_parser_scope_t *scope,
      uintptr_t atom_id, njs_variable_type_t type)
 {
-    njs_bool_t               module;
-    njs_variable_t           *var;
-    njs_parser_scope_t       *root;
-    njs_lexer_entry_t        entr;
-    njs_lexer_entry_t        *entry = &entr;
+    njs_bool_t          module;
+    njs_variable_t      *var;
+    njs_lexer_entry_t   entry;
+    njs_parser_scope_t  *root;
 
     root = njs_variable_scope(scope, atom_id, &var, type);
     if (njs_slow_path(root == NULL)) {
@@ -240,10 +239,10 @@ njs_variable_scope_find(njs_parser_t *parser, njs_parser_scope_t *scope,
 
 failed:
 
-    njs_lexer_entry(parser->vm, atom_id, entry);
+    njs_lexer_entry(parser->vm, atom_id, &entry);
 
     njs_parser_syntax_error(parser, "\"%V\" has already been declared",
-                            &entry->name);
+                            &entry.name);
     return NULL;
 }
 

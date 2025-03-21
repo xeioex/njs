@@ -1152,16 +1152,11 @@ njs_value_t *
 njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
     njs_value_t *retval)
 {
-    njs_int_t                ret;
-    njs_value_t              *val;
-    njs_array_t              *keys;
-    njs_rbtree_t             *variables;
-    njs_rbtree_node_t        *rb_node;
-    njs_variable_node_t      *node;
-    njs_lexer_entry_t        lex_entr;
-    njs_lexer_entry_t        *lex_entry = &lex_entr;
-
-    static const njs_str_t  njs_this_str = njs_str("this");
+    njs_value_t          *val;
+    njs_array_t          *keys;
+    njs_rbtree_t         *variables;
+    njs_rbtree_node_t    *rb_node;
+    njs_variable_node_t  *node;
 
     keys = njs_value_enumerate(vm, value, flags);
     if (njs_slow_path(keys == NULL)) {
@@ -1182,12 +1177,7 @@ njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
     while (njs_rbtree_is_there_successor(variables, rb_node)) {
         node = (njs_variable_node_t *) rb_node;
 
-        njs_lexer_entry(vm, node->variable->atom_id, lex_entry);
-        if (njs_slow_path(lex_entry == NULL)) {
-            return NULL;
-        }
-
-        if (njs_strstr_eq(&lex_entry->name, &njs_this_str)) {
+        if (node->variable->atom_id == NJS_ATOM_this) {
             rb_node = njs_rbtree_node_successor(variables, rb_node);
             continue;
         }
@@ -1197,11 +1187,7 @@ njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
             return NULL;
         }
 
-        ret = njs_string_create(vm, val, lex_entry->name.start,
-                                lex_entry->name.length);
-        if (njs_slow_path(ret != NJS_OK)) {
-            return NULL;
-        }
+        njs_atom_to_value(vm, val, node->variable->atom_id);
 
         rb_node = njs_rbtree_node_successor(variables, rb_node);
     }
