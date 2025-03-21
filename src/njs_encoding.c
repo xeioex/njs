@@ -249,7 +249,7 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_text_encoder_properties[] =
+static const njs_object_prop_init_t  njs_text_encoder_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -270,7 +270,7 @@ static const njs_object_init_t  njs_text_encoder_init = {
 };
 
 
-static const njs_object_propi_t  njs_text_encoder_constructor_properties[] =
+static const njs_object_prop_init_t  njs_text_encoder_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
@@ -578,7 +578,7 @@ njs_text_decoder_decode(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_text_decoder_properties[] =
+static const njs_object_prop_init_t  njs_text_decoder_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -602,7 +602,7 @@ static const njs_object_init_t  njs_text_decoder_init = {
 };
 
 
-static const njs_object_propi_t  njs_text_decoder_constructor_properties[] =
+static const njs_object_prop_init_t  njs_text_decoder_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 

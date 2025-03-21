@@ -2162,7 +2162,7 @@ njs_typed_array_constructor_intrinsic(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_typed_array_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
@@ -2185,7 +2185,7 @@ static const njs_object_init_t  njs_typed_array_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_prototype_properties[] =
 {
     NJS_DECLARE_PROP_GETTER(SYMBOL_toStringTag,
                             njs_typed_array_get_string_tag, 0),
@@ -2395,7 +2395,7 @@ memory_error:
 }
 
 
-static const njs_object_propi_t  njs_data_view_constructor_props[] =
+static const njs_object_prop_init_t  njs_data_view_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
@@ -2641,7 +2641,7 @@ njs_data_view_prototype_set(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_data_view_prototype_properties[] =
+static const njs_object_prop_init_t  njs_data_view_prototype_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(DataView),
                            NJS_OBJECT_PROP_VALUE_C),
@@ -2723,7 +2723,7 @@ const njs_object_type_init_t  njs_data_view_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u8_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_u8_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -2743,7 +2743,7 @@ static const njs_object_init_t  njs_typed_array_u8_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u8_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_u8_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -2769,7 +2769,7 @@ const njs_object_type_init_t  njs_typed_array_u8_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u8c_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_u8c_constructor_props[] =
 {
     NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval(Uint8ClampedArray),
                          NJS_OBJECT_PROP_VALUE_C),
@@ -2790,7 +2790,7 @@ static const njs_object_init_t  njs_typed_array_u8c_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u8c_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_u8c_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -2816,7 +2816,7 @@ const njs_object_type_init_t  njs_typed_array_u8clamped_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_i8_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_i8_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -2836,7 +2836,7 @@ static const njs_object_init_t  njs_typed_array_i8_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_i8_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_i8_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -2862,7 +2862,7 @@ const njs_object_type_init_t  njs_typed_array_i8_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u16_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_u16_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -2882,7 +2882,7 @@ static const njs_object_init_t  njs_typed_array_u16_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u16_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_u16_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -2908,7 +2908,7 @@ const njs_object_type_init_t  njs_typed_array_u16_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_i16_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_i16_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -2928,7 +2928,7 @@ static const njs_object_init_t  njs_typed_array_i16_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_i16_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_i16_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -2954,7 +2954,7 @@ const njs_object_type_init_t  njs_typed_array_i16_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u32_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_u32_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -2973,7 +2973,7 @@ static const njs_object_init_t  njs_typed_array_u32_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_u32_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_u32_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -2999,7 +2999,7 @@ const njs_object_type_init_t  njs_typed_array_u32_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_i32_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_i32_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -3019,7 +3019,7 @@ static const njs_object_init_t  njs_typed_array_i32_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_i32_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_i32_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -3044,7 +3044,7 @@ const njs_object_type_init_t  njs_typed_array_i32_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_f32_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_f32_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -3064,7 +3064,7 @@ static const njs_object_init_t  njs_typed_array_f32_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_f32_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_f32_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,
@@ -3090,7 +3090,7 @@ const njs_object_type_init_t  njs_typed_array_f32_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_f64_constructor_props[] =
+static const njs_object_prop_init_t  njs_typed_array_f64_constructor_props[] =
 {
     NJS_DECLARE_PROP_LENGTH(3),
 
@@ -3110,7 +3110,7 @@ static const njs_object_init_t  njs_typed_array_f64_constructor_init = {
 };
 
 
-static const njs_object_propi_t  njs_typed_array_f64_prototype_properties[] =
+static const njs_object_prop_init_t  njs_typed_array_f64_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(constructor,
                              njs_object_prototype_create_constructor, 0,

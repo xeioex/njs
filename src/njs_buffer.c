@@ -2464,7 +2464,7 @@ njs_buffer_decode_string(njs_vm_t *vm, const njs_value_t *value,
 }
 
 
-static const njs_object_propi_t  njs_buffer_prototype_properties[] =
+static const njs_object_prop_init_t  njs_buffer_prototype_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(Buffer),
                            NJS_OBJECT_PROP_VALUE_C),
@@ -2663,7 +2663,7 @@ static const njs_object_init_t  njs_buffer_prototype_init = {
 };
 
 
-static const njs_object_propi_t  njs_buffer_constructor_properties[] =
+static const njs_object_prop_init_t  njs_buffer_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
@@ -2710,7 +2710,7 @@ const njs_object_type_init_t  njs_buffer_type_init = {
 };
 
 
-static const njs_object_propi_t  njs_buffer_constants_properties[] =
+static const njs_object_prop_init_t  njs_buffer_constants_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(MAX_LENGTH,
                            njs_value(NJS_NUMBER, 1, INT32_MAX),

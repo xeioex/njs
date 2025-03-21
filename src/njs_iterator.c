@@ -175,7 +175,7 @@ njs_iterator_prototype_get_this(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_iterator_prototype_properties[] =
+static const njs_object_prop_init_t  njs_iterator_prototype_properties[] =
 {
     NJS_DECLARE_PROP_NATIVE(SYMBOL_iterator,
                             njs_iterator_prototype_get_this, 0, 0),
@@ -251,7 +251,7 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_array_iterator_prototype_properties[] =
+static const njs_object_prop_init_t  njs_array_iterator_prototype_properties[] =
 {
     NJS_DECLARE_PROP_NATIVE(next, njs_array_iterator_prototype_next,
                             0, NJS_DATA_TAG_ARRAY_ITERATOR),

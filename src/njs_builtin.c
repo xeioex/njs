@@ -959,7 +959,7 @@ njs_top_level_constructor(njs_vm_t *vm, njs_object_prop_t *self,
 }
 
 
-static const njs_object_propi_t  njs_global_this_object_properties[] =
+static const njs_object_prop_init_t  njs_global_this_object_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(global),
                            NJS_OBJECT_PROP_VALUE_C),
@@ -1168,7 +1168,7 @@ static const njs_object_init_t  njs_global_this_init = {
 };
 
 
-static const njs_object_propi_t  njs_njs_object_properties[] =
+static const njs_object_prop_init_t  njs_njs_object_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(njs),
                            NJS_OBJECT_PROP_VALUE_C),
@@ -1460,7 +1460,7 @@ njs_ext_process_kill(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_process_object_properties[] =
+static const njs_object_prop_init_t  njs_process_object_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(process),
                            NJS_OBJECT_PROP_VALUE_C),

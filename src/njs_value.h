@@ -323,28 +323,14 @@ typedef enum {
 } njs_object_attribute_t;
 
 
-#define NJS_COMMON_OBJECT_PROP                                                 \
-    union {                                                                    \
-        njs_value_t             value;                                         \
-        struct {                                                               \
-            njs_function_t      *getter;                                       \
-            njs_function_t      *setter;                                       \
-        } accessor;                                                            \
-    } u;                                                                       \
-                                                                               \
-                                                                               \
-    njs_object_prop_type_t      type:8;          /* 3 bits */                  \
-    njs_object_prop_type_t      enum_in_object_hash:8; /* 3 bits */            \
-                                                                               \
-    njs_object_attribute_t      writable:8;      /* 2 bits */                  \
-    njs_object_attribute_t      enumerable:8;    /* 2 bits */                  \
-    njs_object_attribute_t      configurable:8;  /* 2 bits */
-
-
 struct njs_object_prop_s {
-    NJS_COMMON_OBJECT_PROP
-};
-
+    union {
+        njs_value_t             value;
+        struct {
+            njs_function_t      *getter;
+            njs_function_t      *setter;
+        } accessor;
+    } u;
 
 #define njs_prop_value(_p)      (&(_p)->u.value)
 #define njs_prop_handler(_p)    (_p)->u.value.data.u.prop_handler
@@ -356,10 +342,16 @@ struct njs_object_prop_s {
 #define njs_prop_getter(_p)     (_p)->u.accessor.getter
 #define njs_prop_setter(_p)     (_p)->u.accessor.setter
 
+    njs_object_prop_type_t      type:8;          /* 3 bits */
+    njs_object_prop_type_t      enum_in_object_hash:8; /* 3 bits */
 
-struct njs_object_propi_s {
-    NJS_COMMON_OBJECT_PROP
+    njs_object_attribute_t      writable:8;      /* 2 bits */
+    njs_object_attribute_t      enumerable:8;    /* 2 bits */
+    njs_object_attribute_t      configurable:8;  /* 2 bits */
+};
 
+struct njs_object_prop_init_s {
+    struct njs_object_prop_s    desc;
     uint32_t                    atom_id;
 };
 

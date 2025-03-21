@@ -88,7 +88,7 @@ static njs_object_t *njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
     const njs_value_t *value);
 
 
-static const njs_object_propi_t  njs_json_object_properties[];
+static const njs_object_prop_init_t  njs_json_object_properties[];
 
 
 static njs_int_t
@@ -165,7 +165,7 @@ njs_vm_json_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 {
     njs_function_t  *parse;
 
-    parse = njs_function(&njs_json_object_properties[1].u.value);
+    parse = njs_function(&njs_json_object_properties[1].desc.u.value);
 
     return njs_vm_invoke(vm, parse, args, nargs, retval);
 }
@@ -271,7 +271,7 @@ njs_vm_json_stringify(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 {
     njs_function_t  *stringify;
 
-    stringify = njs_function(&njs_json_object_properties[2].u.value);
+    stringify = njs_function(&njs_json_object_properties[2].desc.u.value);
 
     return njs_vm_invoke(vm, stringify, args, nargs, retval);
 }
@@ -1635,7 +1635,7 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
 }
 
 
-static const njs_object_propi_t  njs_json_object_properties[] =
+static const njs_object_prop_init_t  njs_json_object_properties[] =
 {
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval(JSON),
                            NJS_OBJECT_PROP_VALUE_C),

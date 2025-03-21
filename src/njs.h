@@ -34,7 +34,7 @@ typedef struct njs_function_s         njs_function_t;
 typedef struct njs_vm_shared_s        njs_vm_shared_t;
 typedef struct njs_object_init_s      njs_object_init_t;
 typedef struct njs_object_prop_s      njs_object_prop_t;
-typedef struct njs_object_propi_s     njs_object_propi_t;
+typedef struct njs_object_prop_init_s njs_object_prop_init_t;
 typedef struct njs_object_type_init_s njs_object_type_init_t;
 typedef struct njs_external_s         njs_external_t;
 

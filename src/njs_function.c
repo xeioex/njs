@@ -325,14 +325,16 @@ njs_function_prototype_thrower(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_arguments_object_instance_properties[] =
+static const njs_object_prop_init_t  njs_arguments_object_instance_properties[] =
 {
     {
-        .type = NJS_ACCESSOR,
         .atom_id = NJS_ATOM_callee,
-        .u.accessor = njs_accessor(njs_function_prototype_thrower, 0,
-                                   njs_function_prototype_thrower, 0),
-        .writable = NJS_ATTRIBUTE_UNSET,
+        .desc = {
+            .type = NJS_ACCESSOR,
+            .u.accessor = njs_accessor(njs_function_prototype_thrower, 0,
+                                       njs_function_prototype_thrower, 0),
+            .writable = NJS_ATTRIBUTE_UNSET,
+        },
     },
 };
 
@@ -1155,7 +1157,7 @@ fail:
 }
 
 
-static const njs_object_propi_t  njs_function_constructor_properties[] =
+static const njs_object_prop_init_t  njs_function_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
@@ -1429,7 +1431,7 @@ njs_function_prototype_bind(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 }
 
 
-static const njs_object_propi_t  njs_function_prototype_properties[] =
+static const njs_object_prop_init_t  njs_function_prototype_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(0),
 
@@ -1447,21 +1449,25 @@ static const njs_object_propi_t  njs_function_prototype_properties[] =
     NJS_DECLARE_PROP_NATIVE(bind, njs_function_prototype_bind, 1, 0),
 
     {
-        .type = NJS_ACCESSOR,
         .atom_id = NJS_ATOM_caller,
-        .u.accessor = njs_accessor(njs_function_prototype_thrower, 0,
-                                   njs_function_prototype_thrower, 0),
-        .writable = NJS_ATTRIBUTE_UNSET,
-        .configurable = 1,
+        .desc = {
+            .type = NJS_ACCESSOR,
+            .u.accessor = njs_accessor(njs_function_prototype_thrower, 0,
+                                       njs_function_prototype_thrower, 0),
+            .writable = NJS_ATTRIBUTE_UNSET,
+            .configurable = 1,
+        },
     },
 
     {
-        .type = NJS_ACCESSOR,
         .atom_id = NJS_ATOM_arguments,
-        .u.accessor = njs_accessor(njs_function_prototype_thrower, 0,
-                                   njs_function_prototype_thrower, 0),
-        .writable = NJS_ATTRIBUTE_UNSET,
-        .configurable = 1,
+        .desc = {
+            .type = NJS_ACCESSOR,
+            .u.accessor = njs_accessor(njs_function_prototype_thrower, 0,
+                                       njs_function_prototype_thrower, 0),
+            .writable = NJS_ATTRIBUTE_UNSET,
+            .configurable = 1,
+        },
     },
 };
 
@@ -1472,7 +1478,7 @@ static const njs_object_init_t  njs_function_prototype_init = {
 };
 
 
-static const njs_object_propi_t  njs_function_instance_properties[] =
+static const njs_object_prop_init_t  njs_function_instance_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(length, njs_function_instance_length,
                              0, NJS_OBJECT_PROP_VALUE_C),
@@ -1492,7 +1498,7 @@ const njs_object_init_t  njs_function_instance_init = {
 };
 
 
-static const njs_object_propi_t  njs_arrow_instance_properties[] =
+static const njs_object_prop_init_t  njs_arrow_instance_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(length, njs_function_instance_length,
                              0, NJS_OBJECT_PROP_VALUE_C),

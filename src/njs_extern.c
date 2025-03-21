@@ -9,8 +9,8 @@
 
 
 static njs_int_t njs_external_prop_handler(njs_vm_t *vm,
-    njs_object_prop_t *self, uint32_t atom_id, njs_value_t *value, njs_value_t *setval,
-    njs_value_t *retval);
+    njs_object_prop_t *self, uint32_t atom_id, njs_value_t *value,
+    njs_value_t *setval, njs_value_t *retval);
 
 
 static njs_int_t

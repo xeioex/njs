@@ -154,7 +154,7 @@ njs_object_value_alloc(njs_vm_t *vm, njs_uint_t prototype_index, size_t extra,
 
 njs_int_t
 njs_object_hash_create(njs_vm_t *vm, njs_flathsh_obj_t *hash,
-    const njs_object_propi_t *prop, njs_uint_t n)
+    const njs_object_prop_init_t *prop, njs_uint_t n)
 {
     njs_int_t                ret;
     njs_flathsh_obj_query_t  lhq;
@@ -164,8 +164,7 @@ njs_object_hash_create(njs_vm_t *vm, njs_flathsh_obj_t *hash,
     lhq.pool = vm->mem_pool;
 
     while (n != 0) {
-        lhq.key_hash  = prop->atom_id;
-
+        lhq.key_hash = prop->atom_id;
         lhq.value = (void *) prop;
 
         ret = njs_flathsh_obj_insert(hash, &lhq);
@@ -2208,7 +2207,7 @@ njs_property_prototype_create(njs_vm_t *vm, njs_flathsh_obj_t *hash,
 }
 
 
-static const njs_object_propi_t  njs_object_constructor_properties[] =
+static const njs_object_prop_init_t  njs_object_constructor_properties[] =
 {
     NJS_DECLARE_PROP_LENGTH(1),
 
@@ -2718,7 +2717,7 @@ njs_object_prototype_is_prototype_of(njs_vm_t *vm, njs_value_t *args,
 }
 
 
-static const njs_object_propi_t  njs_object_prototype_properties[] =
+static const njs_object_prop_init_t  njs_object_prototype_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(__proto__, njs_object_prototype_proto,
                              0, NJS_OBJECT_PROP_VALUE_CW),
