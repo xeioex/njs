@@ -14,30 +14,11 @@
     #undef NJS_DEF_VS
 #endif
 
-#define NJS_DEF_VW(name) \
-    const njs_value_t vw_ ## name;
-
-#define NJS_DEF_VS(name) \
-    const njs_value_t vs_ ## name;
-
-typedef struct {
-    #include <njs_atom_defs.h>
-} njs_atom_values_t;
-
-
-#ifdef NJS_DEF_VW
-    #undef NJS_DEF_VW
-    #undef NJS_DEF_VS
-#endif
-
-#define NJS_DEF_VW(name) \
-    NJS_ATOM_SYMBOL_ ## name,
-
-#define NJS_DEF_VS(name) \
-    NJS_ATOM_ ## name,
 
 enum {
-    #include <njs_atom_defs.h>
+#define NJS_DEF_VW(name) NJS_ATOM_SYMBOL_ ## name,
+#define NJS_DEF_VS(name) NJS_ATOM_ ## name,
+#include <njs_atom_defs.h>
     NJS_ATOM_SIZE,
 };
 
@@ -47,10 +28,7 @@ enum {
 njs_int_t njs_atom_hash_init(njs_vm_t *vm);
 njs_int_t njs_atom_atomize_key_s(njs_vm_t *vm, njs_value_t *value);
 
-extern const njs_atom_values_t    njs_atom;
 
-
-/* Returns string or symbol. */
 njs_inline njs_int_t
 njs_atom_to_value(njs_vm_t *vm, njs_value_t *dst, uint32_t atom_id)
 {

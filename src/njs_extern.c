@@ -28,7 +28,6 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
     const njs_external_t     *end;
     njs_flathsh_obj_query_t  lhq;
 
-
     slot = njs_arr_add(protos);
     njs_memzero(slot, sizeof(njs_exotic_slots_t));
 

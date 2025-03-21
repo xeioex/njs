@@ -13,13 +13,10 @@
     #undef NJS_DEF_VS
 #endif
 
-#define NJS_DEF_VW(name) \
-    .vw_ ## name = njs_symval(name),
+#define NJS_DEF_VW(name) njs_symval(name),
+#define NJS_DEF_VS(name) njs_ascii_strval(name),
 
-#define NJS_DEF_VS(name) \
-    .vs_ ## name = njs_ascii_strval(name),
-
-const njs_atom_values_t njs_atom = {
+const njs_value_t njs_atom[] = {
     #include <njs_atom_defs.h>
 };
 
@@ -33,9 +30,9 @@ njs_atom_hash_test(njs_flathsh_query_t *lhq, void *data)
 
     name = data;
 
-    if (name->type == NJS_STRING && ((njs_value_t *)lhq->value)->type ==
-        NJS_STRING) {
-
+    if (name->type == NJS_STRING
+        && ((njs_value_t *) lhq->value)->type == NJS_STRING)
+    {
         size = name->string.data->length;
 
         if (lhq->key.length != size) {
@@ -49,10 +46,10 @@ njs_atom_hash_test(njs_flathsh_query_t *lhq, void *data)
         }
     }
 
-    if (name->type == NJS_SYMBOL && ((njs_value_t *)lhq->value)->type ==
-        NJS_SYMBOL) {
-
-        if (name->atom_id == lhq->key_hash) {
+    if (name->type == NJS_SYMBOL
+        && ((njs_value_t *) lhq->value)->type == NJS_SYMBOL)
+    {
+        if (lhq->key_hash == name->atom_id) {
             return NJS_OK;
         }
     }
@@ -60,12 +57,6 @@ njs_atom_hash_test(njs_flathsh_query_t *lhq, void *data)
     return NJS_DECLINED;
 }
 
-
-/*
- *  Here is used statically allocated hash with correct size.
- *  This hash is only filled in, and later used as read only one.
- *  So, alloc/free are never used here.
- */
 
 const njs_flathsh_proto_t  njs_atom_hash_proto
     njs_aligned(64) =
@@ -87,7 +78,7 @@ njs_atom_hash_init(njs_vm_t *vm)
     const njs_value_t    *value, *values;
     njs_flathsh_query_t  lhq;
 
-    values = &njs_atom.vw_invalid;
+    values = &njs_atom[0];
 
     njs_lvlhsh_init(vm->atom_hash);
 
@@ -148,6 +139,8 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
     njs_int_t          ret;
     njs_value_t        val_str;
     const njs_value_t  *entry;
+
+    njs_assert(value->atom_id == 0);
 
     switch (value->type) {
     case NJS_STRING:
