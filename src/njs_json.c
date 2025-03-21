@@ -2037,13 +2037,8 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
 
         key = &state->keys->start[state->index++];
 
-        if(state->array) {
-            if (key->type == NJS_STRING) {
-                njs_string_get(vm, key, &str);
-                if (str.length == 6 && memcmp(str.start, "length", 6) == 0) {
-                    continue;
-                }
-            }
+        if (state->array && key->atom_id == NJS_ATOM_length) {
+            continue;
         }
 
         state->key = key;

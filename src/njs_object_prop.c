@@ -843,7 +843,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         case NJS_PROPERTY_HANDLER:
             pq.scratch = *prop;
             prop = &pq.scratch;
-            ret = njs_prop_handler(prop)(vm, prop, pq.lhq.key_hash, value, NULL,
+            ret = njs_prop_handler(prop)(vm, prop, key->atom_id, value, NULL,
                                          njs_prop_value(prop));
             if (njs_slow_path(ret == NJS_ERROR)) {
                 return ret;
