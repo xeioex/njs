@@ -3190,6 +3190,7 @@ njs_generate_assignment_end(njs_vm_t *vm, njs_generator_t *generator,
 {
     njs_int_t              ret;
     njs_index_t            prop_index;
+    njs_vmcode_t           opcode;
     njs_parser_node_t      *lvalue, *expr, *object, *property;
     njs_vmcode_2addr_t     *set_function, *to_prop_key;
     njs_vmcode_prop_set_t  *prop_set;
@@ -3246,9 +3247,18 @@ njs_generate_assignment_end(njs_vm_t *vm, njs_generator_t *generator,
         break;
 
     default:
-        /* NJS_VMCODE_PROPERTY_SET */
+        if (property->token_type == NJS_TOKEN_STRING
+            || (property->token_type == NJS_TOKEN_NUMBER
+                && property->u.value.atom_id != NJS_ATOM_unknown))
+        {
+            opcode = NJS_VMCODE_PROPERTY_ATOM_SET;
+
+        } else {
+            opcode = NJS_VMCODE_PROPERTY_SET;
+        }
+
         njs_generate_code(generator, njs_vmcode_prop_set_t, prop_set,
-                          NJS_VMCODE_PROPERTY_SET, expr);
+                          opcode, expr);
     }
 
     prop_set->value = expr->index;

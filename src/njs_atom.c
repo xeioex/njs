@@ -240,7 +240,7 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
     njs_value_t        val_str;
     const njs_value_t  *entry;
 
-    njs_assert(value->atom_id == 0);
+    njs_assert(value->atom_id == NJS_ATOM_unknown);
 
     switch (value->type) {
     case NJS_STRING:
