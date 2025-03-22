@@ -455,7 +455,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
     }
 
     lhq.value = prop;
-    lhq.key_hash =  prop_name.atom_id;
+    lhq.key_hash = prop_name.atom_id;
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

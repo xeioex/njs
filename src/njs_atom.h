@@ -9,17 +9,13 @@
 #define _NJS_ATOM_H_INCLUDED_
 
 
-#ifdef NJS_DEF_VW
-    #undef NJS_DEF_VW
-    #undef NJS_DEF_VS
-#endif
-
-
 enum {
 #define NJS_DEF_VW(name, str) NJS_ATOM_SYMBOL_ ## name,
-#define NJS_DEF_VS(name) NJS_ATOM_ ## name,
+#define NJS_DEF_VS(name, _1, _2, _3) NJS_ATOM_ ## name,
 #include <njs_atom_defs.h>
     NJS_ATOM_SIZE,
+#undef NJS_DEF_VW
+#undef NJS_DEF_VS
 };
 
 

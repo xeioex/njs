@@ -6,31 +6,25 @@
 
 
 #include <njs_main.h>
-#include <njs_atom_map.h>
 
 
-#ifdef NJS_DEF_VW
-    #undef NJS_DEF_VW
-    #undef NJS_DEF_VS
-#endif
-
+const njs_value_t njs_atom[] = {
 #define NJS_DEF_VW(_id, _s) njs_symval(_id, _s),
-#define NJS_DEF_VS(s) (njs_value_t) {                                         \
+#define NJS_DEF_VS(_id, _s, _typ, _tok) (njs_value_t) {                       \
     .string = {                                                               \
         .type = NJS_STRING,                                                   \
-        .truth = njs_length(njs_tbl_str_vs_ ## s) ? 1 : 0,                    \
-        .atom_id = NJS_ATOM_ ## s,                                            \
-        .token_type = njs_tbl_typ_vs_ ## s,                                   \
-        .token_id = njs_tbl_tok_vs_ ## s,                                     \
+        .truth = njs_length(_s) ? 1 : 0,                                      \
+        .atom_id = NJS_ATOM_ ## _id,                                          \
+        .token_type = _typ,                                                   \
+        .token_id = _tok,                                                     \
         .data = & (njs_string_t) {                                            \
-            .start = (u_char *) njs_tbl_str_vs_ ## s,                         \
-            .length = njs_length(njs_tbl_str_vs_ ## s),                       \
-            .size = njs_length(njs_tbl_str_vs_ ## s),                         \
+            .start = (u_char *) _s,                                           \
+            .length = njs_length(_s),                                         \
+            .size = njs_length(_s),                                           \
         },                                                                    \
     }                                                                         \
 },
 
-const njs_value_t njs_atom[] = {
     #include <njs_atom_defs.h>
 };
 

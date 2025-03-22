@@ -191,7 +191,6 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
     njs_value_t *retval)
 {
     njs_int_t                ret;
-    njs_value_t              self_name;
     njs_object_prop_t        *prop;
     njs_external_ptr_t       external;
     njs_object_value_t       *ov;
@@ -224,11 +223,6 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
         njs_set_object_value(retval, ov);
     }
 
-    ret = njs_atom_to_value(vm, &self_name, atom_id);
-    if (ret != NJS_OK) {
-        return NJS_ERROR;
-    }
-
     prop = njs_object_prop_alloc(vm, retval, 1);
     if (njs_slow_path(prop == NULL)) {
         return NJS_ERROR;
@@ -239,9 +233,7 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
     prop->enumerable = self->enumerable;
 
     lhq.value = prop;
-
     lhq.key_hash = atom_id;
-
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

@@ -176,7 +176,6 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
 
     lhq.value = prop;
     lhq.key_hash = NJS_ATOM_name;
-
     lhq.replace = 0;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
