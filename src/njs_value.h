@@ -799,7 +799,8 @@ njs_set_number(njs_value_t *value, double num)
 }
 
 
-#define njs_set_empty_string(vm, value) njs_atom_to_value(vm, value, NJS_ATOM_)
+#define njs_set_empty_string(vm, value)                                       \
+    njs_atom_to_value(vm, value, NJS_ATOM_empty)
 
 
 njs_inline void

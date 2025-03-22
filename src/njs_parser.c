@@ -7188,7 +7188,7 @@ njs_parser_function_expression(njs_parser_t *parser, njs_lexer_token_t *token,
         }
 
     } else {
-        atom_id = NJS_ATOM_;
+        atom_id = NJS_ATOM_empty;
     }
 
     if (token->type != NJS_TOKEN_OPEN_PARENTHESIS) {
@@ -7391,7 +7391,6 @@ njs_parser_arrow_function(njs_parser_t *parser, njs_lexer_token_t *token,
     njs_queue_link_t *current)
 {
     njs_int_t              ret;
-    uintptr_t              atom_id;
     njs_bool_t             async;
     njs_variable_t         *arg, *var;
     njs_parser_node_t      *node, *name;
@@ -7434,16 +7433,14 @@ njs_parser_arrow_function(njs_parser_t *parser, njs_lexer_token_t *token,
 
     node->left = name;
 
-    atom_id = NJS_ATOM_;
-
     var = njs_variable_scope_add(parser, parser->scope, parser->scope,
-                                 atom_id, NJS_VARIABLE_FUNCTION, 1);
+                                 NJS_ATOM_empty, NJS_VARIABLE_FUNCTION, 1);
     if (var == NULL) {
         return NJS_ERROR;
     }
 
     ret = njs_parser_variable_reference(parser, parser->scope, node->left,
-                                        atom_id, NJS_DECLARATION);
+                                        NJS_ATOM_empty, NJS_DECLARATION);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }

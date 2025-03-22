@@ -149,7 +149,7 @@ njs_json_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
 
         return njs_json_internalize_property(vm, njs_function(reviver),
-                               &wrapper, NJS_ATOM_, 0, retval);
+                               &wrapper, NJS_ATOM_empty, 0, retval);
     }
 
     njs_value_assign(retval, &value);
@@ -1614,7 +1614,7 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
     }
 
     lhq.value = prop;
-    lhq.key_hash = NJS_ATOM_; /* empty string */
+    lhq.key_hash = NJS_ATOM_empty;
     lhq.replace = 0;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
