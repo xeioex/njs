@@ -3874,14 +3874,26 @@ njs_generate_3addr_operation_end(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
     njs_bool_t          swap;
+    njs_vmcode_t        opcode;
     njs_parser_node_t   *left, *right;
     njs_vmcode_3addr_t  *code;
 
     left = node->left;
     right = node->right;
 
+    if (node->u.operation == NJS_VMCODE_PROPERTY_GET
+        && (right->token_type == NJS_TOKEN_STRING
+            || (right->token_type == NJS_TOKEN_NUMBER
+                && right->u.value.atom_id != NJS_ATOM_unknown)))
+    {
+        opcode = NJS_VMCODE_PROPERTY_ATOM_GET;
+
+    } else {
+        opcode = node->u.operation;
+    }
+
     njs_generate_code(generator, njs_vmcode_3addr_t, code,
-                      node->u.operation, node);
+                      opcode, node);
 
     swap = *((njs_bool_t *) generator->context);
 
