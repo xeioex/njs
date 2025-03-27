@@ -32,6 +32,11 @@
 #endif
 #include <pthread.h>
 
+/* Support for QuickJS-NG 0.9.0 */
+#ifndef JS_BOOL
+#define JS_BOOL bool
+#endif
+
 
 #define QJS_CORE_CLASS_ID_OFFSET    64
 #define QJS_CORE_CLASS_ID_BUFFER    (QJS_CORE_CLASS_ID_OFFSET)
@@ -146,6 +151,13 @@ static inline JS_BOOL JS_IsNullOrUndefined(JSValueConst v)
 #define qjs_is_same_value(cx, a, b) JS_IsSameValue(cx, a, b)
 #else
 #define qjs_is_same_value(cx, a, b) JS_SameValue(cx, a, b)
+#endif
+
+/* Compatibility for JS_IsArray between QuickJS and QuickJS-NG */
+#ifdef NJS_HAVE_QUICKJS_IS_ARRAY_SINGLE_ARG
+#define qjs_is_array(ctx, val) JS_IsArray(val)
+#else
+#define qjs_is_array(ctx, val) JS_IsArray(ctx, val)
 #endif
 
 
