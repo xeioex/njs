@@ -19,6 +19,7 @@ typedef enum {
     NJS_OBJECT_PROP_CONFIGURABLE = 16,
     NJS_OBJECT_PROP_WRITABLE = 32,
     NJS_OBJECT_PROP_UNSET = 64,
+    NJS_OBJECT_PROP_NOT_STRING = 128,
 #define NJS_OBJECT_PROP_VALUE_ECW (NJS_OBJECT_PROP_VALUE                     \
                                    | NJS_OBJECT_PROP_ENUMERABLE              \
                                    | NJS_OBJECT_PROP_CONFIGURABLE            \
@@ -107,7 +108,7 @@ njs_int_t njs_object_property(njs_vm_t *vm, njs_object_t *object,
 njs_object_prop_t *njs_object_property_add(njs_vm_t *vm, njs_value_t *object,
     uint32_t atom_id, njs_bool_t replace);
 njs_int_t njs_object_prop_define(njs_vm_t *vm, njs_value_t *object,
-    uint32_t atom_id, njs_value_t *value, uint32_t flags, uint32_t is_string);
+    uint32_t atom_id, njs_value_t *value, uint32_t flags);
 njs_int_t njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
     njs_value_t *value, njs_value_t *setval);
 njs_int_t njs_object_get_prototype_of(njs_vm_t *vm, njs_value_t *args,
@@ -268,7 +269,13 @@ njs_object_prop_define_val(njs_vm_t *vm, njs_value_t *object, njs_value_t *name,
         }
     }
 
-    return njs_object_prop_define(vm, object, name->atom_id, value, flags, njs_is_string(name));
+    if (!njs_is_string(name)) {
+       flags |= NJS_OBJECT_PROP_NOT_STRING;
+    } else {
+       flags &= ~NJS_OBJECT_PROP_NOT_STRING;
+    }
+
+    return njs_object_prop_define(vm, object, name->atom_id, value, flags);
 }
 
 

@@ -168,7 +168,7 @@ njs_object_property_add(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
  */
 njs_int_t
 njs_object_prop_define(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
-    njs_value_t *value, unsigned flags, uint32_t is_string)
+    njs_value_t *value, unsigned flags)
 {
     uint32_t              length, index;
     njs_int_t             ret;
@@ -255,7 +255,9 @@ set_prop:
             return NJS_ERROR;
         }
 
-        if (njs_slow_path(njs_is_typed_array(object) && is_string)) {
+        if (njs_slow_path(njs_is_typed_array(object) &&
+           !(flags & NJS_OBJECT_PROP_NOT_STRING)))
+        {
             /* Integer-Indexed Exotic Objects [[DefineOwnProperty]]. */
 
             ret = njs_atom_to_value(vm, &key, atom_id);
