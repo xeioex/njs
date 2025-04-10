@@ -11,7 +11,8 @@
 static njs_int_t njs_object_property_query(njs_vm_t *vm,
     njs_property_query_t *pq, njs_object_t *object, uint32_t atom_id);
 static njs_int_t njs_array_property_query(njs_vm_t *vm,
-    njs_property_query_t *pq, njs_array_t *array, uint32_t index);
+    njs_property_query_t *pq, njs_array_t *array, uint32_t index,
+    uint32_t atom_id);
 static njs_int_t njs_typed_array_property_query(njs_vm_t *vm,
     njs_property_query_t *pq, njs_typed_array_t *array, uint32_t index);
 static njs_int_t njs_string_property_query(njs_vm_t *vm,
@@ -495,6 +496,7 @@ njs_value_is_object(const njs_value_t *value)
 
 njs_int_t
 njs_value_is_error(const njs_value_t *value)
+
 {
     return njs_is_error(value);
 }
@@ -563,7 +565,7 @@ njs_object_property_query(njs_vm_t *vm, njs_property_query_t *pq,
 
             if (njs_fast_path(njs_atom_is_number(atom_id))) {
                 ret = njs_array_property_query(vm, pq, array,
-                                               njs_atom_number(atom_id));
+                                               njs_atom_number(atom_id), atom_id);
                 if (njs_fast_path(ret != NJS_DECLINED)) {
                     return (ret == NJS_DONE) ? NJS_DECLINED : ret;
                 }
@@ -577,7 +579,7 @@ njs_object_property_query(njs_vm_t *vm, njs_property_query_t *pq,
             num = njs_key_to_index(&key);
 
             if (njs_key_is_integer_index(num, &key)) {
-                ret = njs_array_property_query(vm, pq, array, num);
+                ret = njs_array_property_query(vm, pq, array, num, atom_id);
                 if (njs_fast_path(ret != NJS_DECLINED)) {
                     return (ret == NJS_DONE) ? NJS_DECLINED : ret;
                 }
@@ -759,7 +761,7 @@ njs_property_query(njs_vm_t *vm, njs_property_query_t *pq, njs_value_t *value,
 
 static njs_int_t
 njs_array_property_query(njs_vm_t *vm, njs_property_query_t *pq,
-    njs_array_t *array, uint32_t index)
+    njs_array_t *array, uint32_t index, uint32_t atom_id)
 {
     int64_t            length;
     uint64_t           size;
@@ -820,7 +822,7 @@ njs_array_property_query(njs_vm_t *vm, njs_property_query_t *pq,
             }
         }
 
-        pq->lhq.key_hash = njs_number_atom(index);
+        pq->lhq.key_hash = atom_id;
 
         ret = njs_flathsh_unique_find(&array->object.hash, &pq->lhq);
         if (ret == NJS_OK) {
