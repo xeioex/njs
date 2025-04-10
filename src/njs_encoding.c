@@ -234,13 +234,13 @@ njs_text_encoder_encode_into(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_set_object(retval, object);
 
     ret = njs_object_prop_define(vm, retval, NJS_ATOM_read, &read,
-                                 NJS_OBJECT_PROP_VALUE_CW);
+                                 NJS_OBJECT_PROP_VALUE_CW, 1);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
 
     ret = njs_object_prop_define(vm, retval, NJS_ATOM_written, &written,
-                                 NJS_OBJECT_PROP_VALUE_CW);
+                                 NJS_OBJECT_PROP_VALUE_CW, 1);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }

@@ -1613,7 +1613,7 @@ njs_object_define_properties(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
 
         ret = njs_object_prop_define(vm, value, keys->start[i].atom_id, &desc,
-                                     NJS_OBJECT_PROP_DESCRIPTOR);
+                                     NJS_OBJECT_PROP_DESCRIPTOR, 1);
         if (njs_slow_path(ret != NJS_OK)) {
             goto done;
         }
