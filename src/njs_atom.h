@@ -10,7 +10,7 @@
 
 
 enum {
-#define NJS_DEF_STRING(name, _1, _2, _3) NJS_ATOM_ ## name,
+#define NJS_DEF_STRING(name, _1, _2, _3) NJS_ATOM_STRING_ ## name,
 #define NJS_DEF_SYMBOL(name, str) NJS_ATOM_SYMBOL_ ## name,
 #include <njs_atom_defs.h>
     NJS_ATOM_SIZE,
@@ -33,7 +33,7 @@ njs_atom_to_value(njs_vm_t *vm, njs_value_t *dst, uint32_t atom_id)
     njs_flathsh_descr_t  *h;
     u_char               buf[128];
 
-    njs_assert(atom_id != NJS_ATOM_unknown);
+    njs_assert(atom_id != NJS_ATOM_STRING_unknown);
 
     if (njs_atom_is_number(atom_id)) {
         num = njs_atom_number(atom_id);

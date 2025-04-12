@@ -149,7 +149,7 @@ njs_json_parse(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
 
         return njs_json_internalize_property(vm, njs_function(reviver),
-                               &wrapper, NJS_ATOM_empty, 0, retval);
+                               &wrapper, NJS_ATOM_STRING_empty, 0, retval);
     }
 
     njs_value_assign(retval, &value);
@@ -1236,7 +1236,7 @@ njs_object_to_json_function(njs_vm_t *vm, njs_value_t *value)
 
     if (njs_is_object(value)) {
         lhq.proto = &njs_object_hash_proto;
-        lhq.key_hash = NJS_ATOM_toJSON;
+        lhq.key_hash = NJS_ATOM_STRING_toJSON;
 
         ret = njs_object_property(vm, njs_object(value), &lhq, &retval);
 
@@ -1614,7 +1614,7 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
     }
 
     lhq.value = prop;
-    lhq.key_hash = NJS_ATOM_empty;
+    lhq.key_hash = NJS_ATOM_STRING_empty;
     lhq.replace = 0;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
@@ -1633,9 +1633,9 @@ static const njs_object_prop_init_t  njs_json_object_properties[] =
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("JSON"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_NATIVE(parse, njs_json_parse, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_parse, njs_json_parse, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(stringify, njs_json_stringify, 3, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_stringify, njs_json_stringify, 3, 0),
 };
 
 
@@ -1764,7 +1764,8 @@ njs_dump_terminal(njs_json_stringify_t *stringify, njs_chb_t *chain,
             str = njs_str_value("");
         }
 
-        ret = njs_value_property(stringify->vm, value, NJS_ATOM_name, &tag);
+        ret = njs_value_property(stringify->vm, value, NJS_ATOM_STRING_name,
+                                 &tag);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
         }
@@ -2030,7 +2031,7 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
 
         key = &state->keys->start[state->index++];
 
-        if (state->array && key->atom_id == NJS_ATOM_length) {
+        if (state->array && key->atom_id == NJS_ATOM_STRING_length) {
             continue;
         }
 
@@ -2090,14 +2091,14 @@ njs_vm_value_dump(njs_vm_t *vm, njs_str_t *retval, njs_value_t *value,
         if (njs_is_accessor_descriptor(prop)) {
             if (njs_prop_getter(prop) != NULL) {
                 if (njs_prop_setter(prop) != NULL) {
-                    njs_atom_to_value(vm, &s, NJS_ATOM__Getter_Setter_);
+                    njs_atom_to_value(vm, &s, NJS_ATOM_STRING__Getter_Setter_);
 
                 } else {
-                    njs_atom_to_value(vm, &s, NJS_ATOM__Getter_);
+                    njs_atom_to_value(vm, &s, NJS_ATOM_STRING__Getter_);
                 }
 
             } else {
-                njs_atom_to_value(vm, &s, NJS_ATOM__Setter_);
+                njs_atom_to_value(vm, &s, NJS_ATOM_STRING__Setter_);
             }
 
             val = &s;

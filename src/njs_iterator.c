@@ -223,12 +223,12 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
 
     njs_set_object(retval, object);
 
-    prop_value = njs_object_property_add(vm, retval, NJS_ATOM_value, 0);
+    prop_value = njs_object_property_add(vm, retval, NJS_ATOM_STRING_value, 0);
     if (njs_slow_path(prop_value == NULL)) {
         return NJS_ERROR;
     }
 
-    prop_done = njs_object_property_add(vm, retval, NJS_ATOM_done, 0);
+    prop_done = njs_object_property_add(vm, retval, NJS_ATOM_STRING_done, 0);
     if (njs_slow_path(prop_done == NULL)) {
         return NJS_ERROR;
     }
@@ -253,7 +253,7 @@ njs_array_iterator_prototype_next(njs_vm_t *vm, njs_value_t *args,
 
 static const njs_object_prop_init_t  njs_array_iterator_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_NATIVE(next, njs_array_iterator_prototype_next,
+    NJS_DECLARE_PROP_NATIVE(STRING_next, njs_array_iterator_prototype_next,
                             0, NJS_DATA_TAG_ARRAY_ITERATOR),
 
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag,

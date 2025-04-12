@@ -18,7 +18,7 @@ const njs_value_t njs_atom[] = {
     .string = {                                                               \
         .type = NJS_STRING,                                                   \
         .truth = njs_length(_s) ? 1 : 0,                                      \
-        .atom_id = NJS_ATOM_ ## _id,                                          \
+        .atom_id = NJS_ATOM_STRING_ ## _id,                                   \
         .token_type = _typ,                                                   \
         .token_id = _tok,                                                     \
         .data = & (njs_string_t) {                                            \
@@ -240,7 +240,7 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
     njs_value_t        val_str;
     const njs_value_t  *entry;
 
-    njs_assert(value->atom_id == NJS_ATOM_unknown);
+    njs_assert(value->atom_id == NJS_ATOM_STRING_unknown);
 
     switch (value->type) {
     case NJS_STRING:
@@ -282,7 +282,7 @@ njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
                 return ret;
             }
 
-            if (val_str.atom_id == NJS_ATOM_unknown) {
+            if (val_str.atom_id == NJS_ATOM_STRING_unknown) {
                 hash_id = njs_djb_hash(val_str.string.data->start,
                                        val_str.string.data->size);
 
@@ -319,7 +319,7 @@ njs_atom_symbol_add(njs_vm_t *vm, njs_value_t *value)
     njs_int_t            ret;
     njs_flathsh_query_t  lhq;
 
-    njs_assert(value->atom_id == NJS_ATOM_unknown);
+    njs_assert(value->atom_id == NJS_ATOM_STRING_unknown);
 
     lhq.replace = 0;
     lhq.proto = &njs_lexer_hash_proto;

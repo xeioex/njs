@@ -44,8 +44,8 @@ njs_value_to_primitive(njs_vm_t *vm, njs_value_t *dst, njs_value_t *value,
     njs_flathsh_query_t  lhq;
 
     static const uint32_t atoms[] = {
-        NJS_ATOM_valueOf,
-        NJS_ATOM_toString,
+        NJS_ATOM_STRING_valueOf,
+        NJS_ATOM_STRING_toString,
     };
 
     if (njs_is_primitive(value)) {
@@ -232,7 +232,7 @@ njs_value_of(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
         return NJS_DECLINED;
     }
 
-    ret = njs_value_property(vm, value, NJS_ATOM_valueOf, retval);
+    ret = njs_value_property(vm, value, NJS_ATOM_STRING_valueOf, retval);
     if (njs_slow_path(ret != NJS_OK)) {
         return ret;
     }
@@ -1229,7 +1229,7 @@ slow_path:
             switch (prop->type) {
             case NJS_PROPERTY:
                 if (njs_is_array(value)) {
-                    if (njs_slow_path(atom_id == NJS_ATOM_length)) {
+                    if (njs_slow_path(atom_id == NJS_ATOM_STRING_length)) {
                         return njs_array_length_set(vm, value, prop, setval);
                     }
                 }
@@ -1485,19 +1485,19 @@ njs_primitive_value_to_string(njs_vm_t *vm, njs_value_t *dst,
     switch (src->type) {
 
     case NJS_NULL:
-        njs_atom_to_value(vm, dst, NJS_ATOM_null);
+        njs_atom_to_value(vm, dst, NJS_ATOM_STRING_null);
         return NJS_OK;
 
     case NJS_UNDEFINED:
-        njs_atom_to_value(vm, dst, NJS_ATOM_undefined);
+        njs_atom_to_value(vm, dst, NJS_ATOM_STRING_undefined);
         return NJS_OK;
 
     case NJS_BOOLEAN:
         if (njs_is_true(src)) {
-            njs_atom_to_value(vm, dst, NJS_ATOM_true);
+            njs_atom_to_value(vm, dst, NJS_ATOM_STRING_true);
 
         } else {
-            njs_atom_to_value(vm, dst, NJS_ATOM_false);
+            njs_atom_to_value(vm, dst, NJS_ATOM_STRING_false);
         }
 
         return NJS_OK;
@@ -1653,7 +1653,8 @@ njs_value_species_constructor(njs_vm_t *vm, njs_value_t *object,
     njs_int_t    ret;
     njs_value_t  constructor, retval;
 
-    ret = njs_value_property(vm, object, NJS_ATOM_constructor, &constructor);
+    ret = njs_value_property(vm, object, NJS_ATOM_STRING_constructor,
+                             &constructor);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }

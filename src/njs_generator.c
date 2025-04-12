@@ -2308,7 +2308,7 @@ njs_generate_for_in_set_prop_block(njs_vm_t *vm, njs_generator_t *generator,
 
     if (prop->token_type == NJS_TOKEN_STRING
         || (prop->token_type == NJS_TOKEN_NUMBER
-            && prop->u.value.atom_id != NJS_ATOM_unknown))
+            && prop->u.value.atom_id != NJS_ATOM_STRING_unknown))
     {
         opcode = NJS_VMCODE_PROPERTY_ATOM_SET;
 
@@ -3261,7 +3261,7 @@ njs_generate_assignment_end(njs_vm_t *vm, njs_generator_t *generator,
     default:
         if (property->token_type == NJS_TOKEN_STRING
             || (property->token_type == NJS_TOKEN_NUMBER
-                && property->u.value.atom_id != NJS_ATOM_unknown))
+                && property->u.value.atom_id != NJS_ATOM_STRING_unknown))
         {
             opcode = NJS_VMCODE_PROPERTY_ATOM_SET;
 
@@ -3478,7 +3478,7 @@ njs_generate_operation_assignment_prop(njs_vm_t *vm, njs_generator_t *generator,
 
     if (property->token_type == NJS_TOKEN_STRING
         || (property->token_type == NJS_TOKEN_NUMBER
-            && property->u.value.atom_id != NJS_ATOM_unknown))
+            && property->u.value.atom_id != NJS_ATOM_STRING_unknown))
     {
         opcode = NJS_VMCODE_PROPERTY_ATOM_GET;
 
@@ -3528,7 +3528,7 @@ njs_generate_operation_assignment_end(njs_vm_t *vm, njs_generator_t *generator,
 
     if (prop->token_type == NJS_TOKEN_STRING
         || (prop->token_type == NJS_TOKEN_NUMBER
-            && prop->u.value.atom_id != NJS_ATOM_unknown))
+            && prop->u.value.atom_id != NJS_ATOM_STRING_unknown))
     {
         opcode = NJS_VMCODE_PROPERTY_ATOM_SET;
 
@@ -3932,7 +3932,7 @@ njs_generate_3addr_operation_end(njs_vm_t *vm, njs_generator_t *generator,
     if (node->u.operation == NJS_VMCODE_PROPERTY_GET
         && (right->token_type == NJS_TOKEN_STRING
             || (right->token_type == NJS_TOKEN_NUMBER
-                && right->u.value.atom_id != NJS_ATOM_unknown)))
+                && right->u.value.atom_id != NJS_ATOM_STRING_unknown)))
     {
         opcode = NJS_VMCODE_PROPERTY_ATOM_GET;
 
@@ -4187,7 +4187,7 @@ found:
 
     if (prop->token_type == NJS_TOKEN_STRING
         || (prop->token_type == NJS_TOKEN_NUMBER
-            && prop->u.value.atom_id != NJS_ATOM_unknown))
+            && prop->u.value.atom_id != NJS_ATOM_STRING_unknown))
     {
         opcode = NJS_VMCODE_PROPERTY_ATOM_GET;
 

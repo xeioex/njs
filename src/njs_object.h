@@ -149,19 +149,19 @@ njs_primitive_value_to_key(njs_vm_t *vm, njs_value_t *dst,
 {
     switch (src->type) {
     case NJS_NULL:
-        njs_atom_to_value(vm, dst, NJS_ATOM_null);
+        njs_atom_to_value(vm, dst, NJS_ATOM_STRING_null);
         return NJS_OK;
 
     case NJS_UNDEFINED:
-        njs_atom_to_value(vm, dst, NJS_ATOM_undefined);
+        njs_atom_to_value(vm, dst, NJS_ATOM_STRING_undefined);
         return NJS_OK;
 
     case NJS_BOOLEAN:
         if (njs_is_true(src)) {
-            njs_atom_to_value(vm, dst, NJS_ATOM_true);
+            njs_atom_to_value(vm, dst, NJS_ATOM_STRING_true);
 
         } else {
-            njs_atom_to_value(vm, dst, NJS_ATOM_false);
+            njs_atom_to_value(vm, dst, NJS_ATOM_STRING_false);
         }
 
         return NJS_OK;
@@ -262,7 +262,7 @@ njs_object_prop_define_val(njs_vm_t *vm, njs_value_t *object, njs_value_t *name,
 {
     njs_int_t  ret;
 
-    if (njs_value_atom(name) == NJS_ATOM_unknown) {
+    if (njs_value_atom(name) == NJS_ATOM_STRING_unknown) {
         ret = njs_atom_atomize_key(vm, name);
         if (ret != NJS_OK) {
             return ret;
@@ -308,7 +308,7 @@ njs_object_length_set(njs_vm_t *vm, njs_value_t *value, int64_t length)
 
     njs_value_number_set(&index, length);
 
-    return njs_value_property_set(vm, value, NJS_ATOM_length, &index);
+    return njs_value_property_set(vm, value, NJS_ATOM_STRING_length, &index);
 }
 
 

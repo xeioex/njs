@@ -550,7 +550,7 @@ njs_value_property_val(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 {
     njs_int_t  ret;
 
-    if (njs_value_atom(key) == 0 /* NJS_ATOM_unknown */) {
+    if (njs_value_atom(key) == 0 /* NJS_ATOM_STRING_unknown */) {
         ret = njs_atom_atomize_key(vm, key);
         if (ret != NJS_OK) {
             return ret;
@@ -567,7 +567,7 @@ njs_value_property_val_set(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 {
     njs_int_t  ret;
 
-    if (njs_value_atom(key) == 0 /* NJS_ATOM_unknown */) {
+    if (njs_value_atom(key) == 0 /* NJS_ATOM_STRING_unknown */) {
         ret = njs_atom_atomize_key(vm, key);
         if (ret != NJS_OK) {
             return ret;

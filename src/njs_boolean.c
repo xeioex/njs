@@ -40,13 +40,13 @@ njs_boolean_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
 static const njs_object_prop_init_t  njs_boolean_constructor_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(name, njs_ascii_strval("Boolean"),
+    NJS_DECLARE_PROP_VALUE(STRING_name, njs_ascii_strval("Boolean"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_VALUE(length, njs_value(NJS_NUMBER, 1, 1.0),
+    NJS_DECLARE_PROP_VALUE(STRING_length, njs_value(NJS_NUMBER, 1, 1.0),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
+    NJS_DECLARE_PROP_HANDLER(STRING_prototype, njs_object_prototype_create,
                              0, 0),
 };
 
@@ -104,10 +104,10 @@ njs_boolean_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
     }
 
     if (njs_is_true(value)) {
-        njs_atom_to_value(vm, retval, NJS_ATOM_true);
+        njs_atom_to_value(vm, retval, NJS_ATOM_STRING_true);
 
     } else {
-        njs_atom_to_value(vm, retval, NJS_ATOM_false);
+        njs_atom_to_value(vm, retval, NJS_ATOM_STRING_false);
     }
 
     return NJS_OK;
@@ -116,18 +116,18 @@ njs_boolean_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
 
 static const njs_object_prop_init_t  njs_boolean_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(__proto__,
+    NJS_DECLARE_PROP_HANDLER(STRING___proto__,
                              njs_primitive_prototype_get_proto, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_constructor,
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(valueOf, njs_boolean_prototype_value_of,
+    NJS_DECLARE_PROP_NATIVE(STRING_valueOf, njs_boolean_prototype_value_of,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(toString,
+    NJS_DECLARE_PROP_NATIVE(STRING_toString,
                             njs_boolean_prototype_to_string, 0, 0),
 };
 

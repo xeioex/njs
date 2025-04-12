@@ -391,7 +391,7 @@ njs_promise_value_constructor(njs_vm_t *vm, njs_value_t *value,
         return NJS_OK;
     }
 
-    ret = njs_value_property(vm, value, NJS_ATOM_constructor, dst);
+    ret = njs_value_property(vm, value, NJS_ATOM_STRING_constructor, dst);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -544,7 +544,7 @@ njs_promise_invoke_then(njs_vm_t *vm, njs_value_t *promise, njs_value_t *args,
     njs_int_t    ret;
     njs_value_t  function;
 
-    ret = njs_value_property(vm, promise, NJS_ATOM_then, &function);
+    ret = njs_value_property(vm, promise, NJS_ATOM_STRING_then, &function);
     if (njs_slow_path(ret != NJS_OK)) {
         if (ret == NJS_DECLINED) {
             goto failed;
@@ -606,7 +606,7 @@ njs_promise_resolve_function(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         goto fulfill;
     }
 
-    ret = njs_value_property(vm, resolution, NJS_ATOM_then, &then);
+    ret = njs_value_property(vm, resolution, NJS_ATOM_STRING_then, &then);
     if (njs_slow_path(ret == NJS_ERROR)) {
         if (njs_slow_path(njs_is_memory_error(vm, &vm->exception))) {
             return NJS_ERROR;
@@ -680,7 +680,7 @@ njs_promise_resolve(njs_vm_t *vm, njs_value_t *constructor, njs_value_t *x,
     njs_promise_capability_t  *capability;
 
     if (njs_is_promise(x)) {
-        ret = njs_value_property(vm, x, NJS_ATOM_constructor, &value);
+        ret = njs_value_property(vm, x, NJS_ATOM_STRING_constructor, &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return NJS_ERROR;
         }
@@ -1156,7 +1156,8 @@ njs_promise_all(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, promise_ctor, NJS_ATOM_resolve, &resolve);
+    ret = njs_value_property(vm, promise_ctor, NJS_ATOM_STRING_resolve,
+                             &resolve);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -1235,7 +1236,8 @@ njs_promise_perform_all(njs_vm_t *vm, njs_value_t *iterator,
         njs_mp_free(vm->mem_pool, pargs->remaining);
 
         njs_set_array(&argument, pargs->args.data);
-        njs_atom_to_value(vm, &message, NJS_ATOM_All_promises_were_rejected);
+        njs_atom_to_value(vm, &message,
+                          NJS_ATOM_STRING_All_promises_were_rejected);
 
         if (handler == njs_promise_perform_any_handler) {
             error = njs_error_alloc(vm,
@@ -1473,15 +1475,15 @@ njs_promise_all_settled_element_functions(njs_vm_t *vm,
     njs_set_object(&obj_value, obj);
 
     if (rejected) {
-        njs_atom_to_value(vm, &status, NJS_ATOM_rejected);
-        set_atom_id = NJS_ATOM_reason;
+        njs_atom_to_value(vm, &status, NJS_ATOM_STRING_rejected);
+        set_atom_id = NJS_ATOM_STRING_reason;
 
     } else {
-        njs_atom_to_value(vm, &status, NJS_ATOM_fulfilled);
-        set_atom_id = NJS_ATOM_value;
+        njs_atom_to_value(vm, &status, NJS_ATOM_STRING_fulfilled);
+        set_atom_id = NJS_ATOM_STRING_value;
     }
 
-    ret = njs_value_property_set(vm, &obj_value, NJS_ATOM_status,
+    ret = njs_value_property_set(vm, &obj_value, NJS_ATOM_STRING_status,
                                  njs_value_arg(&status));
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
@@ -1611,7 +1613,8 @@ njs_promise_any_reject_element_functions(njs_vm_t *vm, njs_value_t *args,
     if (--(*context->remaining_elements) == 0) {
         njs_mp_free(vm->mem_pool, context->remaining_elements);
 
-        njs_atom_to_value(vm, &message, NJS_ATOM_All_promises_were_rejected);
+        njs_atom_to_value(vm, &message,
+                          NJS_ATOM_STRING_All_promises_were_rejected);
 
         error = njs_error_alloc(vm,
                                 njs_vm_proto(vm, NJS_OBJ_TYPE_AGGREGATE_ERROR),
@@ -1650,7 +1653,8 @@ njs_promise_race(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, promise_ctor, NJS_ATOM_resolve, &resolve);
+    ret = njs_value_property(vm, promise_ctor, NJS_ATOM_STRING_resolve,
+                             &resolve);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
@@ -1733,24 +1737,24 @@ static const njs_object_prop_init_t  njs_promise_constructor_properties[] =
 
     NJS_DECLARE_PROP_NAME("Promise"),
 
-    NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
+    NJS_DECLARE_PROP_HANDLER(STRING_prototype, njs_object_prototype_create,
                              0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(resolve, njs_promise_object_resolve, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_resolve, njs_promise_object_resolve, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(reject, njs_promise_object_reject, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_reject, njs_promise_object_reject, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(all, njs_promise_all, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_all, njs_promise_all, 1,
                             NJS_PROMISE_ALL),
 
-    NJS_DECLARE_PROP_NATIVE(allSettled, njs_promise_all, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_allSettled, njs_promise_all, 1,
                              NJS_PROMISE_ALL_SETTLED),
 
-    NJS_DECLARE_PROP_NATIVE(any, njs_promise_all, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_any, njs_promise_all, 1,
                             NJS_PROMISE_ANY),
 
-    NJS_DECLARE_PROP_NATIVE(race, njs_promise_race, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_race, njs_promise_race, 1, 0),
 
     NJS_DECLARE_PROP_GETTER(SYMBOL_species, njs_promise_species, 0),
 };
@@ -1764,19 +1768,19 @@ static const njs_object_init_t  njs_promise_constructor_init = {
 
 static const njs_object_prop_init_t  njs_promise_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_constructor,
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("Promise"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_NATIVE(then, njs_promise_prototype_then, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_then, njs_promise_prototype_then, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(catch, njs_promise_prototype_catch, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_catch, njs_promise_prototype_catch, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(finally, njs_promise_prototype_finally,
+    NJS_DECLARE_PROP_NATIVE(STRING_finally, njs_promise_prototype_finally,
                             1, 0),
 };
 

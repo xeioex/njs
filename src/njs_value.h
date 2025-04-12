@@ -392,6 +392,7 @@ typedef struct {
 
 #define njs_ascii_strval(_s) (njs_value_t) {                                  \
     .string = {                                                               \
+        .atom_id = NJS_ATOM_STRING_unknown,                                   \
         .type = NJS_STRING,                                                   \
         .truth = njs_length(_s) ? 1 : 0,                                      \
         .data = & (njs_string_t) {                                            \
@@ -795,12 +796,12 @@ njs_set_number(njs_value_t *value, double num)
     value->data.u.number = num;
     value->type = NJS_NUMBER;
     value->data.truth = njs_is_number_true(num);
-    value->atom_id = 0 /* NJS_ATOM_unknown */;
+    value->atom_id = 0 /* NJS_ATOM_STRING_unknown */;
 }
 
 
 #define njs_set_empty_string(vm, value)                                       \
-    njs_atom_to_value(vm, value, NJS_ATOM_empty)
+    njs_atom_to_value(vm, value, NJS_ATOM_STRING_empty)
 
 
 njs_inline void
@@ -809,7 +810,7 @@ njs_set_int32(njs_value_t *value, int32_t num)
     value->data.u.number = num;
     value->type = NJS_NUMBER;
     value->data.truth = (num != 0);
-    value->atom_id = 0 /* NJS_ATOM_unknown */;
+    value->atom_id = 0 /* NJS_ATOM_STRING_unknown */;
 }
 
 
@@ -819,7 +820,7 @@ njs_set_uint32(njs_value_t *value, uint32_t num)
     value->data.u.number = num;
     value->type = NJS_NUMBER;
     value->data.truth = (num != 0);
-    value->atom_id = 0 /* NJS_ATOM_unknown */;
+    value->atom_id = 0 /* NJS_ATOM_STRING_unknown */;
 }
 
 
@@ -1006,7 +1007,7 @@ njs_property_query_val(njs_vm_t *vm, njs_property_query_t *pq,
 {
     njs_int_t  ret;
 
-    if (njs_value_atom(key) == 0 /* NJS_ATOM_unknown */) {
+    if (njs_value_atom(key) == 0 /* NJS_ATOM_STRING_unknown */) {
         ret = njs_atom_atomize_key(vm, key);
         if (ret != NJS_OK) {
             return ret;
@@ -1056,7 +1057,7 @@ njs_value_property_val_delete(njs_vm_t *vm, njs_value_t *value,
 {
     njs_int_t  ret;
 
-    if (njs_value_atom(key) == 0 /* NJS_ATOM_unknown */) {
+    if (njs_value_atom(key) == 0 /* NJS_ATOM_STRING_unknown */) {
         ret = njs_atom_atomize_key(vm, key);
         if (ret != NJS_OK) {
             return ret;

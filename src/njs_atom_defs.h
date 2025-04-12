@@ -5,7 +5,7 @@
  */
 
 
-NJS_DEF_STRING(unknown, "unkown",  0x00, NJS_TOKEN_ILLEGAL)
+NJS_DEF_STRING(unknown, "unknown",  0x00, NJS_TOKEN_ILLEGAL)
 
 NJS_DEF_SYMBOL(asyncIterator, "Symbol.asyncIterator")
 NJS_DEF_SYMBOL(hasInstance, "Symbol.hasInstance")

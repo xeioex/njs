@@ -565,7 +565,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
 
     p = &dst[0];
 
-    ret = njs_value_property(vm, this, NJS_ATOM_global, &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_STRING_global, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -574,7 +574,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'g';
     }
 
-    ret = njs_value_property(vm, this, NJS_ATOM_ignoreCase, &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_STRING_ignoreCase, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -583,7 +583,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'i';
     }
 
-    ret = njs_value_property(vm, this, NJS_ATOM_multiline, &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_STRING_multiline, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -592,7 +592,7 @@ njs_regexp_prototype_flags(njs_vm_t *vm, njs_value_t *args,
         *p++ = 'm';
     }
 
-    ret = njs_value_property(vm, this, NJS_ATOM_sticky, &value);
+    ret = njs_value_property(vm, this, NJS_ATOM_STRING_sticky, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -672,7 +672,7 @@ njs_regexp_prototype_source(njs_vm_t *vm, njs_value_t *args,
 
     if (njs_slow_path(!njs_is_regexp(this))) {
         if (njs_object(this) == njs_vm_proto(vm, NJS_OBJ_TYPE_REGEXP)) {
-            njs_atom_to_value(vm, retval, NJS_ATOM_spec_EMPTY_REGEXP);
+            njs_atom_to_value(vm, retval, NJS_ATOM_STRING_spec_EMPTY_REGEXP);
             return NJS_OK;
         }
 
@@ -706,7 +706,7 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, r, NJS_ATOM_source, &source);
+    ret = njs_value_property(vm, r, NJS_ATOM_STRING_source, &source);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -716,7 +716,7 @@ njs_regexp_prototype_to_string(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
-    ret = njs_value_property(vm, r, NJS_ATOM_flags, &flags);
+    ret = njs_value_property(vm, r, NJS_ATOM_STRING_flags, &flags);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -865,7 +865,7 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
     regexp->string = *s;
     pattern = regexp->pattern;
 
-    ret = njs_value_property(vm, r, NJS_ATOM_lastIndex, &value);
+    ret = njs_value_property(vm, r, NJS_ATOM_STRING_lastIndex, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -937,7 +937,8 @@ njs_regexp_builtin_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s,
             }
 
             njs_set_number(&value, index);
-            ret = njs_value_property_set(vm, r, NJS_ATOM_lastIndex, &value);
+            ret = njs_value_property_set(vm, r, NJS_ATOM_STRING_lastIndex,
+                                         &value);
             if (njs_slow_path(ret != NJS_OK)) {
                 njs_regex_match_data_free(match_data, vm->regex_generic_ctx);
                 return NJS_ERROR;
@@ -972,7 +973,7 @@ not_found:
 
     if (pattern->global || pattern->sticky) {
         njs_set_number(&value, 0);
-        ret = njs_value_property_set(vm, r, NJS_ATOM_lastIndex, &value);
+        ret = njs_value_property_set(vm, r, NJS_ATOM_STRING_lastIndex, &value);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1053,7 +1054,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
 
     njs_set_number(&prop->u.value, index);
 
-    lhq.key_hash = NJS_ATOM_index;
+    lhq.key_hash = NJS_ATOM_STRING_index;
     lhq.replace = 0;
     lhq.value = prop;
     lhq.pool = vm->mem_pool;
@@ -1069,7 +1070,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto fail;
     }
 
-    lhq.key_hash = NJS_ATOM_input;
+    lhq.key_hash = NJS_ATOM_STRING_input;
     lhq.value = prop;
 
     ret = njs_flathsh_unique_insert(&array->object.hash, &lhq);
@@ -1082,7 +1083,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto fail;
     }
 
-    lhq.key_hash = NJS_ATOM_groups;
+    lhq.key_hash = NJS_ATOM_STRING_groups;
     lhq.value = prop;
 
     ret = njs_flathsh_unique_insert(&array->object.hash, &lhq);
@@ -1231,7 +1232,7 @@ njs_regexp_exec(njs_vm_t *vm, njs_value_t *r, njs_value_t *s, unsigned flags,
     njs_value_t  exec;
     njs_value_t  arguments[2];
 
-    ret = njs_value_property(vm, r, NJS_ATOM_exec, &exec);
+    ret = njs_value_property(vm, r, NJS_ATOM_STRING_exec, &exec);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1325,7 +1326,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         }
     }
 
-    ret = njs_value_property(vm, rx, NJS_ATOM_global, &value);
+    ret = njs_value_property(vm, rx, NJS_ATOM_STRING_global, &value);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1334,7 +1335,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
 
     if (global) {
         njs_set_number(&value, 0);
-        ret = njs_value_property_set(vm, rx, NJS_ATOM_lastIndex, &value);
+        ret = njs_value_property_set(vm, rx, NJS_ATOM_STRING_lastIndex, &value);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1391,7 +1392,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             continue;
         }
 
-        ret = njs_value_property(vm, rx, NJS_ATOM_lastIndex, &value);
+        ret = njs_value_property(vm, rx, NJS_ATOM_STRING_lastIndex, &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1402,7 +1403,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
         }
 
         njs_set_number(&value, last_index + 1);
-        ret = njs_value_property_set(vm, rx, NJS_ATOM_lastIndex, &value);
+        ret = njs_value_property_set(vm, rx, NJS_ATOM_STRING_lastIndex, &value);
         if (njs_slow_path(ret != NJS_OK)) {
             goto exception;
         }
@@ -1429,7 +1430,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             goto exception;
         }
 
-        ret = njs_value_property(vm, r, NJS_ATOM_index, &value);
+        ret = njs_value_property(vm, r, NJS_ATOM_STRING_index, &value);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1472,7 +1473,7 @@ njs_regexp_prototype_symbol_replace(njs_vm_t *vm, njs_value_t *args,
             }
         }
 
-        ret = njs_value_property(vm, r, NJS_ATOM_groups, &groups);
+        ret = njs_value_property(vm, r, NJS_ATOM_STRING_groups, &groups);
         if (njs_slow_path(ret == NJS_ERROR)) {
             goto exception;
         }
@@ -1604,7 +1605,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
         return ret;
     }
 
-    ret = njs_value_property(vm, rx, NJS_ATOM_flags, retval);
+    ret = njs_value_property(vm, rx, NJS_ATOM_STRING_flags, retval);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NJS_ERROR;
     }
@@ -1695,7 +1696,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
 
     while (q < length) {
         njs_set_number(&setval, q);
-        ret = njs_value_property_set(vm, rx, NJS_ATOM_lastIndex, &setval);
+        ret = njs_value_property_set(vm, rx, NJS_ATOM_STRING_lastIndex, &setval);
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
@@ -1710,7 +1711,7 @@ njs_regexp_prototype_symbol_split(njs_vm_t *vm, njs_value_t *args,
             continue;
         }
 
-        ret = njs_value_property(vm, rx, NJS_ATOM_lastIndex, retval);
+        ret = njs_value_property(vm, rx, NJS_ATOM_STRING_lastIndex, retval);
         if (njs_slow_path(ret == NJS_ERROR)) {
             return NJS_ERROR;
         }
@@ -1837,7 +1838,7 @@ static const njs_object_prop_init_t  njs_regexp_constructor_properties[] =
 
     NJS_DECLARE_PROP_NAME("RegExp"),
 
-    NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
+    NJS_DECLARE_PROP_HANDLER(STRING_prototype, njs_object_prototype_create,
                              0, 0),
 };
 
@@ -1850,32 +1851,32 @@ static const njs_object_init_t  njs_regexp_constructor_init = {
 
 static const njs_object_prop_init_t  njs_regexp_prototype_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_constructor,
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_GETTER(flags, njs_regexp_prototype_flags, 0),
+    NJS_DECLARE_PROP_GETTER(STRING_flags, njs_regexp_prototype_flags, 0),
 
-    NJS_DECLARE_PROP_GETTER(global, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(STRING_global, njs_regexp_prototype_flag,
                             NJS_REGEX_GLOBAL),
 
-    NJS_DECLARE_PROP_GETTER(ignoreCase, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(STRING_ignoreCase, njs_regexp_prototype_flag,
                             NJS_REGEX_IGNORE_CASE),
 
-    NJS_DECLARE_PROP_GETTER(multiline, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(STRING_multiline, njs_regexp_prototype_flag,
                             NJS_REGEX_MULTILINE),
 
-    NJS_DECLARE_PROP_GETTER(source, njs_regexp_prototype_source, 0),
+    NJS_DECLARE_PROP_GETTER(STRING_source, njs_regexp_prototype_source, 0),
 
-    NJS_DECLARE_PROP_GETTER(sticky, njs_regexp_prototype_flag,
+    NJS_DECLARE_PROP_GETTER(STRING_sticky, njs_regexp_prototype_flag,
                             NJS_REGEX_STICKY),
 
-    NJS_DECLARE_PROP_NATIVE(toString,
+    NJS_DECLARE_PROP_NATIVE(STRING_toString,
                             njs_regexp_prototype_to_string, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(test, njs_regexp_prototype_test, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_test, njs_regexp_prototype_test, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(exec, njs_regexp_prototype_exec, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_exec, njs_regexp_prototype_exec, 1, 0),
 
     NJS_DECLARE_PROP_NATIVE(SYMBOL_replace,
                             njs_regexp_prototype_symbol_replace, 2, 0),
@@ -1887,7 +1888,7 @@ static const njs_object_prop_init_t  njs_regexp_prototype_properties[] =
 
 static const njs_object_prop_init_t  njs_regexp_instance_properties[] =
 {
-    NJS_DECLARE_PROP_HANDLER(lastIndex,
+    NJS_DECLARE_PROP_HANDLER(STRING_lastIndex,
                              njs_regexp_prototype_last_index, 0,
                              NJS_OBJECT_PROP_VALUE_W),
 };

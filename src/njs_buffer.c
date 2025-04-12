@@ -354,13 +354,13 @@ njs_buffer_from_object(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
 
 next:
 
-    ret = njs_value_property(vm, value, NJS_ATOM_length, &length);
+    ret = njs_value_property(vm, value, NJS_ATOM_STRING_length, &length);
     if (njs_slow_path(ret == NJS_ERROR)) {
         return ret;
     }
 
     if (ret == NJS_DECLINED) {
-        ret = njs_value_property(vm, value, NJS_ATOM_type, &val);
+        ret = njs_value_property(vm, value, NJS_ATOM_STRING_type, &val);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
         }
@@ -376,7 +376,7 @@ next:
             return NJS_DECLINED;
         }
 
-        ret = njs_value_property(vm, value, NJS_ATOM_data, &val);
+        ret = njs_value_property(vm, value, NJS_ATOM_STRING_data, &val);
         if (njs_slow_path(ret != NJS_OK)) {
             return ret;
         }
@@ -2363,9 +2363,9 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     }
 
     njs_set_object(&object, obj);
-    njs_atom_to_value(vm, &setval, NJS_ATOM_Buffer);
+    njs_atom_to_value(vm, &setval, NJS_ATOM_STRING_Buffer);
 
-    ret = njs_value_property_set(vm, &object, NJS_ATOM_type, &setval);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_STRING_type, &setval);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -2391,7 +2391,7 @@ njs_buffer_prototype_to_json(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     njs_set_array(&array, arr);
 
-    ret = njs_value_property_set(vm, &object, NJS_ATOM_data, &array);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_STRING_data, &array);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -2469,190 +2469,191 @@ static const njs_object_prop_init_t  njs_buffer_prototype_properties[] =
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("Buffer"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_HANDLER(constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_constructor,
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(length, njs_buffer_prototype_length, 0,
+    NJS_DECLARE_PROP_HANDLER(STRING_length, njs_buffer_prototype_length, 0,
                              0),
 
-    NJS_DECLARE_PROP_NATIVE(readInt8, njs_buffer_prototype_read_int,
+    NJS_DECLARE_PROP_NATIVE(STRING_readInt8, njs_buffer_prototype_read_int,
                             1, njs_buffer_magic(1, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readUInt8, njs_buffer_prototype_read_int,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUInt8, njs_buffer_prototype_read_int,
                             1, njs_buffer_magic(1, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readInt16LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readInt16LE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(2, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readUInt16LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUInt16LE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(2, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readInt16BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readInt16BE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(2, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readUInt16BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUInt16BE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(2, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readInt32LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readInt32LE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(4, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readUInt32LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUInt32LE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(4, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readInt32BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readInt32BE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(4, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readUInt32BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUInt32BE,
                             njs_buffer_prototype_read_int, 1,
                             njs_buffer_magic(4, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readIntLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readIntLE,
                             njs_buffer_prototype_read_int, 2,
                             njs_buffer_magic(0, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readUIntLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUIntLE,
                             njs_buffer_prototype_read_int, 2,
                             njs_buffer_magic(0, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readIntBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readIntBE,
                             njs_buffer_prototype_read_int, 2,
                             njs_buffer_magic(0, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readUIntBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readUIntBE,
                             njs_buffer_prototype_read_int, 2,
                             njs_buffer_magic(0, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readFloatLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readFloatLE,
                             njs_buffer_prototype_read_float, 1,
                             njs_buffer_magic(4, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readFloatBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readFloatBE,
                             njs_buffer_prototype_read_float, 1,
                             njs_buffer_magic(4, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(readDoubleLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readDoubleLE,
                             njs_buffer_prototype_read_float, 1,
                             njs_buffer_magic(8, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(readDoubleBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_readDoubleBE,
                             njs_buffer_prototype_read_float, 1,
                             njs_buffer_magic(8, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeInt8,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeInt8,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(1, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUInt8,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUInt8,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(1, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeInt16LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeInt16LE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(2, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUInt16LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUInt16LE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(2, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeInt16BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeInt16BE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(2, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUInt16BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUInt16BE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(2, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeInt32LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeInt32LE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(4, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUInt32LE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUInt32LE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(4, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeInt32BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeInt32BE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(4, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUInt32BE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUInt32BE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(4, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeIntLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeIntLE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(0, 1, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUIntLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUIntLE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(0, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeIntBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeIntBE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(0, 1, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeUIntBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeUIntBE,
                             njs_buffer_prototype_write_int, 1,
                             njs_buffer_magic(0, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeFloatLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeFloatLE,
                             njs_buffer_prototype_write_float,
                             1, njs_buffer_magic(4, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeFloatBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeFloatBE,
                             njs_buffer_prototype_write_float,
                             1, njs_buffer_magic(4, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(writeDoubleLE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeDoubleLE,
                             njs_buffer_prototype_write_float,
                             1, njs_buffer_magic(8, 0, 1)),
 
-    NJS_DECLARE_PROP_NATIVE(writeDoubleBE,
+    NJS_DECLARE_PROP_NATIVE(STRING_writeDoubleBE,
                             njs_buffer_prototype_write_float,
                             1, njs_buffer_magic(8, 0, 0)),
 
-    NJS_DECLARE_PROP_NATIVE(write, njs_buffer_prototype_write, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_write, njs_buffer_prototype_write, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(fill, njs_buffer_prototype_fill, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_fill, njs_buffer_prototype_fill, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(toString, njs_buffer_prototype_to_string,
+    NJS_DECLARE_PROP_NATIVE(STRING_toString, njs_buffer_prototype_to_string,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(compare, njs_buffer_prototype_compare, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_compare, njs_buffer_prototype_compare, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(copy, njs_buffer_prototype_copy, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_copy, njs_buffer_prototype_copy, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(equals, njs_buffer_prototype_equals, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_equals, njs_buffer_prototype_equals, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(indexOf, njs_buffer_prototype_index_of,
+    NJS_DECLARE_PROP_NATIVE(STRING_indexOf, njs_buffer_prototype_index_of,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(lastIndexOf,
+    NJS_DECLARE_PROP_NATIVE(STRING_lastIndexOf,
                             njs_buffer_prototype_index_of, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(includes, njs_buffer_prototype_includes, 1, 0),
-
-    NJS_DECLARE_PROP_NATIVE(subarray, njs_buffer_prototype_slice, 2,
+    NJS_DECLARE_PROP_NATIVE(STRING_includes, njs_buffer_prototype_includes, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(slice, njs_buffer_prototype_slice, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_subarray, njs_buffer_prototype_slice, 2,
+                            0),
 
-    NJS_DECLARE_PROP_NATIVE(swap16, njs_buffer_prototype_swap, 0, 2),
+    NJS_DECLARE_PROP_NATIVE(STRING_slice, njs_buffer_prototype_slice, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(swap32, njs_buffer_prototype_swap, 0, 4),
+    NJS_DECLARE_PROP_NATIVE(STRING_swap16, njs_buffer_prototype_swap, 0, 2),
 
-    NJS_DECLARE_PROP_NATIVE(swap64, njs_buffer_prototype_swap, 0, 8),
+    NJS_DECLARE_PROP_NATIVE(STRING_swap32, njs_buffer_prototype_swap, 0, 4),
 
-    NJS_DECLARE_PROP_NATIVE(toJSON, njs_buffer_prototype_to_json, 0,
+    NJS_DECLARE_PROP_NATIVE(STRING_swap64, njs_buffer_prototype_swap, 0, 8),
+
+    NJS_DECLARE_PROP_NATIVE(STRING_toJSON, njs_buffer_prototype_to_json, 0,
                             0),
 };
 
@@ -2669,29 +2670,29 @@ static const njs_object_prop_init_t  njs_buffer_constructor_properties[] =
 
     NJS_DECLARE_PROP_NAME("Buffer"),
 
-    NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
+    NJS_DECLARE_PROP_HANDLER(STRING_prototype, njs_object_prototype_create,
                              0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(alloc, njs_buffer_alloc_safe, 0, 1),
+    NJS_DECLARE_PROP_NATIVE(STRING_alloc, njs_buffer_alloc_safe, 0, 1),
 
-    NJS_DECLARE_PROP_NATIVE(allocUnsafe, njs_buffer_alloc_safe, 0,
+    NJS_DECLARE_PROP_NATIVE(STRING_allocUnsafe, njs_buffer_alloc_safe, 0,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(allocUnsafeSlow, njs_buffer_alloc_safe,
+    NJS_DECLARE_PROP_NATIVE(STRING_allocUnsafeSlow, njs_buffer_alloc_safe,
                             1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(byteLength, njs_buffer_byte_length, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_byteLength, njs_buffer_byte_length, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(compare, njs_buffer_compare, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_compare, njs_buffer_compare, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(concat, njs_buffer_concat, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_concat, njs_buffer_concat, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(from, njs_buffer_from, 3, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_from, njs_buffer_from, 3, 0),
 
-    NJS_DECLARE_PROP_NATIVE(isBuffer, njs_buffer_is_buffer, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_isBuffer, njs_buffer_is_buffer, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(isEncoding, njs_buffer_is_encoding, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_isEncoding, njs_buffer_is_encoding, 1,
                             0),
 };
 
@@ -2712,11 +2713,11 @@ const njs_object_type_init_t  njs_buffer_type_init = {
 
 static const njs_object_prop_init_t  njs_buffer_constants_properties[] =
 {
-    NJS_DECLARE_PROP_VALUE(MAX_LENGTH,
+    NJS_DECLARE_PROP_VALUE(STRING_MAX_LENGTH,
                            njs_value(NJS_NUMBER, 1, INT32_MAX),
                            NJS_OBJECT_PROP_VALUE_E),
 
-    NJS_DECLARE_PROP_VALUE(MAX_STRING_LENGTH,
+    NJS_DECLARE_PROP_VALUE(STRING_MAX_STRING_LENGTH,
                            njs_value(NJS_NUMBER, 1, NJS_STRING_MAX_LENGTH),
                            NJS_OBJECT_PROP_VALUE_E),
 };

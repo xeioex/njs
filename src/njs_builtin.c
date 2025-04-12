@@ -520,7 +520,7 @@ njs_builtin_match_native_function(njs_vm_t *vm, njs_function_t *function,
     for (i = NJS_OBJ_TYPE_HIDDEN_MIN; i < NJS_OBJ_TYPE_HIDDEN_MAX; i++) {
         njs_set_object(&value, &njs_vm_ctor(vm, i).object);
 
-        ret = njs_value_property(vm, &value, NJS_ATOM_name, &tag);
+        ret = njs_value_property(vm, &value, NJS_ATOM_STRING_name, &tag);
         if (ret == NJS_OK && njs_is_string(&tag)) {
             njs_string_get(vm, &tag, &ctx.match);
         }
@@ -717,28 +717,29 @@ njs_ext_memory_stats(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused,
 
     njs_set_number(&value, mp_stat.size);
 
-    ret = njs_value_property_set(vm, &object, NJS_ATOM_size, &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_STRING_size, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.nblocks);
 
-    ret = njs_value_property_set(vm, &object, NJS_ATOM_nblocks, &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_STRING_nblocks, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.cluster_size);
 
-    ret = njs_value_property_set(vm, &object, NJS_ATOM_cluster_size, &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_STRING_cluster_size,
+                                 &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
 
     njs_set_number(&value, mp_stat.page_size);
 
-    ret = njs_value_property_set(vm, &object, NJS_ATOM_page_size, &value);
+    ret = njs_value_property_set(vm, &object, NJS_ATOM_STRING_page_size, &value);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -955,197 +956,197 @@ static const njs_object_prop_init_t  njs_global_this_object_properties[] =
 
     /* Global aliases. */
 
-    NJS_DECLARE_PROP_HANDLER(global, njs_global_this_object, 0,
+    NJS_DECLARE_PROP_HANDLER(STRING_global, njs_global_this_object, 0,
                              NJS_OBJECT_PROP_VALUE_ECW),
 
-    NJS_DECLARE_PROP_HANDLER(globalThis, njs_global_this_object, 0,
+    NJS_DECLARE_PROP_HANDLER(STRING_globalThis, njs_global_this_object, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
     /* Global constants. */
 
-    NJS_DECLARE_PROP_VALUE(NaN,  njs_value(NJS_NUMBER, 0, NAN), 0),
+    NJS_DECLARE_PROP_VALUE(STRING_NaN,  njs_value(NJS_NUMBER, 0, NAN), 0),
 
-    NJS_DECLARE_PROP_VALUE(Infinity,
+    NJS_DECLARE_PROP_VALUE(STRING_Infinity,
                            njs_value(NJS_NUMBER, 1, INFINITY), 0),
 
-    NJS_DECLARE_PROP_VALUE(undefined,
+    NJS_DECLARE_PROP_VALUE(STRING_undefined,
                            njs_value(NJS_UNDEFINED, 0, NAN), 0),
 
     /* Global functions. */
 
-    NJS_DECLARE_PROP_NATIVE(isFinite, njs_number_global_is_finite, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_isFinite, njs_number_global_is_finite, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(isNaN, njs_number_global_is_nan, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_isNaN, njs_number_global_is_nan, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(parseFloat, njs_number_parse_float, 1,
+    NJS_DECLARE_PROP_NATIVE(STRING_parseFloat, njs_number_parse_float, 1,
                             0),
 
-    NJS_DECLARE_PROP_NATIVE(parseInt, njs_number_parse_int, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_parseInt, njs_number_parse_int, 2, 0),
 
-    NJS_DECLARE_PROP_NATIVE(toString, njs_object_prototype_to_string,
+    NJS_DECLARE_PROP_NATIVE(STRING_toString, njs_object_prototype_to_string,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(encodeURI, njs_string_encode_uri, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_encodeURI, njs_string_encode_uri, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(encodeURIComponent,
+    NJS_DECLARE_PROP_NATIVE(STRING_encodeURIComponent,
                             njs_string_encode_uri, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(decodeURI, njs_string_decode_uri, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_decodeURI, njs_string_decode_uri, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(decodeURIComponent,
+    NJS_DECLARE_PROP_NATIVE(STRING_decodeURIComponent,
                             njs_string_decode_uri, 1, 1),
 
-    NJS_DECLARE_PROP_NATIVE(atob, njs_string_atob, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_atob, njs_string_atob, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(btoa, njs_string_btoa, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_btoa, njs_string_btoa, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(eval, njs_eval_function, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_eval, njs_eval_function, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(require, njs_module_require, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_require, njs_module_require, 1, 0),
 
     /* Global objects. */
 
-    NJS_DECLARE_PROP_HANDLER(njs, njs_top_level_object,
+    NJS_DECLARE_PROP_HANDLER(STRING_njs, njs_top_level_object,
                              NJS_OBJECT_NJS, NJS_OBJECT_PROP_VALUE_ECW),
 
-    NJS_DECLARE_PROP_HANDLER(process, njs_top_level_object,
+    NJS_DECLARE_PROP_HANDLER(STRING_process, njs_top_level_object,
                              NJS_OBJECT_PROCESS, NJS_OBJECT_PROP_VALUE_ECW),
 
-    NJS_DECLARE_PROP_HANDLER(Math, njs_top_level_object,
+    NJS_DECLARE_PROP_HANDLER(STRING_Math, njs_top_level_object,
                              NJS_OBJECT_MATH, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(JSON, njs_top_level_object,
+    NJS_DECLARE_PROP_HANDLER(STRING_JSON, njs_top_level_object,
                              NJS_OBJECT_JSON, NJS_OBJECT_PROP_VALUE_CW),
 
 
 #ifdef NJS_TEST262
-    NJS_DECLARE_PROP_HANDLER(_262, njs_top_level_object,
+    NJS_DECLARE_PROP_HANDLER(STRING__262, njs_top_level_object,
                              NJS_OBJECT_262, NJS_OBJECT_PROP_VALUE_ECW),
 #endif
 
     /* Global constructors. */
 
-    NJS_DECLARE_PROP_HANDLER(Object, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Object, njs_top_level_constructor,
                              NJS_OBJ_TYPE_OBJECT, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_ARRAY, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(ArrayBuffer, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_ArrayBuffer, njs_top_level_constructor,
                              NJS_OBJ_TYPE_ARRAY_BUFFER,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(DataView, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_DataView, njs_top_level_constructor,
                              NJS_OBJ_TYPE_DATA_VIEW,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(TextDecoder, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_TextDecoder, njs_top_level_constructor,
                              NJS_OBJ_TYPE_TEXT_DECODER,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(TextEncoder, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_TextEncoder, njs_top_level_constructor,
                              NJS_OBJ_TYPE_TEXT_ENCODER,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Buffer, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Buffer, njs_top_level_constructor,
                              NJS_OBJ_TYPE_BUFFER, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Uint8Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Uint8Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_UINT8_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Uint16Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Uint16Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_UINT16_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Uint32Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Uint32Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_UINT32_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Int8Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Int8Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_INT8_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Int16Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Int16Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_INT16_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Int32Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Int32Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_INT32_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Float32Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Float32Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_FLOAT32_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Float64Array, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Float64Array, njs_top_level_constructor,
                              NJS_OBJ_TYPE_FLOAT64_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Uint8ClampedArray,
+    NJS_DECLARE_PROP_HANDLER(STRING_Uint8ClampedArray,
                              njs_top_level_constructor,
                              NJS_OBJ_TYPE_UINT8_CLAMPED_ARRAY,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Boolean, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Boolean, njs_top_level_constructor,
                              NJS_OBJ_TYPE_BOOLEAN, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Number, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Number, njs_top_level_constructor,
                              NJS_OBJ_TYPE_NUMBER, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Symbol, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Symbol, njs_top_level_constructor,
                              NJS_OBJ_TYPE_SYMBOL, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(String, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_String, njs_top_level_constructor,
                              NJS_OBJ_TYPE_STRING, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Function, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Function, njs_top_level_constructor,
                              NJS_OBJ_TYPE_FUNCTION, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(RegExp, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_RegExp, njs_top_level_constructor,
                              NJS_OBJ_TYPE_REGEXP, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Date, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Date, njs_top_level_constructor,
                              NJS_OBJ_TYPE_DATE, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Promise, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Promise, njs_top_level_constructor,
                              NJS_OBJ_TYPE_PROMISE, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(Error, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_Error, njs_top_level_constructor,
                              NJS_OBJ_TYPE_ERROR, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(EvalError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_EvalError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_EVAL_ERROR, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(InternalError,
+    NJS_DECLARE_PROP_HANDLER(STRING_InternalError,
                              njs_top_level_constructor,
                              NJS_OBJ_TYPE_INTERNAL_ERROR,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(RangeError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_RangeError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_RANGE_ERROR,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(ReferenceError,
+    NJS_DECLARE_PROP_HANDLER(STRING_ReferenceError,
                              njs_top_level_constructor,
                              NJS_OBJ_TYPE_REF_ERROR, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(SyntaxError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_SyntaxError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_SYNTAX_ERROR,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(TypeError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_TypeError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_TYPE_ERROR, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(URIError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_URIError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_URI_ERROR, NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(MemoryError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_MemoryError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_MEMORY_ERROR,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(AggregateError, njs_top_level_constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_AggregateError, njs_top_level_constructor,
                              NJS_OBJ_TYPE_AGGREGATE_ERROR,
                              NJS_OBJECT_PROP_VALUE_CW),
 };
@@ -1162,21 +1163,21 @@ static const njs_object_prop_init_t  njs_njs_object_properties[] =
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("njs"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_VALUE(engine, njs_ascii_strval("njs"),
+    NJS_DECLARE_PROP_VALUE(STRING_engine, njs_ascii_strval("njs"),
                            NJS_OBJECT_PROP_VALUE_EC),
 
-    NJS_DECLARE_PROP_VALUE(version, njs_ascii_strval(NJS_VERSION),
+    NJS_DECLARE_PROP_VALUE(STRING_version, njs_ascii_strval(NJS_VERSION),
                            NJS_OBJECT_PROP_VALUE_EC),
 
-    NJS_DECLARE_PROP_VALUE(version_number,
+    NJS_DECLARE_PROP_VALUE(STRING_version_number,
                            njs_value(NJS_NUMBER, 1, NJS_VERSION_NUMBER),
                            NJS_OBJECT_PROP_VALUE_EC),
 
-    NJS_DECLARE_PROP_NATIVE(dump, njs_ext_dump, 0, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_dump, njs_ext_dump, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(on, njs_ext_on, 0, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_on, njs_ext_on, 0, 0),
 
-    NJS_DECLARE_PROP_HANDLER(memoryStats, njs_ext_memory_stats, 0,
+    NJS_DECLARE_PROP_HANDLER(STRING_memoryStats, njs_ext_memory_stats, 0,
                              NJS_OBJECT_PROP_VALUE_EC),
 
 };
@@ -1222,7 +1223,7 @@ njs_process_object_argv(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
     njs_set_array(njs_prop_value(prop), argv);
 
     lhq.value = prop;
-    lhq.key_hash = NJS_ATOM_argv;
+    lhq.key_hash = NJS_ATOM_STRING_argv;
 
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
@@ -1350,7 +1351,7 @@ njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
     njs_set_object(njs_prop_value(prop), env);
 
     lhq.value = prop;
-    lhq.key_hash = NJS_ATOM_env;
+    lhq.key_hash = NJS_ATOM_STRING_env;
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
@@ -1453,15 +1454,15 @@ static const njs_object_prop_init_t  njs_process_object_properties[] =
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("process"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_HANDLER(argv, njs_process_object_argv, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(STRING_argv, njs_process_object_argv, 0, 0),
 
-    NJS_DECLARE_PROP_HANDLER(env, njs_process_object_env, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(STRING_env, njs_process_object_env, 0, 0),
 
-    NJS_DECLARE_PROP_HANDLER(pid, njs_process_object_pid, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(STRING_pid, njs_process_object_pid, 0, 0),
 
-    NJS_DECLARE_PROP_HANDLER(ppid, njs_process_object_ppid, 0, 0),
+    NJS_DECLARE_PROP_HANDLER(STRING_ppid, njs_process_object_ppid, 0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(kill, njs_ext_process_kill, 2, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_kill, njs_ext_process_kill, 2, 0),
 };
 
 

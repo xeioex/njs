@@ -290,7 +290,7 @@ NEXT_LBL;
             value2 = &primitive1;
         }
 
-        if (value2->atom_id == NJS_ATOM_unknown) {
+        if (value2->atom_id == NJS_ATOM_STRING_unknown) {
             num = njs_number(value2);
             u32 = (uint32_t) num;
 
@@ -1303,7 +1303,7 @@ NEXT_LBL;
             value2 = &primitive2;
         }
 
-        if (value2->atom_id == NJS_ATOM_unknown) {
+        if (value2->atom_id == NJS_ATOM_STRING_unknown) {
             num = njs_number(value2);
             u32 = (uint32_t) num;
 
@@ -2102,7 +2102,7 @@ njs_vmcode_property_init(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
 
     case NJS_OBJECT:
         if (key->type == NJS_STRING) {
-            if (key->atom_id == NJS_ATOM_unknown) {
+            if (key->atom_id == NJS_ATOM_STRING_unknown) {
                 ret = njs_atom_atomize_key(vm, key);
                 if (ret != NJS_OK) {
                     return ret;
@@ -2115,7 +2115,7 @@ njs_vmcode_property_init(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
             return NJS_ERROR;
         }
 
-        if (name.atom_id == NJS_ATOM_unknown) {
+        if (name.atom_id == NJS_ATOM_STRING_unknown) {
             ret = njs_atom_atomize_key(vm, &name);
             if (ret != NJS_OK) {
                 return ret;
@@ -2163,7 +2163,7 @@ njs_vmcode_proto_init(njs_vm_t *vm, njs_value_t *value, njs_value_t *unused,
     njs_object_prop_t    *prop;
     njs_flathsh_query_t  lhq;
 
-    lhq.key_hash = NJS_ATOM___proto__;
+    lhq.key_hash = NJS_ATOM_STRING___proto__;
     lhq.proto = &njs_object_hash_proto;
     lhq.pool = vm->mem_pool;
 
@@ -2284,7 +2284,8 @@ njs_vmcode_instance_of(njs_vm_t *vm, njs_value_t *object,
     }
 
     if (njs_is_object(object)) {
-        ret = njs_value_property(vm, constructor, NJS_ATOM_prototype, &value);
+        ret = njs_value_property(vm, constructor, NJS_ATOM_STRING_prototype,
+                                 &value);
 
         if (njs_slow_path(ret == NJS_ERROR)) {
             return ret;
@@ -2324,33 +2325,33 @@ njs_vmcode_typeof(njs_vm_t *vm, njs_value_t *value, njs_value_t *retval)
     /* ECMAScript 5.1: null, array and regexp are objects. */
 
     static const uint32_t  types[NJS_VALUE_TYPE_MAX] = {
-        NJS_ATOM_object,
-        NJS_ATOM_undefined,
-        NJS_ATOM_boolean,
-        NJS_ATOM_number,
-        NJS_ATOM_symbol,
-        NJS_ATOM_string,
-        NJS_ATOM_data,
-        NJS_ATOM_external,
-        NJS_ATOM_unknown,
-        NJS_ATOM_undefined,
-        NJS_ATOM_undefined,
-        NJS_ATOM_undefined,
-        NJS_ATOM_undefined,
-        NJS_ATOM_undefined,
-        NJS_ATOM_undefined,
-        NJS_ATOM_undefined,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_boolean,
+        NJS_ATOM_STRING_number,
+        NJS_ATOM_STRING_symbol,
+        NJS_ATOM_STRING_string,
+        NJS_ATOM_STRING_data,
+        NJS_ATOM_STRING_external,
+        NJS_ATOM_STRING_unknown,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_undefined,
+        NJS_ATOM_STRING_undefined,
 
-        NJS_ATOM_object,
-        NJS_ATOM_object,
-        NJS_ATOM_function,
-        NJS_ATOM_object,
-        NJS_ATOM_object,
-        NJS_ATOM_object,
-        NJS_ATOM_object,
-        NJS_ATOM_object,
-        NJS_ATOM_object,
-        NJS_ATOM_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_function,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
+        NJS_ATOM_STRING_object,
     };
 
     njs_atom_to_value(vm, retval, types[value->type]);
@@ -2435,14 +2436,14 @@ again:
     if (val1->type == val2->type) {
 
         if (njs_is_string(val1)) {
-            if (val1->atom_id == NJS_ATOM_unknown) {
+            if (val1->atom_id == NJS_ATOM_STRING_unknown) {
                 ret = njs_atom_atomize_key(vm, val1);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return -1;
                 }
             }
 
-            if (val2->atom_id == NJS_ATOM_unknown) {
+            if (val2->atom_id == NJS_ATOM_STRING_unknown) {
                 ret = njs_atom_atomize_key(vm, val2);
                 if (njs_slow_path(ret != NJS_OK)) {
                     return -1;
@@ -2627,7 +2628,7 @@ njs_function_new_object(njs_vm_t *vm, njs_value_t *constructor)
         constructor = &bound;
     }
 
-    ret = njs_value_property(vm, constructor, NJS_ATOM_prototype, &proto);
+    ret = njs_value_property(vm, constructor, NJS_ATOM_STRING_prototype, &proto);
 
     if (njs_slow_path(ret == NJS_ERROR)) {
         return NULL;

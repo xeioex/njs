@@ -1171,7 +1171,7 @@ njs_vm_value_enumerate(njs_vm_t *vm, njs_value_t *value, uint32_t flags,
     while (njs_rbtree_is_there_successor(variables, rb_node)) {
         node = (njs_variable_node_t *) rb_node;
 
-        if (node->variable->atom_id == NJS_ATOM_this) {
+        if (node->variable->atom_id == NJS_ATOM_STRING_this) {
             rb_node = njs_rbtree_node_successor(variables, rb_node);
             continue;
         }
@@ -1252,7 +1252,7 @@ njs_vm_object_alloc(njs_vm_t *vm, njs_value_t *retval, ...)
             goto done;
         }
 
-        if (name->atom_id == NJS_ATOM_unknown) {
+        if (name->atom_id == NJS_ATOM_STRING_unknown) {
             ret = njs_atom_atomize_key(vm, name);
             if (ret != NJS_OK) {
                 goto done;

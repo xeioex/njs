@@ -162,7 +162,7 @@ njs_variable_scope_find(njs_parser_t *parser, njs_parser_scope_t *scope,
     case NJS_VARIABLE_CONST:
     case NJS_VARIABLE_LET:
         if (scope->type == NJS_SCOPE_GLOBAL
-            && atom_id == NJS_ATOM_undefined)
+            && atom_id == NJS_ATOM_STRING_undefined)
         {
             goto failed;
         }

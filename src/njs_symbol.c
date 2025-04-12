@@ -178,49 +178,52 @@ static const njs_object_prop_init_t  njs_symbol_constructor_properties[] =
 
     NJS_DECLARE_PROP_NAME("Symbol"),
 
-    NJS_DECLARE_PROP_HANDLER(prototype, njs_object_prototype_create,
+    NJS_DECLARE_PROP_HANDLER(STRING_prototype, njs_object_prototype_create,
                              0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(for, njs_symbol_for, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_for, njs_symbol_for, 1, 0),
 
-    NJS_DECLARE_PROP_NATIVE(keyFor, njs_symbol_key_for, 1, 0),
+    NJS_DECLARE_PROP_NATIVE(STRING_keyFor, njs_symbol_key_for, 1, 0),
 
-    NJS_DECLARE_PROP_VALUE(asyncIterator,
+    NJS_DECLARE_PROP_VALUE(STRING_asyncIterator,
                            njs_symval(asyncIterator, "Symbol.asyncIterator"),
                            0),
 
-    NJS_DECLARE_PROP_VALUE(hasInstance,
+    NJS_DECLARE_PROP_VALUE(STRING_hasInstance,
                            njs_symval(hasInstance, "Symbol.hasInstance"),
                            0),
 
-    NJS_DECLARE_PROP_VALUE(isConcatSpreadable,
+    NJS_DECLARE_PROP_VALUE(STRING_isConcatSpreadable,
                    njs_symval(isConcatSpreadable, "Symbol.isConcatSpreadable"),
                    0),
 
-    NJS_DECLARE_PROP_VALUE(iterator, njs_symval(iterator, "Symbol.iterator"),
-                           0),
+    NJS_DECLARE_PROP_VALUE(STRING_iterator,
+                           njs_symval(iterator, "Symbol.iterator"), 0),
 
-    NJS_DECLARE_PROP_VALUE(match, njs_symval(match, "Symbol.match"), 0),
+    NJS_DECLARE_PROP_VALUE(STRING_match, njs_symval(match, "Symbol.match"), 0),
 
-    NJS_DECLARE_PROP_VALUE(matchAll, njs_symval(matchAll, "Symbol.matchAll"),
-                           0),
+    NJS_DECLARE_PROP_VALUE(STRING_matchAll,
+                           njs_symval(matchAll, "Symbol.matchAll"), 0),
 
-    NJS_DECLARE_PROP_VALUE(replace, njs_symval(replace, "Symbol.replace"), 0),
+    NJS_DECLARE_PROP_VALUE(STRING_replace,
+                           njs_symval(replace, "Symbol.replace"), 0),
 
-    NJS_DECLARE_PROP_VALUE(search, njs_symval(search, "Symbol.search"), 0),
+    NJS_DECLARE_PROP_VALUE(STRING_search,
+                           njs_symval(search, "Symbol.search"), 0),
 
-    NJS_DECLARE_PROP_VALUE(species, njs_symval(species, "Symbol.species"), 0),
+    NJS_DECLARE_PROP_VALUE(STRING_species,
+                           njs_symval(species, "Symbol.species"), 0),
 
-    NJS_DECLARE_PROP_VALUE(split, njs_symval(split, "Symbol.split"), 0),
+    NJS_DECLARE_PROP_VALUE(STRING_split, njs_symval(split, "Symbol.split"), 0),
 
-    NJS_DECLARE_PROP_VALUE(toPrimitive,
+    NJS_DECLARE_PROP_VALUE(STRING_toPrimitive,
                            njs_symval(toPrimitive, "Symbol.toPrimitive"),
                            0),
 
-    NJS_DECLARE_PROP_VALUE(toStringTag,
+    NJS_DECLARE_PROP_VALUE(STRING_toStringTag,
                            njs_symval(toStringTag, "Symbol.toStringTag"), 0),
 
-    NJS_DECLARE_PROP_VALUE(unscopables,
+    NJS_DECLARE_PROP_VALUE(STRING_unscopables,
                            njs_symval(unscopables, "Symbol.unscopables"),
                            0),
 };
@@ -296,21 +299,21 @@ static const njs_object_prop_init_t  njs_symbol_prototype_properties[] =
     NJS_DECLARE_PROP_VALUE(SYMBOL_toStringTag, njs_ascii_strval("Symbol"),
                            NJS_OBJECT_PROP_VALUE_C),
 
-    NJS_DECLARE_PROP_HANDLER(__proto__,
+    NJS_DECLARE_PROP_HANDLER(STRING___proto__,
                              njs_primitive_prototype_get_proto, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_HANDLER(constructor,
+    NJS_DECLARE_PROP_HANDLER(STRING_constructor,
                              njs_object_prototype_create_constructor, 0,
                              NJS_OBJECT_PROP_VALUE_CW),
 
-    NJS_DECLARE_PROP_NATIVE(valueOf, njs_symbol_prototype_value_of,
+    NJS_DECLARE_PROP_NATIVE(STRING_valueOf, njs_symbol_prototype_value_of,
                             0, 0),
 
-    NJS_DECLARE_PROP_NATIVE(toString,
+    NJS_DECLARE_PROP_NATIVE(STRING_toString,
                             njs_symbol_prototype_to_string, 0, 0),
 
-    NJS_DECLARE_PROP_GETTER(description,
+    NJS_DECLARE_PROP_GETTER(STRING_description,
                             njs_symbol_prototype_description, 0),
 };
 
