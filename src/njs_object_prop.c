@@ -256,7 +256,7 @@ set_prop:
         }
 
         if (njs_slow_path(njs_is_typed_array(object) &&
-           !(flags & NJS_OBJECT_PROP_NOT_STRING)))
+           (flags & NJS_OBJECT_PROP_IS_STRING)))
         {
             /* Integer-Indexed Exotic Objects [[DefineOwnProperty]]. */
 

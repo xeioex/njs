@@ -5881,6 +5881,11 @@ static njs_unit_test_t  njs_test[] =
       njs_str("true") },
 
     { njs_str(NJS_TYPED_ARRAY_LIST
+              ".every(v=>{var a = new v([0]); var desc = Object.getOwnPropertyDescriptor(a, '0');"
+              "           try { Object.defineProperty(a, '1', desc) } catch (e) { return e.name == 'TypeError' }})"),
+      njs_str("true") },
+
+    { njs_str(NJS_TYPED_ARRAY_LIST
               ".every(v=>{try {var a = new v([1,1]); Object.defineProperty(a, '1', {configurable:true})} "
               "           catch (e) { return e.message == 'Cannot redefine property: \"1\"'}})"),
       njs_str("true") },

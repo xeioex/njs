@@ -19,7 +19,7 @@ typedef enum {
     NJS_OBJECT_PROP_CONFIGURABLE = 16,
     NJS_OBJECT_PROP_WRITABLE = 32,
     NJS_OBJECT_PROP_UNSET = 64,
-    NJS_OBJECT_PROP_NOT_STRING = 128,
+    NJS_OBJECT_PROP_IS_STRING = 128,
 #define NJS_OBJECT_PROP_VALUE_ECW (NJS_OBJECT_PROP_VALUE                     \
                                    | NJS_OBJECT_PROP_ENUMERABLE              \
                                    | NJS_OBJECT_PROP_CONFIGURABLE            \
@@ -269,10 +269,8 @@ njs_object_prop_define_val(njs_vm_t *vm, njs_value_t *object, njs_value_t *name,
         }
     }
 
-    if (!njs_is_string(name)) {
-       flags |= NJS_OBJECT_PROP_NOT_STRING;
-    } else {
-       flags &= ~NJS_OBJECT_PROP_NOT_STRING;
+    if (njs_is_string(name)) {
+       flags |= NJS_OBJECT_PROP_IS_STRING;
     }
 
     return njs_object_prop_define(vm, object, name->atom_id, value, flags);
