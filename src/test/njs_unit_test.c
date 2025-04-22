@@ -4172,6 +4172,11 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var a = [ 1, 2, 3 ]; a[4294967296] = 4; a + a[4294967296]"),
       njs_str("1,2,34") },
 
+    { njs_str("var x = []; var k = 1;"
+              "for (var i = 0; i < 32; i++) { k = k * 2; x[k - 2] = k; };"
+              "k = 1; for (i = 0; i < 32; i++) { k = k * 2; if (x[k - 2] != k) { throw 'error'; } }"),
+      njs_str("undefined") },
+
     { njs_str("delete[]['4e9']"),
       njs_str("true") },
 
