@@ -45,6 +45,10 @@ http {
             js_content test.njs;
         }
 
+        location /pass {
+            proxy_pass http://127.0.0.1:8081/source;
+        }
+
         location /append {
             js_body_filter test.append;
             proxy_pass http://127.0.0.1:8081/source;
@@ -134,6 +138,7 @@ $t->write_file('test.js', <<EOF);
         chunks.chain = chain;
 
         r.status = 200;
+        r.headersOut['Content-Length'] = chunks.reduce((a, b) => a + b.length, 0);
         r.sendHeader();
         chain(chunks, 0);
     }
@@ -174,15 +179,17 @@ $t->write_file('test.js', <<EOF);
 
 EOF
 
-$t->try_run('no njs body filter')->plan(7);
+$t->try_run('no njs body filter')->plan(9);
 
 ###############################################################################
 
-like(http_get('/append'), qr/AAABBCDDDDXXX/, 'append');
+like(http_get('/pass'), qr/Content-Length: 10.*^AAABBCDDDD$/ms, 'pass');
+like(http_get('/append'), qr/AAABBCDDDDXXX$/, 'append');
+unlike(http_get('/append'), qr/Content-Length/, 'no Content-Length');
 like(http_get('/buffer_type'), qr/AAABBCDDDD/, 'buffer type');
 like(http_get('/buffer_type_nonutf8'), qr/\xaa\xaa\xbb\xcc\xdd\xdd/,
 	'buffer type nonutf8');
-like(http_get('/forward'), qr/AAABBCDDDD/, 'forward');
+like(http_get('/forward'), qr/AAABBCDDDD$/, 'forward');
 like(http_get('/filter?len=3'), qr/AAA|DDDD|/, 'filter 3');
 like(http_get('/filter?len=2&dup=1'), qr/AAA|AAABB|BBDDDD|DDDD/,
 	'filter 2 dup');
