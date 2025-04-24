@@ -2436,21 +2436,7 @@ again:
     if (val1->type == val2->type) {
 
         if (njs_is_string(val1)) {
-            if (val1->atom_id == NJS_ATOM_STRING_unknown) {
-                ret = njs_atom_atomize_key(vm, val1);
-                if (njs_slow_path(ret != NJS_OK)) {
-                    return -1;
-                }
-            }
-
-            if (val2->atom_id == NJS_ATOM_STRING_unknown) {
-                ret = njs_atom_atomize_key(vm, val2);
-                if (njs_slow_path(ret != NJS_OK)) {
-                    return -1;
-                }
-            }
-
-            return val1->atom_id == val2->atom_id;
+            return njs_string_eq(vm, val1, val2);
         }
 
         if (njs_is_symbol(val1)) {

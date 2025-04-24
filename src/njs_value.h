@@ -1091,10 +1091,6 @@ njs_values_same_non_numeric(njs_vm_t *vm, const njs_value_t *val1,
     const njs_value_t *val2)
 {
     if (njs_is_string(val1)) {
-        if (val1->atom_id != 0 && val2->atom_id != 0) {
-            return (val1->atom_id == val2->atom_id);
-        }
-
         return njs_string_eq(vm, val1, val2);
     }
 
