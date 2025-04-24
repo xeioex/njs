@@ -157,7 +157,7 @@ if [ "$NJS_HAVE_QUICKJS" = "YES" ];  then
 fi
 
 if [ $HTTP != NO ]; then
-    ngx_module_type=HTTP_AUX_FILTER
+    ngx_module_type=HTTP_FILTER
     ngx_module_name=ngx_http_js_module
     ngx_module_incs="$ngx_addon_dir/../src $ngx_addon_dir/../build \
                      $NJS_QUICKJS_INC"
@@ -165,6 +165,9 @@ if [ $HTTP != NO ]; then
     ngx_module_srcs="$ngx_addon_dir/ngx_http_js_module.c $NJS_SRCS $QJS_SRCS"
     ngx_module_libs="PCRE $NJS_OPENSSL_LIB $NJS_XSLT_LIB $NJS_ZLIB_LIB \
                      $NJS_QUICKJS_LIB $NJS_ENGINE_LIB -lm"
+    ngx_module_order="ngx_http_js_module \
+                      ngx_http_gunzip_filter_module \
+                      ngx_http_copy_filter_module"
 
     . auto/module
 
