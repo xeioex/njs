@@ -1843,7 +1843,7 @@ static const njs_object_prop_init_t  njs_regexp_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_regexp_constructor_init = {
+const njs_object_init_t  njs_regexp_constructor_init = {
     njs_regexp_constructor_properties,
     njs_nitems(njs_regexp_constructor_properties),
 };
@@ -1886,7 +1886,7 @@ static const njs_object_prop_init_t  njs_regexp_prototype_properties[] =
 };
 
 
-static const njs_object_prop_init_t  njs_regexp_instance_properties[] =
+const njs_object_prop_init_t  njs_regexp_instance_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(STRING_lastIndex,
                              njs_regexp_prototype_last_index, 0,
@@ -1900,7 +1900,7 @@ const njs_object_init_t  njs_regexp_instance_init = {
 };
 
 
-static const njs_object_init_t  njs_regexp_prototype_init = {
+const njs_object_init_t  njs_regexp_prototype_init = {
     njs_regexp_prototype_properties,
     njs_nitems(njs_regexp_prototype_properties),
 };

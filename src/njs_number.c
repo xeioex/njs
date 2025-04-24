@@ -902,7 +902,7 @@ static const njs_object_prop_init_t  njs_number_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_number_prototype_init = {
+const njs_object_init_t  njs_number_prototype_init = {
     njs_number_prototype_properties,
     njs_nitems(njs_number_prototype_properties),
 };

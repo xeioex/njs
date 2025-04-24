@@ -3466,13 +3466,13 @@ static const njs_object_prop_init_t  njs_string_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_string_prototype_init = {
+const njs_object_init_t  njs_string_prototype_init = {
     njs_string_prototype_properties,
     njs_nitems(njs_string_prototype_properties),
 };
 
 
-static const njs_object_prop_init_t  njs_string_instance_properties[] =
+const njs_object_prop_init_t  njs_string_instance_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(STRING_length, njs_string_instance_length, 0,
                              0),

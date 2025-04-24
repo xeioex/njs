@@ -618,7 +618,7 @@ static const njs_object_prop_init_t  njs_array_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_array_constructor_init = {
+const njs_object_init_t  njs_array_constructor_init = {
     njs_array_constructor_properties,
     njs_nitems(njs_array_constructor_properties),
 };
@@ -3293,13 +3293,14 @@ static const njs_object_prop_init_t  njs_array_prototype_properties[] =
                             NJS_ENUM_VALUES),
 };
 
-static const njs_object_init_t  njs_array_prototype_init = {
+
+const njs_object_init_t  njs_array_prototype_init = {
     njs_array_prototype_properties,
     njs_nitems(njs_array_prototype_properties),
 };
 
 
-njs_object_prop_init_t  njs_array_instance_properties[] =
+const njs_object_prop_init_t  njs_array_instance_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(STRING_length, njs_array_length, 0,
                              NJS_OBJECT_PROP_VALUE_W),

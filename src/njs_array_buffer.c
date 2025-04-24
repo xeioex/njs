@@ -156,7 +156,7 @@ static const njs_object_prop_init_t  njs_array_buffer_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_array_buffer_constructor_init = {
+const njs_object_init_t  njs_array_buffer_constructor_init = {
     njs_array_buffer_constructor_properties,
     njs_nitems(njs_array_buffer_constructor_properties),
 };
@@ -279,7 +279,7 @@ static const njs_object_prop_init_t  njs_array_buffer_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_array_buffer_prototype_init = {
+const njs_object_init_t  njs_array_buffer_prototype_init = {
     njs_array_buffer_prototype_properties,
     njs_nitems(njs_array_buffer_prototype_properties),
 };

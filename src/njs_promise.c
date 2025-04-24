@@ -1760,7 +1760,7 @@ static const njs_object_prop_init_t  njs_promise_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_promise_constructor_init = {
+const njs_object_init_t  njs_promise_constructor_init = {
     njs_promise_constructor_properties,
     njs_nitems(njs_promise_constructor_properties),
 };
@@ -1785,7 +1785,7 @@ static const njs_object_prop_init_t  njs_promise_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_promise_prototype_init = {
+const njs_object_init_t  njs_promise_prototype_init = {
     njs_promise_prototype_properties,
     njs_nitems(njs_promise_prototype_properties),
 };

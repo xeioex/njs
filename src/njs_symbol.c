@@ -229,7 +229,7 @@ static const njs_object_prop_init_t  njs_symbol_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_symbol_constructor_init = {
+const njs_object_init_t  njs_symbol_constructor_init = {
     njs_symbol_constructor_properties,
     njs_nitems(njs_symbol_constructor_properties),
 };
@@ -318,7 +318,7 @@ static const njs_object_prop_init_t  njs_symbol_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_symbol_prototype_init = {
+const njs_object_init_t  njs_symbol_prototype_init = {
     njs_symbol_prototype_properties,
     njs_nitems(njs_symbol_prototype_properties),
 };

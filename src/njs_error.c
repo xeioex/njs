@@ -338,7 +338,7 @@ static const njs_object_prop_init_t  njs_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_error_constructor_init = {
+const njs_object_init_t  njs_error_constructor_init = {
     njs_error_constructor_properties,
     njs_nitems(njs_error_constructor_properties),
 };
@@ -355,7 +355,7 @@ static const njs_object_prop_init_t  njs_eval_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_eval_error_constructor_init = {
+const njs_object_init_t  njs_eval_error_constructor_init = {
     njs_eval_error_constructor_properties,
     njs_nitems(njs_eval_error_constructor_properties),
 };
@@ -372,7 +372,7 @@ static const njs_object_prop_init_t  njs_internal_error_constructor_properties[]
 };
 
 
-static const njs_object_init_t  njs_internal_error_constructor_init = {
+const njs_object_init_t  njs_internal_error_constructor_init = {
     njs_internal_error_constructor_properties,
     njs_nitems(njs_internal_error_constructor_properties),
 };
@@ -389,7 +389,7 @@ static const njs_object_prop_init_t  njs_range_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_range_error_constructor_init = {
+const njs_object_init_t  njs_range_error_constructor_init = {
     njs_range_error_constructor_properties,
     njs_nitems(njs_range_error_constructor_properties),
 };
@@ -406,7 +406,7 @@ static const njs_object_prop_init_t  njs_reference_error_constructor_properties[
 };
 
 
-static const njs_object_init_t  njs_reference_error_constructor_init = {
+const njs_object_init_t  njs_reference_error_constructor_init = {
     njs_reference_error_constructor_properties,
     njs_nitems(njs_reference_error_constructor_properties),
 };
@@ -423,7 +423,7 @@ static const njs_object_prop_init_t  njs_syntax_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_syntax_error_constructor_init = {
+const njs_object_init_t  njs_syntax_error_constructor_init = {
     njs_syntax_error_constructor_properties,
     njs_nitems(njs_syntax_error_constructor_properties),
 };
@@ -440,7 +440,7 @@ static const njs_object_prop_init_t  njs_type_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_type_error_constructor_init = {
+const njs_object_init_t  njs_type_error_constructor_init = {
     njs_type_error_constructor_properties,
     njs_nitems(njs_type_error_constructor_properties),
 };
@@ -457,7 +457,7 @@ static const njs_object_prop_init_t  njs_uri_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_uri_error_constructor_init = {
+const njs_object_init_t  njs_uri_error_constructor_init = {
     njs_uri_error_constructor_properties,
     njs_nitems(njs_uri_error_constructor_properties),
 };
@@ -474,7 +474,7 @@ static const njs_object_prop_init_t  njs_aggregate_error_constructor_properties[
 };
 
 
-static const njs_object_init_t  njs_aggregate_error_constructor_init = {
+const njs_object_init_t  njs_aggregate_error_constructor_init = {
     njs_aggregate_error_constructor_properties,
     njs_nitems(njs_aggregate_error_constructor_properties),
 };
@@ -563,7 +563,7 @@ static const njs_object_prop_init_t  njs_memory_error_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_memory_error_constructor_init = {
+const njs_object_init_t  njs_memory_error_constructor_init = {
     njs_memory_error_constructor_properties,
     njs_nitems(njs_memory_error_constructor_properties),
 };
@@ -815,7 +815,7 @@ static const njs_object_prop_init_t  njs_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_error_prototype_init = {
+const njs_object_init_t  njs_error_prototype_init = {
     njs_error_prototype_properties,
     njs_nitems(njs_error_prototype_properties),
 };
@@ -844,7 +844,7 @@ static const njs_object_prop_init_t  njs_eval_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_eval_error_prototype_init = {
+const njs_object_init_t  njs_eval_error_prototype_init = {
     njs_eval_error_prototype_properties,
     njs_nitems(njs_eval_error_prototype_properties),
 };
@@ -888,7 +888,7 @@ static const njs_object_prop_init_t  njs_internal_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_internal_error_prototype_init = {
+const njs_object_init_t  njs_internal_error_prototype_init = {
     njs_internal_error_prototype_properties,
     njs_nitems(njs_internal_error_prototype_properties),
 };
@@ -925,7 +925,7 @@ static const njs_object_prop_init_t  njs_range_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_range_error_prototype_init = {
+const njs_object_init_t  njs_range_error_prototype_init = {
     njs_range_error_prototype_properties,
     njs_nitems(njs_range_error_prototype_properties),
 };
@@ -954,7 +954,7 @@ static const njs_object_prop_init_t  njs_reference_error_prototype_properties[] 
 };
 
 
-static const njs_object_init_t  njs_reference_error_prototype_init = {
+const njs_object_init_t  njs_reference_error_prototype_init = {
     njs_reference_error_prototype_properties,
     njs_nitems(njs_reference_error_prototype_properties),
 };
@@ -983,7 +983,7 @@ static const njs_object_prop_init_t  njs_syntax_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_syntax_error_prototype_init = {
+const njs_object_init_t  njs_syntax_error_prototype_init = {
     njs_syntax_error_prototype_properties,
     njs_nitems(njs_syntax_error_prototype_properties),
 };
@@ -1012,7 +1012,7 @@ static const njs_object_prop_init_t  njs_type_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_type_error_prototype_init = {
+const njs_object_init_t  njs_type_error_prototype_init = {
     njs_type_error_prototype_properties,
     njs_nitems(njs_type_error_prototype_properties),
 };
@@ -1041,7 +1041,7 @@ static const njs_object_prop_init_t  njs_uri_error_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_uri_error_prototype_init = {
+const njs_object_init_t  njs_uri_error_prototype_init = {
     njs_uri_error_prototype_properties,
     njs_nitems(njs_uri_error_prototype_properties),
 };
@@ -1070,7 +1070,7 @@ static const njs_object_prop_init_t  njs_aggregate_error_prototype_properties[] 
 };
 
 
-static const njs_object_init_t  njs_aggregate_error_prototype_init = {
+const njs_object_init_t  njs_aggregate_error_prototype_init = {
     njs_aggregate_error_prototype_properties,
     njs_nitems(njs_aggregate_error_prototype_properties),
 };

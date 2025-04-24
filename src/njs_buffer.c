@@ -23,7 +23,7 @@
     ((size << 2) | (sign << 1) | little)
 
 
-static const njs_buffer_encoding_t  njs_buffer_encodings[] =
+static njs_buffer_encoding_t  njs_buffer_encodings[] =
 {
     {
         njs_str("utf-8"),
@@ -98,7 +98,7 @@ static njs_int_t njs_buffer_constant(njs_vm_t *vm,
 static njs_int_t njs_buffer_init(njs_vm_t *vm);
 
 
-static const njs_external_t  njs_ext_buffer[] = {
+static njs_external_t  njs_ext_buffer[] = {
 
     {
         .flags = NJS_EXTERN_PROPERTY,
@@ -2657,7 +2657,7 @@ static const njs_object_prop_init_t  njs_buffer_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_buffer_prototype_init = {
+const njs_object_init_t  njs_buffer_prototype_init = {
     njs_buffer_prototype_properties,
     njs_nitems(njs_buffer_prototype_properties),
 };
@@ -2696,7 +2696,7 @@ static const njs_object_prop_init_t  njs_buffer_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_buffer_constructor_init = {
+const njs_object_init_t  njs_buffer_constructor_init = {
     njs_buffer_constructor_properties,
     njs_nitems(njs_buffer_constructor_properties),
 };

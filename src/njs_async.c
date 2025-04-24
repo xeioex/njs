@@ -172,7 +172,7 @@ static const njs_object_prop_init_t  njs_async_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_async_constructor_init = {
+const njs_object_init_t  njs_async_constructor_init = {
     njs_async_constructor_properties,
     njs_nitems(njs_async_constructor_properties),
 };
@@ -190,7 +190,7 @@ static const njs_object_prop_init_t  njs_async_prototype_properties[] =
 };
 
 
-static const njs_object_init_t  njs_async_prototype_init = {
+const njs_object_init_t  njs_async_prototype_init = {
     njs_async_prototype_properties,
     njs_nitems(njs_async_prototype_properties),
 };
@@ -204,7 +204,7 @@ const njs_object_type_init_t  njs_async_function_type_init = {
 };
 
 
-static const njs_object_prop_init_t  njs_async_function_instance_properties[] =
+const njs_object_prop_init_t  njs_async_function_instance_properties[] =
 {
     NJS_DECLARE_PROP_HANDLER(STRING_length, njs_function_instance_length, 0,
                              NJS_OBJECT_PROP_VALUE_C),

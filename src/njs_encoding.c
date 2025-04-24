@@ -264,7 +264,7 @@ static const njs_object_prop_init_t  njs_text_encoder_properties[] =
 };
 
 
-static const njs_object_init_t  njs_text_encoder_init = {
+const njs_object_init_t  njs_text_encoder_init = {
     njs_text_encoder_properties,
     njs_nitems(njs_text_encoder_properties),
 };
@@ -281,7 +281,7 @@ static const njs_object_prop_init_t  njs_text_encoder_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_text_encoder_constructor_init = {
+const njs_object_init_t  njs_text_encoder_constructor_init = {
     njs_text_encoder_constructor_properties,
     njs_nitems(njs_text_encoder_constructor_properties),
 };
@@ -596,7 +596,7 @@ static const njs_object_prop_init_t  njs_text_decoder_properties[] =
 };
 
 
-static const njs_object_init_t  njs_text_decoder_init = {
+const njs_object_init_t  njs_text_decoder_init = {
     njs_text_decoder_properties,
     njs_nitems(njs_text_decoder_properties),
 };
@@ -613,7 +613,7 @@ static const njs_object_prop_init_t  njs_text_decoder_constructor_properties[] =
 };
 
 
-static const njs_object_init_t  njs_text_decoder_constructor_init = {
+const njs_object_init_t  njs_text_decoder_constructor_init = {
     njs_text_decoder_constructor_properties,
     njs_nitems(njs_text_decoder_constructor_properties),
 };

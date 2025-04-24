@@ -107,7 +107,7 @@ static const njs_object_type_init_t *const
 
 
 /* P1990 signals from `man 7 signal` are supported */
-static const njs_signal_entry_t njs_signals_table[] = {
+static njs_signal_entry_t njs_signals_table[] = {
     { njs_str("ABRT"), SIGABRT },
     { njs_str("ALRM"), SIGALRM },
     { njs_str("CHLD"), SIGCHLD },
