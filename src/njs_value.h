@@ -127,12 +127,8 @@ union njs_value_s {
         uint32_t                      atom_id;
         njs_value_type_t              type:8;  /* 5 bits */
         uint8_t                       truth;
-
-        /* token_type is mask: string=0, keyword=2, keyword_reserved=1 */
         uint8_t                       token_type;
-        /* if token_type != 0 then token_id is token id, else not used. */
         uint8_t                       token_id;
-
         njs_string_t                  *data;
     } string;
 

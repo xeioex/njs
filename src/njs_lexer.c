@@ -741,7 +741,7 @@ njs_lexer_word(njs_lexer_t *lexer, njs_lexer_token_t *token)
         return NJS_ERROR;
     }
 
-    if (entry->string.token_type == 0) {
+    if (entry->string.token_type == NJS_KEYWORD_TYPE_UNDEF) {
         token->type = NJS_TOKEN_NAME;
         token->keyword_type = NJS_KEYWORD_TYPE_UNDEF;
 

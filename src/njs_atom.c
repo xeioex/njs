@@ -116,7 +116,7 @@ njs_atom_find_or_add(njs_vm_t *vm, u_char *key, size_t size, size_t length,
         return NULL;
     }
 
-    entry->string.token_type = 0;
+    entry->string.token_type = NJS_KEYWORD_TYPE_UNDEF;
 
     lhq.value = entry;
     lhq.pool = vm->mem_pool;
