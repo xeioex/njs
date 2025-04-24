@@ -371,7 +371,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
     do {
         symbol = 0;
 
-        ret = njs_atom_to_value(vm, &key, path[n]->prop_atom_id);
+        ret = njs_atom_to_value(vm, &key, path[n]->atom_id);
         if (ret != NJS_OK) {
             return NJS_ERROR;
         }
@@ -934,7 +934,7 @@ njs_top_level_constructor(njs_vm_t *vm, njs_object_prop_t *self,
     prop->enumerable = 0;
 
     lhq.value = prop;
-    lhq.key_hash =  atom_id;
+    lhq.key_hash = atom_id;
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
@@ -1224,7 +1224,6 @@ njs_process_object_argv(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
 
     lhq.value = prop;
     lhq.key_hash = NJS_ATOM_STRING_argv;
-
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
@@ -1350,11 +1349,11 @@ njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
 
     njs_set_object(njs_prop_value(prop), env);
 
-    lhq.value = prop;
-    lhq.key_hash = NJS_ATOM_STRING_env;
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;
+    lhq.value = prop;
+    lhq.key_hash = NJS_ATOM_STRING_env;
 
     ret = njs_flathsh_unique_insert(njs_object_hash(process), &lhq);
     if (njs_fast_path(ret == NJS_OK)) {

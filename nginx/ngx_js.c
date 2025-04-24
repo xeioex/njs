@@ -2513,8 +2513,8 @@ ngx_js_ext_build(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused,
 
 njs_int_t
 ngx_js_ext_conf_file_path(njs_vm_t *vm, njs_object_prop_t *prop,
-    uint32_t unused,
-    njs_value_t *value, njs_value_t *setval, njs_value_t *retval)
+    uint32_t unused, njs_value_t *value, njs_value_t *setval,
+    njs_value_t *retval)
 {
     return njs_vm_value_string_create(vm, retval, ngx_cycle->conf_file.data,
                                       ngx_cycle->conf_file.len);

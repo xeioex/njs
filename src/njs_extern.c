@@ -45,6 +45,7 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
     end = external + n;
 
     while (external < end) {
+
         if ((external->flags & NJS_EXTERN_TYPE_MASK) == NJS_EXTERN_SELF) {
             slot->writable = external->u.object.writable;
             slot->configurable = external->u.object.configurable;

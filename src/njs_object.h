@@ -40,8 +40,8 @@ typedef enum {
 
 
 struct njs_object_init_s {
-    const njs_object_prop_init_t    *properties;
-    njs_uint_t                  items;
+    const njs_object_prop_init_t  *properties;
+    njs_uint_t                    items;
 };
 
 
@@ -50,7 +50,7 @@ typedef struct njs_traverse_s  njs_traverse_t;
 struct njs_traverse_s {
     struct njs_traverse_s      *parent;
     njs_object_prop_t          *prop;
-    uint32_t                   prop_atom_id;
+    uint32_t                   atom_id;
 
     njs_value_t                value;
     njs_array_t                *keys;

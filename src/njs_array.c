@@ -2789,6 +2789,7 @@ njs_sort_indexed_properties(njs_vm_t *vm, njs_value_t *obj, int64_t length,
                 if (njs_slow_path(ret != NJS_OK)) {
                     goto exception;
                 }
+
                 ret = njs_value_property_val(vm, obj, &key, &p->value);
                 if (njs_slow_path(ret == NJS_ERROR)) {
                     goto exception;

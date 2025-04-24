@@ -663,7 +663,8 @@ njs_xml_node_ext_prop_keys(njs_vm_t *vm, njs_value_t *value, njs_value_t *keys)
 
 static njs_int_t
 njs_xml_node_ext_prop_handler(njs_vm_t *vm, njs_object_prop_t *prop,
-    uint32_t atom_id, njs_value_t *value, njs_value_t *setval, njs_value_t *retval)
+    uint32_t atom_id, njs_value_t *value, njs_value_t *setval,
+    njs_value_t *retval)
 {
     xmlNode    *current;
     njs_int_t  ret;
@@ -860,7 +861,8 @@ njs_xml_node_ext_remove_attribute(njs_vm_t *vm, njs_value_t *args,
 
 static njs_int_t
 njs_xml_node_ext_remove_all_attributes(njs_vm_t *vm,
-    njs_value_t *args, njs_uint_t nargs, njs_index_t unused, njs_value_t *retval)
+    njs_value_t *args, njs_uint_t nargs, njs_index_t unused,
+    njs_value_t *retval)
 {
     xmlNode  *current;
 

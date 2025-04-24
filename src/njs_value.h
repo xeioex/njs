@@ -350,6 +350,7 @@ struct njs_object_prop_s {
     njs_object_attribute_t      configurable:8;  /* 2 bits */
 };
 
+
 struct njs_object_prop_init_s {
     struct njs_object_prop_s    desc;
     uint32_t                    atom_id;
@@ -534,7 +535,7 @@ typedef struct {
         njs_assert(njs_is_string(value));                                     \
                                                                               \
         if (njs_slow_path((value)->string.data == NULL)) {                    \
-            njs_assert((value)->atom_id != 0);                                \
+            njs_assert((value)->atom_id != 0 /* NJS_ATOM_STRING_unknown */);  \
             njs_atom_to_value(vm, &_dst, (value)->atom_id);                   \
             njs_assert(njs_is_string(&_dst));                                 \
             njs_string_get_unsafe(&_dst, str);                                \

@@ -1047,9 +1047,7 @@ njs_object_prop_init(njs_vm_t *vm, const njs_object_init_t* init,
     njs_set_object(njs_prop_value(prop), object);
 
     lhq.value = prop;
-
-    lhq.key_hash =  atom_id;
-
+    lhq.key_hash = atom_id;
     lhq.replace = 1;
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

@@ -222,15 +222,6 @@ njs_atom_hash_init(njs_vm_t *vm)
 }
 
 
-/*
- * value is always key: string or number or symbol.
- *
- * symbol always contain atom_id by construction. do nothing;
- * number if short number it is atomized by "| 0x80000000";
- * string if represents short number it is atomized by "| 0x80000000";
- * for string and symbol atom_ids common range is uint32_t < 0x80000000.
- */
-
 njs_int_t
 njs_atom_atomize_key(njs_vm_t *vm, njs_value_t *value)
 {

@@ -3029,9 +3029,9 @@ static njs_int_t
 njs_generate_global_property_set(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node_dst, njs_parser_node_t *node_src)
 {
-    njs_value_t              property;
-    njs_variable_t           *var;
-    njs_vmcode_prop_set_t    *prop_set;
+    njs_value_t            property;
+    njs_variable_t         *var;
+    njs_vmcode_prop_set_t  *prop_set;
 
     var = njs_variable_reference(vm, node_dst);
     if (var == NULL) {

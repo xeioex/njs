@@ -37,14 +37,6 @@ struct njs_flathsh_proto_s {
 };
 
 
-struct njs_flathsh_descr_s {
-    uint32_t     hash_mask;
-    uint32_t     elts_size;          /* allocated properties */
-    uint32_t     elts_count;         /* include deleted properties */
-    uint32_t     elts_deleted_count;
-};
-
-
 struct njs_flathsh_query_s {
     uint32_t                   key_hash;
     njs_str_t                  key;
@@ -72,11 +64,8 @@ struct njs_flathsh_query_s {
     ((fhl)->slot == (fhr)->slot)
 
 
-njs_inline njs_flathsh_elt_t *
-njs_hash_elts(njs_flathsh_descr_t *h)
-{
-    return (njs_flathsh_elt_t *) ((char *) h + sizeof(njs_flathsh_descr_t));
-}
+#define njs_hash_elts(h)                                                       \
+    ((njs_flathsh_elt_t *) ((char *) (h) + 16 /* njs_flathsh_descr_t size */))
 
 
 /*

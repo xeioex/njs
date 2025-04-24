@@ -1175,11 +1175,11 @@ njs_regexp_exec_result_free(njs_vm_t *vm, njs_array_t *result)
         if (elt == NULL) {
             break;
         }
+
         prop = elt->value;
 
         njs_mp_free(vm->mem_pool, prop);
     }
-
 
     lhq.pool = vm->mem_pool;
     lhq.proto = &njs_object_hash_proto;

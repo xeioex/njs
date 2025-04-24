@@ -6655,8 +6655,8 @@ static njs_int_t
 njs_parser_labelled_statement(njs_parser_t *parser, njs_lexer_token_t *token,
     njs_queue_link_t *current)
 {
-    uintptr_t          atom_id;
-    njs_variable_t     *label;
+    uintptr_t       atom_id;
+    njs_variable_t  *label;
 
     atom_id = token->atom_id;
 
@@ -8350,11 +8350,11 @@ njs_parser_variable_node(njs_parser_t *parser, uintptr_t atom_id,
 static njs_parser_node_t *
 njs_parser_reference(njs_parser_t *parser, njs_lexer_token_t *token)
 {
-    njs_int_t                        ret;
-    njs_index_t                      index;
-    njs_variable_t                   *var;
-    njs_parser_node_t                *node;
-    njs_parser_scope_t               *scope;
+    njs_int_t           ret;
+    njs_index_t         index;
+    njs_variable_t      *var;
+    njs_parser_node_t   *node;
+    njs_parser_scope_t  *scope;
 
     node = njs_parser_node_new(parser, token->type);
     if (njs_slow_path(node == NULL)) {

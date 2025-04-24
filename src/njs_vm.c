@@ -1056,8 +1056,8 @@ njs_vm_prop_magic32(njs_object_prop_t *prop)
 njs_int_t
 njs_vm_prop_name(njs_vm_t *vm, uint32_t atom_id, njs_str_t *dst)
 {
-    njs_int_t      ret;
-    njs_value_t    prop_name;
+    njs_int_t    ret;
+    njs_value_t  prop_name;
 
     ret = njs_atom_to_value(vm, &prop_name, atom_id);
     if (ret != NJS_OK) {
