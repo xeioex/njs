@@ -14,21 +14,21 @@
 
 
 typedef struct {
-    ngx_str_t       name;
-    ngx_int_t       value;
+    ngx_str_t        name;
+    ngx_int_t        value;
 } ngx_qjs_entry_t;
 
 
 typedef struct {
-    ngx_js_http_t      http;
+    ngx_js_http_t    http;
 
-    JSContext          *cx;
-    ngx_qjs_event_t    *event;
+    JSContext        *cx;
+    ngx_qjs_event_t  *event;
 
-    JSValue             response_value;
+    JSValue           response_value;
 
-    JSValue             promise;
-    JSValue             promise_callbacks[2];
+    JSValue           promise;
+    JSValue           promise_callbacks[2];
 } ngx_qjs_fetch_t;
 
 
@@ -79,7 +79,7 @@ static JSValue ngx_qjs_fetch_request_ctor(JSContext *cx,
     JSValueConst new_target, int argc, JSValueConst *argv);
 static JSValue ngx_qjs_ext_fetch_request_body(JSContext *cx,
     JSValueConst this_val, int argc, JSValueConst *argv, int magic);
-static JSValue ngx_qjs_ext_fetch_request_bodyused(JSContext *cx,
+static JSValue ngx_qjs_ext_fetch_request_body_used(JSContext *cx,
     JSValueConst this_val);
 static JSValue ngx_qjs_ext_fetch_request_cache(JSContext *cx,
     JSValueConst this_val);
@@ -101,7 +101,7 @@ static JSValue ngx_qjs_ext_fetch_response_status_text(JSContext *cx,
     JSValueConst this_val);
 static JSValue ngx_qjs_ext_fetch_response_ok(JSContext *cx,
     JSValueConst this_val);
-static JSValue ngx_qjs_ext_fetch_response_bodyused(JSContext *cx,
+static JSValue ngx_qjs_ext_fetch_response_body_used(JSContext *cx,
     JSValueConst this_val);
 static JSValue ngx_qjs_ext_fetch_response_headers(JSContext *cx,
     JSValueConst this_val);
@@ -140,7 +140,7 @@ static const JSCFunctionListEntry  ngx_qjs_ext_fetch_request_proto[] = {
 #define NGX_QJS_BODY_TEXT           2
     JS_CFUNC_MAGIC_DEF("arrayBuffer", 0, ngx_qjs_ext_fetch_request_body,
                        NGX_QJS_BODY_ARRAY_BUFFER),
-    JS_CGETSET_DEF("bodyUsed", ngx_qjs_ext_fetch_request_bodyused, NULL),
+    JS_CGETSET_DEF("bodyUsed", ngx_qjs_ext_fetch_request_body_used, NULL),
     JS_CGETSET_DEF("cache", ngx_qjs_ext_fetch_request_cache, NULL),
     JS_CGETSET_DEF("credentials", ngx_qjs_ext_fetch_request_credentials, NULL),
     JS_CFUNC_MAGIC_DEF("json", 0, ngx_qjs_ext_fetch_request_body,
@@ -159,7 +159,7 @@ static const JSCFunctionListEntry  ngx_qjs_ext_fetch_request_proto[] = {
 static const JSCFunctionListEntry  ngx_qjs_ext_fetch_response_proto[] = {
     JS_CFUNC_MAGIC_DEF("arrayBuffer", 0, ngx_qjs_ext_fetch_response_body,
                        NGX_QJS_BODY_ARRAY_BUFFER),
-    JS_CGETSET_DEF("bodyUsed", ngx_qjs_ext_fetch_response_bodyused, NULL),
+    JS_CGETSET_DEF("bodyUsed", ngx_qjs_ext_fetch_response_body_used, NULL),
     JS_CGETSET_DEF("headers", ngx_qjs_ext_fetch_response_headers, NULL ),
     JS_CFUNC_MAGIC_DEF("json", 0, ngx_qjs_ext_fetch_response_body,
                        NGX_QJS_BODY_JSON),
@@ -2057,7 +2057,7 @@ ngx_qjs_ext_fetch_request_body(JSContext *cx, JSValueConst this_val,
 
 
 static JSValue
-ngx_qjs_ext_fetch_request_bodyused(JSContext *cx, JSValueConst this_val)
+ngx_qjs_ext_fetch_request_body_used(JSContext *cx, JSValueConst this_val)
 {
     ngx_js_request_t  *request;
 
@@ -2214,7 +2214,7 @@ ngx_qjs_ext_fetch_response_ok(JSContext *cx, JSValueConst this_val)
 
 
 static JSValue
-ngx_qjs_ext_fetch_response_bodyused(JSContext *cx, JSValueConst this_val)
+ngx_qjs_ext_fetch_response_body_used(JSContext *cx, JSValueConst this_val)
 {
     ngx_js_response_t  *response;
 
