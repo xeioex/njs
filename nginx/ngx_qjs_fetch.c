@@ -1992,8 +1992,8 @@ static JSValue
 ngx_qjs_ext_fetch_request_body(JSContext *cx, JSValueConst this_val,
     int argc, JSValueConst *argv, int magic)
 {
+    char *             string;
     JSValue            result;
-    ngx_str_t          string;
     ngx_js_request_t  *request;
 
     request = JS_GetOpaque2(cx, this_val, NGX_QJS_CLASS_ID_FETCH_REQUEST);
@@ -2031,19 +2031,21 @@ ngx_qjs_ext_fetch_request_body(JSContext *cx, JSValueConst this_val,
         }
 
         if (magic == NGX_QJS_BODY_JSON) {
-            string.data = (u_char *) JS_ToCStringLen(cx, &string.len, result);
+            string = js_malloc(cx, request->body.len + 1);
 
             JS_FreeValue(cx, result);
             result = JS_UNDEFINED;
 
-            if (string.data == NULL) {
-                JS_FreeCString(cx, (const char *) string.data);
-                break;
+            if (string == NULL) {
+                return JS_ThrowOutOfMemory(cx);
             }
 
-            result = JS_ParseJSON(cx, (const char *) string.data,
-                                  string.len, "<input>");
-            JS_FreeCString(cx, (const char *) string.data);
+            ngx_memcpy(string, request->body.data, request->body.len);
+            string[request->body.len] = '\0';
+
+            /* 'string' must be zero terminated. */
+            result = JS_ParseJSON(cx, string, request->body.len, "<input>");
+            js_free(cx, string);
             if (JS_IsException(result)) {
                 break;
             }
@@ -2287,13 +2289,23 @@ ngx_qjs_ext_fetch_response_body(JSContext *cx, JSValueConst this_val,
 
     response->body_used = 1;
 
-    ret = njs_chb_join(&response->chain, &string);
-    if (ret != NJS_OK) {
-        return JS_ThrowOutOfMemory(cx);
-    }
-
     switch (magic) {
     case NGX_QJS_BODY_ARRAY_BUFFER:
+    case NGX_QJS_BODY_TEXT:
+        ret = njs_chb_join(&response->chain, &string);
+        if (ret != NJS_OK) {
+            return JS_ThrowOutOfMemory(cx);
+        }
+
+        if (magic == NGX_QJS_BODY_TEXT) {
+            result = qjs_string_create(cx, string.start, string.length);
+            if (JS_IsException(result)) {
+                return JS_ThrowOutOfMemory(cx);
+            }
+
+            break;
+        }
+
         /*
          * no free_func for JS_NewArrayBuffer()
          * because string.start is allocated from e->pool
@@ -2308,31 +2320,18 @@ ngx_qjs_ext_fetch_response_body(JSContext *cx, JSValueConst this_val,
         break;
 
     case NGX_QJS_BODY_JSON:
-    case NGX_QJS_BODY_TEXT:
     default:
-        result = qjs_string_create(cx, string.start, string.length);
-        if (JS_IsException(result)) {
+        /* 'string.start' must be zero terminated. */
+        njs_chb_append_literal(&response->chain, "\0");
+        ret = njs_chb_join(&response->chain, &string);
+        if (ret != NJS_OK) {
             return JS_ThrowOutOfMemory(cx);
         }
 
-        if (magic == NGX_QJS_BODY_JSON) {
-            string.start = (u_char *) JS_ToCStringLen(cx, &string.length,
-                                                      result);
-
-            JS_FreeValue(cx, result);
-            result = JS_UNDEFINED;
-
-            if (string.start == NULL) {
-                JS_FreeCString(cx, (const char *) string.start);
-                break;
-            }
-
-            result = JS_ParseJSON(cx, (const char *) string.start,
-                                  string.length, "<input>");
-            JS_FreeCString(cx, (const char *) string.start);
-            if (JS_IsException(result)) {
-                break;
-            }
+        result = JS_ParseJSON(cx, (char *) string.start, string.length - 1,
+                              "<input>");
+        if (JS_IsException(result)) {
+            break;
         }
     }
 
