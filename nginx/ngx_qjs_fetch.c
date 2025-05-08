@@ -259,13 +259,12 @@ ngx_qjs_ext_fetch(JSContext *cx, JSValueConst this_val, int argc,
         return JS_ThrowOutOfMemory(cx);
     }
 
-    http = &fetch->http;
-
     rc = ngx_qjs_request_ctor(cx, &request, &u, argc, argv);
     if (rc != NGX_OK) {
         goto fail;
     }
 
+    http = &fetch->http;
     http->response.url = request.url;
     http->timeout = ngx_qjs_external_fetch_timeout(cx, external);
     http->buffer_size = ngx_qjs_external_buffer_size(cx, external);
@@ -457,9 +456,11 @@ fail:
 
     fetch->response_value = JS_GetException(cx);
 
+    JS_DupValue(cx, fetch->promise);
+
     ngx_qjs_fetch_done(fetch, fetch->response_value, NGX_ERROR);
 
-    return JS_DupValue(cx, fetch->promise);
+    return fetch->promise;
 }
 
 
