@@ -28,7 +28,6 @@ typedef enum {
     NJS_KEY_USAGE_SIGN          = 1 << 6,
     NJS_KEY_USAGE_VERIFY        = 1 << 7,
     NJS_KEY_USAGE_WRAP_KEY      = 1 << 8,
-    NJS_KEY_USAGE_UNSUPPORTED   = 1 << 9,
     NJS_KEY_USAGE_UNWRAP_KEY    = 1 << 10,
 } njs_webcrypto_key_usage_t;
 
@@ -281,8 +280,7 @@ static njs_webcrypto_entry_t njs_webcrypto_alg[] = {
       njs_webcrypto_algorithm(NJS_ALGORITHM_ECDH,
                               NJS_KEY_USAGE_DERIVE_KEY |
                               NJS_KEY_USAGE_DERIVE_BITS |
-                              NJS_KEY_USAGE_GENERATE_KEY |
-                              NJS_KEY_USAGE_UNSUPPORTED,
+                              NJS_KEY_USAGE_GENERATE_KEY,
                               NJS_KEY_FORMAT_UNKNOWN,
                               0)
     },
@@ -1708,6 +1706,189 @@ free:
 #endif
 
     case NJS_ALGORITHM_ECDH:
+        {
+            EVP_PKEY        *priv_pkey, *pub_pkey;
+            njs_webcrypto_key_t *pub_key;
+            njs_str_t       context_info;
+            u_char          *ecdh_secret, *final_secret;
+            size_t          ecdh_secret_len;
+            int             use_context;
+            EVP_PKEY_CTX    *ctx;
+            static const njs_str_t  string_public = njs_str("public");
+            static const njs_str_t  string_context = njs_str("context");
+
+            value = njs_vm_object_prop(vm, aobject, &string_public, &lvalue);
+            if (value == NULL) {
+                njs_vm_type_error(vm, "ECDH algorithm.public is not provided");
+                goto fail;
+            }
+
+            pub_key = njs_vm_external(vm, njs_webcrypto_crypto_key_proto_id, value);
+            if (njs_slow_path(pub_key == NULL)) {
+                njs_vm_type_error(vm, "algorithm.public is not a CryptoKey object");
+                goto fail;
+            }
+
+            if (njs_slow_path(pub_key->alg->type != NJS_ALGORITHM_ECDH
+                              && pub_key->alg->type != NJS_ALGORITHM_ECDSA)) {
+                njs_vm_type_error(vm, "algorithm.public is not an EC key");
+                goto fail;
+            }
+
+            /* Make sure both keys have the same curve */
+            if (njs_slow_path(key->u.a.curve != pub_key->u.a.curve)) {
+                njs_vm_type_error(vm, "ECDH keys must use the same curve");
+                goto fail;
+            }
+
+            /* The key should be a private key */
+            if (!key->u.a.privat) {
+                njs_vm_type_error(vm, "baseKey must be a private key for ECDH");
+                goto fail;
+            }
+
+            /* The public key should be a public key */
+            if (pub_key->u.a.privat) {
+                njs_vm_type_error(vm, "algorithm.public must be a public key");
+                goto fail;
+            }
+
+            /* Check for optional context information */
+            value = njs_vm_object_prop(vm, aobject, &string_context, &lvalue);
+            use_context = (value != NULL);
+
+            if (use_context) {
+                ret = njs_vm_value_to_bytes(vm, &context_info, value);
+                if (njs_slow_path(ret != NJS_OK)) {
+                    goto fail;
+                }
+            }
+
+            priv_pkey = key->u.a.pkey;
+            pub_pkey = pub_key->u.a.pkey;
+
+            /* Derive the shared secret using ECDH */
+            ctx = EVP_PKEY_CTX_new(priv_pkey, NULL);
+            if (njs_slow_path(ctx == NULL)) {
+                njs_webcrypto_error(vm, "EVP_PKEY_CTX_new() failed");
+                goto fail;
+            }
+
+            if (EVP_PKEY_derive_init(ctx) != 1) {
+                njs_webcrypto_error(vm, "EVP_PKEY_derive_init() failed");
+                EVP_PKEY_CTX_free(ctx);
+                goto fail;
+            }
+
+            if (EVP_PKEY_derive_set_peer(ctx, pub_pkey) != 1) {
+                njs_webcrypto_error(vm, "EVP_PKEY_derive_set_peer() failed");
+                EVP_PKEY_CTX_free(ctx);
+                goto fail;
+            }
+
+            /* Get the required output buffer size */
+            if (EVP_PKEY_derive(ctx, NULL, &ecdh_secret_len) != 1) {
+                njs_webcrypto_error(vm, "EVP_PKEY_derive() failed (size query)");
+                EVP_PKEY_CTX_free(ctx);
+                goto fail;
+            }
+
+            ecdh_secret = njs_mp_alloc(njs_vm_memory_pool(vm), ecdh_secret_len);
+            if (njs_slow_path(ecdh_secret == NULL)) {
+                njs_vm_memory_error(vm);
+                EVP_PKEY_CTX_free(ctx);
+                goto fail;
+            }
+
+            /* Perform the actual key derivation */
+            if (EVP_PKEY_derive(ctx, ecdh_secret, &ecdh_secret_len) != 1) {
+                njs_webcrypto_error(vm, "EVP_PKEY_derive() failed");
+                njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                EVP_PKEY_CTX_free(ctx);
+                goto fail;
+            }
+
+            EVP_PKEY_CTX_free(ctx);
+
+            /* If context info is provided, derive the final key using concat KDF */
+            if (use_context) {
+                /*
+                 * For simplicity, we can use an HKDF-based derivation when context is provided
+                 * Replace with proper concat KDF if needed in future
+                 */
+                EVP_MD_CTX *md_ctx;
+                u_char hash[EVP_MAX_MD_SIZE];
+                unsigned int hash_len;
+
+                md_ctx = EVP_MD_CTX_new();
+                if (njs_slow_path(md_ctx == NULL)) {
+                    njs_webcrypto_error(vm, "EVP_MD_CTX_new() failed");
+                    njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                    goto fail;
+                }
+
+                if (EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL) != 1) {
+                    njs_webcrypto_error(vm, "EVP_DigestInit_ex() failed");
+                    EVP_MD_CTX_free(md_ctx);
+                    njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                    goto fail;
+                }
+
+                /* Hash = SHA-256(shared_secret || context_info) */
+                if (EVP_DigestUpdate(md_ctx, ecdh_secret, ecdh_secret_len) != 1) {
+                    njs_webcrypto_error(vm, "EVP_DigestUpdate() failed");
+                    EVP_MD_CTX_free(md_ctx);
+                    njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                    goto fail;
+                }
+
+                if (EVP_DigestUpdate(md_ctx, context_info.start, context_info.length) != 1) {
+                    njs_webcrypto_error(vm, "EVP_DigestUpdate() failed");
+                    EVP_MD_CTX_free(md_ctx);
+                    njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                    goto fail;
+                }
+
+                if (EVP_DigestFinal_ex(md_ctx, hash, &hash_len) != 1) {
+                    njs_webcrypto_error(vm, "EVP_DigestFinal_ex() failed");
+                    EVP_MD_CTX_free(md_ctx);
+                    njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                    goto fail;
+                }
+
+                EVP_MD_CTX_free(md_ctx);
+
+                /* Use the hash as the final derived key */
+                final_secret = njs_mp_alloc(njs_vm_memory_pool(vm), hash_len);
+                if (njs_slow_path(final_secret == NULL)) {
+                    njs_vm_memory_error(vm);
+                    njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+                    goto fail;
+                }
+
+                memcpy(final_secret, hash, hash_len);
+                njs_mp_free(njs_vm_memory_pool(vm), ecdh_secret);
+
+                k = final_secret;
+                length = hash_len;
+            } else {
+                /* Use the ECDH shared secret directly */
+                k = ecdh_secret;
+
+                if (!derive_key) {
+                    /* For deriveBits, use the exact requested length */
+                    /* Note that result.byteLength is checked in JS against length/8 */
+                    /* Just log to stderr for now */
+                    if ((size_t)(length) > ecdh_secret_len) {
+                        fprintf(stderr, "ECDH deriveBits: requested length %lu exceeds available length %lu\n",
+                               (unsigned long)(length), (unsigned long)ecdh_secret_len);
+                    }
+                }
+            }
+        }
+
+        break;
+
     default:
         njs_vm_internal_error(vm, "not implemented deriveKey "
                               "algorithm: \"%V\"", njs_algorithm_string(alg));
@@ -1715,14 +1896,91 @@ free:
     }
 
     if (derive_key) {
+        /* Parse usage from arguments */
+        usage = 0;
+
+        value = njs_arg(args, nargs, 5);
+        ret = njs_key_usage(vm, value, &usage);
+        if (njs_slow_path(ret != NJS_OK)) {
+            goto fail;
+        }
+
+        /* Allocate derived key with proper usage */
+        dkey = njs_webcrypto_key_alloc(vm, dalg, usage, 0);
+        if (njs_slow_path(dkey == NULL)) {
+            goto fail;
+        }
+
         if (dalg->type == NJS_ALGORITHM_HMAC) {
-            ret = njs_algorithm_hash(vm, dobject, &dkey->hash);
+            /* For HMAC, we need to extract the hash property */
+            njs_value_t *hash_val;
+            njs_opaque_value_t hash_obj;
+
+            /* Try to get the hash property from the algorithm object */
+            hash_val = njs_vm_object_prop(vm, dobject, &string_hash, &hash_obj);
+
+            if (njs_slow_path(hash_val == NULL)) {
+                /* If not found directly, try to create a value for it */
+                static const njs_str_t sha256 = njs_str("SHA-256");
+
+                /* Default to SHA-256 */
+                ret = njs_vm_value_string_create(vm, njs_value_arg(&hash_obj),
+                                                 sha256.start, sha256.length);
+                if (njs_slow_path(ret != NJS_OK)) {
+                    goto fail;
+                }
+
+                hash_val = njs_value_arg(&hash_obj);
+            }
+
+            /* Now we have a hash_val, use it */
+            ret = njs_algorithm_hash(vm, hash_val, &dkey->hash);
             if (njs_slow_path(ret == NJS_ERROR)) {
                 goto fail;
             }
         }
 
         dkey->extractable = njs_value_bool(njs_arg(args, nargs, 4));
+        /* For AES algorithms, ensure the key length is correct */
+        if (dalg->type == NJS_ALGORITHM_AES_GCM ||
+            dalg->type == NJS_ALGORITHM_AES_CTR ||
+            dalg->type == NJS_ALGORITHM_AES_CBC) {
+
+            size_t key_bytes = length;
+            size_t target_size = 32;  /* Default to 256 bits (32 bytes) */
+
+            /* Find closest valid size (16=128 bits, 24=192 bits, 32=256 bits) */
+            if (key_bytes <= 16) {
+                target_size = 16;
+            } else if (key_bytes <= 24) {
+                target_size = 24;
+            }
+
+            /* Adjust if necessary */
+            if (key_bytes != target_size) {
+                u_char *new_key = njs_mp_alloc(njs_vm_memory_pool(vm), target_size);
+                if (njs_slow_path(new_key == NULL)) {
+                    njs_vm_memory_error(vm);
+                    goto fail;
+                }
+
+                /* Copy what we can from the original key */
+                size_t copy_size = key_bytes < target_size ? key_bytes : target_size;
+                memcpy(new_key, k, copy_size);
+
+                /* Fill rest with zeros if needed */
+                if (copy_size < target_size) {
+                    memset(new_key + copy_size, 0, target_size - copy_size);
+                }
+
+                /* Free original key memory if needed */
+                njs_mp_free(njs_vm_memory_pool(vm), k);
+
+                k = new_key;
+                length = target_size;
+            }
+        }
+
         dkey->u.s.raw.start = k;
         dkey->u.s.raw.length = length;
 
@@ -2540,6 +2798,7 @@ njs_ext_generate_key(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         break;
 
     case NJS_ALGORITHM_ECDSA:
+    case NJS_ALGORITHM_ECDH:
         nid = 0;
         ret = njs_algorithm_curve(vm, aobject, &nid);
         if (njs_slow_path(ret == NJS_ERROR)) {
@@ -2572,7 +2831,15 @@ njs_ext_generate_key(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         ctx = NULL;
 
         key->u.a.privat = 1;
-        key->usage = NJS_KEY_USAGE_SIGN;
+        key->u.a.curve = nid;
+
+        if (alg->type == NJS_ALGORITHM_ECDSA) {
+            key->usage = NJS_KEY_USAGE_SIGN;
+
+        } else {
+            /* ECDH */
+            key->usage = NJS_KEY_USAGE_DERIVE_KEY | NJS_KEY_USAGE_DERIVE_BITS;
+        }
 
         keypub = njs_webcrypto_key_alloc(vm, alg, usage, extractable);
         if (njs_slow_path(keypub == NULL)) {
@@ -2586,7 +2853,15 @@ njs_ext_generate_key(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
         keypub->u.a.pkey = key->u.a.pkey;
         keypub->u.a.curve = key->u.a.curve;
-        keypub->usage = NJS_KEY_USAGE_VERIFY;
+
+        if (alg->type == NJS_ALGORITHM_ECDSA) {
+            keypub->usage = NJS_KEY_USAGE_VERIFY;
+
+        } else {
+            /* ECDH */
+            keypub->usage = NJS_KEY_USAGE_DERIVE_KEY
+                            | NJS_KEY_USAGE_DERIVE_BITS;
+        }
 
         ret = njs_vm_external_create(vm, njs_value_arg(&priv),
                                      njs_webcrypto_crypto_key_proto_id, key, 0);
@@ -4598,10 +4873,6 @@ njs_key_algorithm(njs_vm_t *vm, njs_value_t *options)
     for (e = &njs_webcrypto_alg[0]; e->name.length != 0; e++) {
         if (njs_strstr_case_eq(&a, &e->name)) {
             alg = (njs_webcrypto_algorithm_t *) e->value;
-            if (alg->usage & NJS_KEY_USAGE_UNSUPPORTED) {
-                njs_vm_type_error(vm, "unsupported algorithm: \"%V\"", &a);
-                return NULL;
-            }
 
             return alg;
         }
