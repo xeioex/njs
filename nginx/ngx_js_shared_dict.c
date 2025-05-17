@@ -1366,6 +1366,10 @@ ngx_js_dict_set(njs_vm_t *vm, ngx_js_dict_t *dict, ngx_str_t *key,
 
     ngx_rwlock_unlock(&dict->sh->rwlock);
 
+    if (dict->state_file.data && !dict->save_event.timer_set) {
+        ngx_add_timer(&dict->save_event, 1000);
+    }
+
     return NGX_OK;
 
 memory_error:
@@ -1718,22 +1722,94 @@ ngx_js_dict_evict(ngx_js_dict_t *dict, ngx_int_t count)
 static ngx_int_t
 ngx_js_dict_render_json(ngx_js_dict_t *dict, njs_chb_t *chain)
 {
-    njs_chb_append_literal(chain,"{");
+    u_char              *p, *dst;
+    size_t               len;
+    ngx_msec_t           now;
+    ngx_time_t          *tp;
+    ngx_rbtree_t        *rbtree;
+    ngx_rbtree_node_t   *rn;
+    ngx_js_dict_node_t  *node;
 
-    for (int i = 0; i < 128; i++) {
-        njs_chb_append_literal(chain,"\"key");
-        njs_chb_sprintf(chain, 10, "%d", i);
-        njs_chb_append_literal(chain,"\"");
-        njs_chb_append_literal(chain,":");
-        njs_chb_append_literal(chain,"\"value\"");
-        if (i == 127) {
-            break;
+    tp = ngx_timeofday();
+    now = tp->sec * 1000 + tp->msec;
+
+    rbtree = &dict->sh->rbtree;
+
+    njs_chb_append_literal(chain,"{\n");
+
+    for (rn = ngx_rbtree_min(rbtree->root, rbtree->sentinel);
+         rn;
+         rn = ngx_rbtree_next(rbtree, rn))
+    {
+        node = (ngx_js_dict_node_t *) rn;
+
+        if (dict->timeout && now >= node->expire.key) {
+            continue;
         }
 
-        njs_chb_append_literal(chain,",");
+        len = node->sn.str.len + sizeof("  \"\": {\n");
+        dst = njs_chb_reserve(chain, len);
+        if (dst == NULL) {
+            return NGX_ERROR;
+        }
+
+        p = njs_sprintf(dst, dst + len, "  \"%*s\": {\n", node->sn.str.len,
+                        node->sn.str.data);
+        njs_chb_written(chain, p - dst);
+
+        if (dict->type == NGX_JS_DICT_TYPE_STRING) {
+            len = node->value.str.len + sizeof("    \"value\": \"\"");
+            dst = njs_chb_reserve(chain, len);
+            if (dst == NULL) {
+                return NGX_ERROR;
+            }
+
+            p = njs_sprintf(dst, dst + len, "    \"value\": \"%*s\"",
+                            node->value.str.len, node->value.str.data);
+            njs_chb_written(chain, p - dst);
+
+        } else {
+            len = sizeof("    \"value\": .") + 18 + 6;
+            dst = njs_chb_reserve(chain, len);
+            if (dst == NULL) {
+                return NGX_ERROR;
+            }
+
+            p = njs_sprintf(dst, dst + len, "    \"value\": %.6f",
+                            node->value.number);
+            njs_chb_written(chain, p - dst);
+        }
+
+        if (dict->timeout) {
+            len = sizeof(",\n    \"expire\": 1000000000\n");
+            dst = njs_chb_reserve(chain, len);
+            if (dst == NULL) {
+                return NGX_ERROR;
+            }
+
+            p = njs_sprintf(dst, dst + len, ",\n    \"expire\": %i",
+                            node->expire.key);
+            njs_chb_written(chain, p - dst);
+
+        } else {
+            njs_chb_append_literal(chain, "\n");
+        }
+
+        njs_chb_append_literal(chain, "  }\n");
+
+        if (rn->left != rbtree->sentinel) {
+            len = sizeof(",\n");
+            dst = njs_chb_reserve(chain, len);
+            if (dst == NULL) {
+                return NGX_ERROR;
+            }
+
+            p = njs_sprintf(dst, dst + len, ",\n");
+            njs_chb_written(chain, p - dst);
+        }
     }
 
-    njs_chb_append_literal(chain,"}");
+    njs_chb_append_literal(chain, "}\n");
 
     return NGX_OK;
 }
