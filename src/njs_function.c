@@ -675,11 +675,12 @@ njs_function_frame_free(njs_vm_t *vm, njs_native_frame_t *native)
 njs_int_t
 njs_function_frame_save(njs_vm_t *vm, njs_frame_t *frame, u_char *pc)
 {
-    size_t              args_count, value_count, n;
-    njs_value_t         *start, *end, *p, **new, *value, **local;
-    njs_function_t      *function;
+    void                   *start, *end;
+    size_t                 args_count, value_count, n;
+    njs_value_t            **map, *value, **current_map;
+    njs_function_t         *function;
+    njs_native_frame_t     *active, *native;
     njs_function_lambda_t  *lambda;
-    njs_native_frame_t  *active, *native;
 
     *frame = *vm->active_frame;
 
@@ -697,33 +698,50 @@ njs_function_frame_save(njs_vm_t *vm, njs_frame_t *frame, u_char *pc)
     args_count = njs_max(native->nargs, lambda->nargs);
     value_count = args_count + lambda->nlocal;
 
-    new = (njs_value_t **) ((u_char *) native + NJS_FRAME_SIZE);
-    value = (njs_value_t *) (new + value_count);
+    /*
+     * We need to save the current frame state because it will be freed
+     * when the function returns.
+     *
+     * Frame has the following layout:
+     *  njs_frame_t | p0 , p2, ..., pn | v0, v1, ..., vn
+     *  where:
+     *  p0, p1, ..., pn - pointers to arguments and locals,
+     *  v0, v1, ..., vn - values of arguments and locals.
+     *  n - number of arguments + locals. See njs_function_lambda_frame()
+     *  for details.
+     *
+     *  Normally, the pointers point to the values directly after them,
+     *  but if a value was captured as a closure by an inner function,
+     *  pn points to a value allocated from the heap.
+     *
+     *  To detect whether a value is captured as a closure,
+     *  we check whether the pointer is within the frame. In this case
+     *  the pointer is copied as is because the value it points to
+     *  is already allocated in the heap and will not be freed.
+     *  See njs_function_capture_closure() for details.
+     */
+
+    start = active;
+    end = active->free;
+
+    map = (njs_value_t **) ((u_char *) native + NJS_FRAME_SIZE);
+    value = (njs_value_t *) (map + value_count);
+
+    current_map = (njs_value_t **) ((u_char *) active + NJS_FRAME_SIZE);
+
+    for (n = 0; n < value_count; n++) {
+        if (start <= (void *) current_map[n] && (void *) current_map[n] < end) {
+            map[n] = &value[n];
+            njs_value_assign(&value[n], current_map[n]);
+
+        } else {
+            map[n] = current_map[n];
+        }
+    }
 
     native->arguments = value;
-    native->local = new + njs_function_frame_args_count(active);
+    native->local = map + args_count;
     native->pc = pc;
-
-    start = njs_function_frame_values(active, &end);
-    p = native->arguments;
-
-    while (start < end) {
-        njs_value_assign(p, start++);
-        *new++ = p++;
-    }
-
-    /* Move all arguments. */
-
-    p = native->arguments;
-    local = native->local + 1 /* this */;
-
-    for (n = 0; n < function->args_count; n++) {
-        if (!njs_is_valid(p)) {
-            njs_set_undefined(p);
-        }
-
-        *local++ = p++;
-    }
 
     return NJS_OK;
 }
