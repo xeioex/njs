@@ -4438,6 +4438,45 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("Array.prototype.join.call(new Uint8Array([0,1,2]))"),
       njs_str("0,1,2") },
 
+    /* Enhanced Array.prototype.join optimization tests (fast path handling) */
+
+    { njs_str("['a', 'b', 'c'].join(',')"),
+      njs_str("a,b,c") },
+
+    { njs_str("[1, 2.5, 3, 4.75].join(',')"),
+      njs_str("1,2.5,3,4.75") },
+
+    { njs_str("[true, false, true].join(',')"),
+      njs_str("true,false,true") },
+
+    { njs_str("['a', 1, true, 'b', 2.5, false].join(',')"),
+      njs_str("a,1,true,b,2.5,false") },
+
+    { njs_str("['a', null, 'c', undefined, 'e'].join(',')"),
+      njs_str("a,,c,,e") },
+
+    { njs_str("[NaN, Infinity, -Infinity].join(',')"),
+      njs_str("NaN,Infinity,-Infinity") },
+
+    { njs_str("['a', {}, 'c'].join(',')"),
+      njs_str("a,[object Object],c") },
+
+    { njs_str("['a', 1, true, 'b'].join(' | ')"),
+      njs_str("a | 1 | true | b") },
+
+    { njs_str("[1234567890, 0.123456789, 1.23e-10, 9.87e+20].join(',')"),
+      njs_str("1234567890,0.123456789,1.23e-10,987000000000000000000") },
+
+    { njs_str("[].join(',')"),
+      njs_str("") },
+
+    { njs_str("[42].join(',')"),
+      njs_str("42") },
+
+    { njs_str("[0, -0, 1e-100, 1e100].join(',')"),
+      njs_str("0,0,1e-100,1e+100") },
+
+
     { njs_str("var a = []; a[5] = 5; a"),
       njs_str(",,,,,5") },
 

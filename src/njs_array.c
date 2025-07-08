@@ -1640,12 +1640,19 @@ static njs_int_t
 njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_index_t unused, njs_value_t *retval)
 {
-    u_char             *p;
-    int64_t            i, size, len, length;
+    char               *np, *np_end;
+    double             num;
+    u_char             *p, *dst;
+    int64_t            i, size, len, length, sep_len;
+    uint64_t           sz;
     njs_int_t          ret;
     njs_chb_t          chain;
     njs_value_t        *value, *this, entry;
     njs_string_prop_t  separator, string;
+    njs_bool_t         use_chain;
+    char               buf[512];
+
+#define NJS_SZ_LAST    64
 
     this = njs_argument(args, 0);
 
@@ -1696,7 +1703,171 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     value = &entry;
 
+    /*
+     * Fast strings optimization: pre-calculate sizes and cache number
+     * conversions similar to String.prototype.concat
+     */
+    size = 0;
+    use_chain = 0;
+    sep_len = separator.length;
+
+    np = buf;
+    np_end = buf + sizeof(buf);
+    *np = 0;
+
+    for (i = 0; i < len; i++) {
+        ret = njs_value_property_i64(vm, this, i, value);
+        if (njs_slow_path(ret == NJS_ERROR)) {
+            return ret;
+        }
+
+        if (!njs_is_null_or_undefined(value)) {
+            if (njs_is_string(value)) {
+                (void) njs_string_prop(vm, &string, value);
+                size += string.size;
+                length += string.length;
+
+            } else if (njs_is_number(value)) {
+                num = njs_number(value);
+
+                if (isnan(num)) {
+                    size += njs_length("NaN");
+                    length += njs_length("NaN");
+
+                } else if (isinf(num)) {
+                    if (num < 0) {
+                        size += njs_length("-Infinity");
+                        length += njs_length("-Infinity");
+
+                    } else {
+                        size += njs_length("Infinity");
+                        length += njs_length("Infinity");
+                    }
+
+                } else {
+                    sz = njs_dtoa(num, np + sizeof(uint8_t));
+
+                    if (*np == 0) {
+                        if (np + sizeof(uint8_t) + sz
+                            < np_end - NJS_DTOA_MAX_LEN - sizeof(uint8_t))
+                        {
+                            *np = (uint8_t) sz;
+                            np += sizeof(uint8_t) + sz;
+                            *np = 0;
+
+                        } else {
+                            *np = NJS_SZ_LAST;
+                        }
+                    }
+
+                    size += sz;
+                    length += sz;
+                }
+
+            } else if (njs_is_boolean(value)) {
+                if (njs_is_true(value)) {
+                    size += njs_length("true");
+                    length += njs_length("true");
+                } else {
+                    size += njs_length("false");
+                    length += njs_length("false");
+                }
+
+            } else {
+                /* Complex types need chain buffer */
+                use_chain = 1;
+                break;
+            }
+        }
+
+        if (i < len - 1) {
+            size += separator.size;
+            length += sep_len;
+        }
+
+        if (njs_slow_path(length > NJS_STRING_MAX_LENGTH)) {
+            njs_range_error(vm, "invalid string length");
+            return NJS_ERROR;
+        }
+    }
+
+    if (!use_chain) {
+        /*
+         * Fast path: all values are strings, numbers, booleans, or
+         * null/undefined. Pre-allocate exact size and copy directly with cached
+         * number conversions.
+         */
+        p = njs_string_alloc(vm, retval, size, length);
+        if (njs_slow_path(p == NULL)) {
+            return NJS_ERROR;
+        }
+
+        dst = p;
+        np = buf;
+
+        for (i = 0; i < len; i++) {
+            ret = njs_value_property_i64(vm, this, i, value);
+            if (njs_slow_path(ret == NJS_ERROR)) {
+                return ret;
+            }
+
+            if (!njs_is_null_or_undefined(value)) {
+                if (njs_is_string(value)) {
+                    (void) njs_string_prop(vm, &string, value);
+                    dst = njs_cpymem(dst, string.start, string.size);
+
+                } else if (njs_is_number(value)) {
+                    num = njs_number(value);
+
+                    if (isnan(num)) {
+                        dst = njs_cpymem(dst, "NaN", njs_length("NaN"));
+
+                    } else if (isinf(num)) {
+                        if (num < 0) {
+                            dst = njs_cpymem(dst, "-Infinity",
+                                             njs_length("-Infinity"));
+
+                        } else {
+                            dst = njs_cpymem(dst, "Infinity",
+                                             njs_length("Infinity"));
+                        }
+
+                    } else {
+                        if (*np != NJS_SZ_LAST) {
+                            sz = *np++;
+                            dst = njs_cpymem(dst, np, sz);
+                            np += sz;
+
+                        } else {
+                            sz = njs_dtoa(num, (char *) dst);
+                            dst += sz;
+                        }
+                    }
+
+                } else if (njs_is_boolean(value)) {
+                    if (njs_is_true(value)) {
+                        dst = njs_cpymem(dst, "true", njs_length("true"));
+                    } else {
+                        dst = njs_cpymem(dst, "false", njs_length("false"));
+                    }
+                }
+            }
+
+            if (i < len - 1) {
+                dst = njs_cpymem(dst, separator.start, separator.size);
+            }
+        }
+
+        return NJS_OK;
+    }
+
+    /*
+     * Slow path: need to convert complex types.
+     * Use chain buffer for memory efficiency.
+     */
     NJS_CHB_MP_INIT(&chain, njs_vm_memory_pool(vm));
+
+    length = 0;
 
     for (i = 0; i < len; i++) {
         ret = njs_value_property_i64(vm, this, i, value);
@@ -1720,8 +1891,10 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
             }
         }
 
-        length += separator.length;
-        njs_chb_append(&chain, separator.start, separator.size);
+        if (i < len - 1) {
+            length += sep_len;
+            njs_chb_append(&chain, separator.start, separator.size);
+        }
 
         if (njs_slow_path(length > NJS_STRING_MAX_LENGTH)) {
             njs_range_error(vm, "invalid string length");
@@ -1729,15 +1902,11 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         }
     }
 
-    njs_chb_drop(&chain, separator.size);
-
     size = njs_chb_size(&chain);
     if (njs_slow_path(size < 0)) {
         njs_memory_error(vm);
         return NJS_ERROR;
     }
-
-    length -= separator.length;
 
     p = njs_string_alloc(vm, retval, size, length);
     if (njs_slow_path(p == NULL)) {
@@ -1748,6 +1917,8 @@ njs_array_prototype_join(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_chb_destroy(&chain);
 
     return NJS_OK;
+
+#undef NJS_SZ_LAST
 }
 
 
