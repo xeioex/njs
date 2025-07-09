@@ -221,7 +221,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
             return NULL;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
@@ -241,7 +241,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
             return NULL;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 0;
@@ -263,7 +263,7 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         }
 
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 0;

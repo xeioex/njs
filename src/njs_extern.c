@@ -78,7 +78,7 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
             return NJS_ERROR;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = external->enumerable;
@@ -234,7 +234,7 @@ njs_external_prop_handler(njs_vm_t *vm, njs_object_prop_t *self,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = self->enumerable;

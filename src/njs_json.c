@@ -405,7 +405,7 @@ njs_json_parse_object(njs_json_parse_ctx_t *ctx, njs_value_t *value,
             return NULL;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
@@ -1622,7 +1622,7 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;

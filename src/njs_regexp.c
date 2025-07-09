@@ -1049,7 +1049,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto insert_fail;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
+
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
     prop->configurable = 1;
@@ -1073,7 +1074,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto insert_fail;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
+
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
     prop->configurable = 1;
@@ -1087,7 +1089,8 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
         goto insert_fail;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
+
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
     prop->configurable = 1;
@@ -1120,7 +1123,7 @@ njs_regexp_exec_result(njs_vm_t *vm, njs_value_t *r, njs_utf8_t utf8,
                 goto insert_fail;
             }
 
-            prop = (njs_object_prop_t *)(lhq.value);
+            prop = lhq.value;
             prop->type = NJS_PROPERTY;
             prop->enumerable = 1;
             prop->configurable = 1;

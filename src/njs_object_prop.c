@@ -114,13 +114,12 @@ njs_object_property_add(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
     prop->configurable = 1;
     prop->writable = 1;
-
     prop->u.value = njs_value_invalid;
 
     return prop;
@@ -864,7 +863,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
             return NJS_ERROR;
         }
 
-        pr = (njs_object_prop_t *)(lhq.value);
+        pr = lhq.value;
         pr->type = NJS_PROPERTY;
         pr->enumerable = 1;
         pr->configurable = 1;
@@ -881,7 +880,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
             return NJS_ERROR;
         }
 
-        pr = (njs_object_prop_t *)(lhq.value);
+        pr = lhq.value;
         pr->type = NJS_PROPERTY;
         pr->enumerable = 1;
         pr->configurable = 1;
@@ -899,7 +898,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
             return NJS_ERROR;
         }
 
-        pr = (njs_object_prop_t *)(lhq.value);
+        pr = lhq.value;
         pr->type = NJS_PROPERTY;
         pr->enumerable = 1;
         pr->configurable = 1;
@@ -919,7 +918,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
             return NJS_ERROR;
         }
 
-        pr = (njs_object_prop_t *)(lhq.value);
+        pr = lhq.value;
         pr->type = NJS_PROPERTY;
         pr->enumerable = 1;
         pr->configurable = 1;
@@ -942,7 +941,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         return NJS_ERROR;
     }
 
-    pr = (njs_object_prop_t *)(lhq.value);
+    pr = lhq.value;
     pr->type = NJS_PROPERTY;
     pr->enumerable = 1;
     pr->configurable = 1;
@@ -960,7 +959,7 @@ njs_object_prop_descriptor(njs_vm_t *vm, njs_value_t *dest,
         return NJS_ERROR;
     }
 
-    pr = (njs_object_prop_t *)(lhq.value);
+    pr = lhq.value;
     pr->type = NJS_PROPERTY;
     pr->enumerable = 1;
     pr->configurable = 1;
@@ -1031,7 +1030,7 @@ njs_object_props_init(njs_vm_t *vm, const njs_object_init_t* init,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
     prop->enumerable = base->enumerable;
     prop->configurable = base->configurable;
     prop->writable = base->writable;

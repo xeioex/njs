@@ -79,7 +79,7 @@ njs_module_find(njs_vm_t *vm, njs_str_t *name, njs_bool_t shared)
             return NULL;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->u.mod = module;
 
@@ -123,7 +123,7 @@ njs_module_add(njs_vm_t *vm, njs_str_t *name, njs_value_t *value)
         return NULL;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->u.mod = module;
 

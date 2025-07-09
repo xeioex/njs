@@ -449,7 +449,7 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *) (lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
@@ -830,7 +830,7 @@ njs_global_this_object(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *) (lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = self->enumerable;
@@ -880,7 +880,7 @@ njs_top_level_object(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *) (lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = self->enumerable;
@@ -928,7 +928,7 @@ njs_top_level_constructor(njs_vm_t *vm, njs_object_prop_t *self,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *) (lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
@@ -1217,7 +1217,7 @@ njs_process_object_argv(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *) (lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
@@ -1304,7 +1304,7 @@ njs_env_hash_init(njs_vm_t *vm, njs_flathsh_t *hash, char **environment)
             continue;
         }
 
-        prop = (njs_object_prop_t *) (lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
@@ -1349,7 +1349,7 @@ njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *) (lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;

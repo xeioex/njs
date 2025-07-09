@@ -138,7 +138,7 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
@@ -908,7 +908,8 @@ njs_function_property_prototype_set(njs_vm_t *vm, njs_flathsh_t *hash,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
+
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
     prop->configurable = 0;

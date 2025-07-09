@@ -2134,7 +2134,8 @@ njs_vmcode_property_init(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
             return NJS_ERROR;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
+
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
         prop->configurable = 1;

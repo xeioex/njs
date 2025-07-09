@@ -926,7 +926,8 @@ njs_vm_bind2(njs_vm_t *vm, const njs_str_t *var_name, njs_object_prop_t *prop,
         return ret;
     }
 
-    obj_prop = (njs_object_prop_t *)(lhq.value);
+    obj_prop = lhq.value;
+
     obj_prop->type = prop->type;
     obj_prop->enumerable = prop->enumerable;
     obj_prop->configurable = prop->configurable;
@@ -1263,7 +1264,8 @@ njs_vm_object_alloc(njs_vm_t *vm, njs_value_t *retval, ...)
             goto done;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
+
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
         prop->configurable = 1;

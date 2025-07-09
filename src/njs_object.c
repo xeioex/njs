@@ -174,7 +174,7 @@ njs_object_hash_create(njs_vm_t *vm, njs_flathsh_t *hash,
             return NJS_ERROR;
         }
 
-        obj_prop = (njs_object_prop_t *)(lhq.value);
+        obj_prop = lhq.value;
 
         obj_prop->type = prop->desc.type;
         obj_prop->enumerable = prop->desc.enumerable;
@@ -1720,7 +1720,7 @@ njs_object_get_own_property_descriptors(njs_vm_t *vm, njs_value_t *args,
             goto done;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = lhq.value;
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
@@ -2203,7 +2203,7 @@ njs_property_prototype_create(njs_vm_t *vm, njs_flathsh_t *hash,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
@@ -2462,7 +2462,7 @@ njs_property_constructor_set(njs_vm_t *vm, njs_flathsh_t *hash,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = lhq.value;
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
