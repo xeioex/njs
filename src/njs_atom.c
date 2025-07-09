@@ -107,7 +107,7 @@ njs_atom_find_or_add(njs_vm_t *vm, u_char *key, size_t size, size_t length,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *) lhq.value;
+    prop = lhq.value;
 
     ret = njs_string_create(vm, &prop->u.value, key, size);
     if (njs_slow_path(ret != NJS_OK)) {
@@ -158,7 +158,7 @@ njs_atom_find_or_add_string(njs_vm_t *vm, njs_value_t *value,
         return NULL;
     }
 
-    prop = (njs_object_prop_t *) lhq.value;
+    prop = lhq.value;
 
     prop->u.value = *value;
 

@@ -182,12 +182,12 @@ njs_scope_value_index(njs_vm_t *vm, const njs_value_t *src, njs_uint_t runtime,
     lhq.proto = &njs_values_hash_proto;
 
     if (njs_lvlhsh_find(&vm->shared->values_hash, &lhq) == NJS_OK) {
-        value = ((njs_object_prop_t *)lhq.value)->u.val;
+        value = ((njs_object_prop_t *) lhq.value)->u.val;
 
         *index = (njs_index_t *) ((u_char *) value + sizeof(njs_value_t));
 
     } else if (runtime && njs_lvlhsh_find(&vm->values_hash, &lhq) == NJS_OK) {
-        value = ((njs_object_prop_t *)lhq.value)->u.val;
+        value = ((njs_object_prop_t *) lhq.value)->u.val;
 
         *index = (njs_index_t *) ((u_char *) value + sizeof(njs_value_t));
 
@@ -238,7 +238,7 @@ njs_scope_value_index(njs_vm_t *vm, const njs_value_t *src, njs_uint_t runtime,
             return NULL;
         }
 
-        pr = (njs_object_prop_t *)lhq.value;
+        pr = lhq.value;
         pr->u.val = value;
 
     }

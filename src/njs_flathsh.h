@@ -13,12 +13,9 @@ typedef struct {
 
 
 typedef struct {
-
     /* next_elt + property descriptor : 32 bits */
 
     uint32_t     next_elt:26;
-
-    /* property descriptor : 6 bits */
 
     uint32_t     type:3;
     uint32_t     writable:1;
@@ -27,7 +24,7 @@ typedef struct {
 
     uint32_t     key_hash;
 
-    void         *value[16/sizeof(void *)];
+    void         *value[16 / sizeof(void *)];
 } njs_flathsh_elt_t;
 
 

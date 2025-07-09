@@ -309,11 +309,9 @@ typedef enum {
 /* njs_object_prop_s: same structure and length as njs_flathsh_elt_t. */
 
 struct njs_object_prop_s {
-    /* next_elt + descr : 32 bits */
+    /* next_elt + property descriptor : 32 bits */
 
     uint32_t     next_elt:26;
-
-    /* descr : 6 bits */
 
     uint32_t     type:3;
     uint32_t     writable:1;

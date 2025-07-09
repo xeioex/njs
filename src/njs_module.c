@@ -48,11 +48,11 @@ njs_module_find(njs_vm_t *vm, njs_str_t *name, njs_bool_t shared)
     lhq.proto = &njs_modules_hash_proto;
 
     if (njs_lvlhsh_find(&vm->modules_hash, &lhq) == NJS_OK) {
-        return ((njs_object_prop_t *)lhq.value)->u.mod;
+        return ((njs_object_prop_t *) lhq.value)->u.mod;
     }
 
     if (njs_lvlhsh_find(&vm->shared->modules_hash, &lhq) == NJS_OK) {
-        shrd = ((njs_object_prop_t *)lhq.value)->u.mod;
+        shrd = ((njs_object_prop_t *) lhq.value)->u.mod;
 
         if (shared) {
             return shrd;

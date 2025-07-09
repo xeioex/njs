@@ -1284,7 +1284,7 @@ slow_path:
                 return NJS_ERROR;
             }
 
-            prop = (njs_object_prop_t *)elt;
+            prop = (njs_object_prop_t *) elt;
             prop->type = NJS_PROPERTY;
             prop->enumerable = 1;
             prop->configurable = 1;
@@ -1331,7 +1331,7 @@ slow_path:
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(pq.lhq.value);
+    prop = pq.lhq.value;
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
     prop->configurable = 1;
