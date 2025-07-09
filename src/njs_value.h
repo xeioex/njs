@@ -340,7 +340,7 @@ struct njs_object_prop_s {
         } accessor;
     } u;
 
-#define njs_prop_value(_p)      (&(_p)->u.value)
+#define njs_prop_value(_p)      (&((njs_object_prop_t *) (_p))->u.value)
 #define njs_prop_handler(_p)    (_p)->u.value.data.u.prop_handler
 #define njs_prop_ref(_p)        (_p)->u.value.data.u.value
 #define njs_prop_typed_ref(_p)  (_p)->u.value.data.u.typed_array

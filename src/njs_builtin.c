@@ -449,14 +449,12 @@ njs_builtin_traverse(njs_vm_t *vm, njs_traverse_t *traverse, void *data)
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = (njs_object_prop_t *) (lhq.value);
 
     prop->type = NJS_PROPERTY;
-
     prop->enumerable = 0;
     prop->configurable = 0;
     prop->writable = 0;
-
     prop->u.value = njs_value_null;
 
     return NJS_OK;
@@ -543,7 +541,7 @@ njs_builtin_match_native_function(njs_vm_t *vm, njs_function_t *function,
     njs_lvlhsh_each_init(&lhe, &njs_modules_hash_proto);
 
     for ( ;; ) {
-        prop = (njs_object_prop_t *)njs_flathsh_each(&vm->modules_hash, &lhe);
+        prop = (njs_object_prop_t *) njs_flathsh_each(&vm->modules_hash, &lhe);
         if (prop == NULL) {
             break;
         }
@@ -832,13 +830,12 @@ njs_global_this_object(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = (njs_object_prop_t *) (lhq.value);
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = self->enumerable;
     prop->configurable = 1;
     prop->writable = 1;
-
     prop->u.value = *retval;
 
     return NJS_OK;
@@ -883,13 +880,12 @@ njs_top_level_object(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = (njs_object_prop_t *) (lhq.value);
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = self->enumerable;
     prop->configurable = 1;
     prop->writable = 1;
-
     prop->u.value = *retval;
 
     return NJS_OK;
@@ -932,13 +928,12 @@ njs_top_level_constructor(njs_vm_t *vm, njs_object_prop_t *self,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = (njs_object_prop_t *) (lhq.value);
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 0;
     prop->configurable = 1;
     prop->writable = 1;
-
     prop->u.value = *retval;
 
     return NJS_OK;
@@ -1222,7 +1217,7 @@ njs_process_object_argv(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = (njs_object_prop_t *) (lhq.value);
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
@@ -1309,7 +1304,7 @@ njs_env_hash_init(njs_vm_t *vm, njs_flathsh_t *hash, char **environment)
             continue;
         }
 
-        prop = (njs_object_prop_t *)(lhq.value);
+        prop = (njs_object_prop_t *) (lhq.value);
 
         prop->type = NJS_PROPERTY;
         prop->enumerable = 1;
@@ -1320,7 +1315,6 @@ njs_env_hash_init(njs_vm_t *vm, njs_flathsh_t *hash, char **environment)
         if (njs_slow_path(ret != NJS_OK)) {
             return NJS_ERROR;
         }
-
     }
 
     return NJS_OK;
@@ -1355,7 +1349,7 @@ njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
         return NJS_ERROR;
     }
 
-    prop = (njs_object_prop_t *)(lhq.value);
+    prop = (njs_object_prop_t *) (lhq.value);
 
     prop->type = NJS_PROPERTY;
     prop->enumerable = 1;
@@ -1365,6 +1359,7 @@ njs_process_object_env(njs_vm_t *vm, njs_object_prop_t *pr, uint32_t unused,
     njs_set_object(njs_prop_value(prop), env);
 
     njs_value_assign(retval, njs_prop_value(prop));
+
     return NJS_OK;
 }
 
