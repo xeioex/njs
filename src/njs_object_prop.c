@@ -42,8 +42,7 @@ njs_object_prop(const njs_value_t *value, uint8_t attributes)
 
 
 static njs_object_prop_t
-njs_object_prop2(
-    njs_object_prop_type_t type, unsigned flags)
+njs_object_prop2(njs_object_prop_type_t type, unsigned flags)
 {
     njs_object_prop_t  prop;
 
@@ -165,8 +164,8 @@ njs_int_t
 njs_object_prop_define(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
     njs_value_t *value, unsigned flags)
 {
-    uint32_t              length, index, unset_enumerable, unset_configurable,
-                          unset_writable;
+    uint32_t              length, index, set_enumerable, set_configurable,
+                          set_writable;
     njs_int_t             ret;
     njs_array_t           *array;
     njs_value_t           key, retval;
@@ -175,9 +174,10 @@ njs_object_prop_define(njs_vm_t *vm, njs_value_t *object, unsigned atom_id,
     njs_property_query_t  pq;
 
 again:
-    unset_enumerable = 0;
-    unset_configurable = 0;
-    unset_writable = 0;
+
+    set_enumerable = 1;
+    set_configurable = 1;
+    set_writable = 1;
 
     njs_property_query_init(&pq, NJS_PROPERTY_QUERY_SET, 1);
 
@@ -191,11 +191,12 @@ again:
 
     switch (njs_prop_type(flags)) {
     case NJS_OBJECT_PROP_DESCRIPTOR:
-        prop = njs_descriptor_prop(vm, value, prop, &unset_enumerable,
-                                   &unset_configurable, &unset_writable);
+        prop = njs_descriptor_prop(vm, value, prop, &set_enumerable,
+                                   &set_configurable, &set_writable);
         if (njs_slow_path(prop == NULL)) {
             return NJS_ERROR;
         }
+
         break;
 
     case NJS_OBJECT_PROP_VALUE:
@@ -213,7 +214,7 @@ again:
         }
 
         _prop = njs_object_prop2(NJS_PROPERTY,
-                                flags & NJS_OBJECT_PROP_VALUE_ECW);
+                                 flags & NJS_OBJECT_PROP_VALUE_ECW);
         if (njs_slow_path(prop == NULL)) {
             return NJS_ERROR;
         }
@@ -226,12 +227,12 @@ again:
     default:
         njs_assert(njs_is_function(value));
 
-        _prop = njs_object_prop2(NJS_ACCESSOR,
-                                NJS_OBJECT_PROP_VALUE_EC);
+        _prop = njs_object_prop2(NJS_ACCESSOR, NJS_OBJECT_PROP_VALUE_EC);
         if (njs_slow_path(prop == NULL)) {
             return NJS_ERROR;
         }
-        unset_writable = 1;
+
+        set_writable = 0;
 
         if (njs_prop_type(flags) == NJS_OBJECT_PROP_GETTER) {
             njs_prop_getter(prop) = njs_function(value);
@@ -284,7 +285,7 @@ set_prop:
             }
 
         } else {
-            if (unset_writable) {
+            if (!set_writable) {
                 prop->writable = 0;
             }
 
@@ -293,11 +294,11 @@ set_prop:
             }
         }
 
-        if (unset_enumerable) {
+        if (!set_enumerable) {
             prop->enumerable = 0;
         }
 
-        if (unset_configurable) {
+        if (!set_configurable) {
             prop->configurable = 0;
         }
 
@@ -349,9 +350,9 @@ set_prop:
     case NJS_PROPERTY_PLACE_REF:
         if (prev->type == NJS_PROPERTY_REF
             && !njs_is_accessor_descriptor(prop)
-            && (unset_configurable || prop->configurable != NJS_ATTRIBUTE_FALSE)
-            && (unset_enumerable || prop->enumerable != NJS_ATTRIBUTE_FALSE)
-            && (unset_writable || prop->writable != NJS_ATTRIBUTE_FALSE))
+            && (!set_configurable || prop->configurable != NJS_ATTRIBUTE_FALSE)
+            && (!set_enumerable || prop->enumerable != NJS_ATTRIBUTE_FALSE)
+            && (!set_writable || prop->writable != NJS_ATTRIBUTE_FALSE))
         {
             if (njs_is_valid(njs_prop_value(prop))) {
                 njs_value_assign(njs_prop_ref(prev), njs_prop_value(prop));
@@ -382,9 +383,9 @@ set_prop:
             goto exception;
         }
 
-        if ((!unset_configurable && prop->configurable == NJS_ATTRIBUTE_TRUE) ||
-            (!unset_enumerable && prop->enumerable == NJS_ATTRIBUTE_FALSE) ||
-            (!unset_writable && prop->writable == NJS_ATTRIBUTE_FALSE))
+        if ((set_configurable && prop->configurable == NJS_ATTRIBUTE_TRUE)
+            || (set_enumerable && prop->enumerable == NJS_ATTRIBUTE_FALSE)
+            || (set_writable && prop->writable == NJS_ATTRIBUTE_FALSE))
         {
             goto exception;
         }
@@ -414,18 +415,18 @@ set_prop:
             goto exception;
         }
 
-        if (!unset_enumerable && prev->enumerable != prop->enumerable) {
+        if (set_enumerable && prev->enumerable != prop->enumerable) {
             goto exception;
         }
     }
 
-    if (!(!unset_writable  || njs_is_data_descriptor(prop)) &&
+    if (!(set_writable  || njs_is_data_descriptor(prop)) &&
         !njs_is_accessor_descriptor(prop))
     {
         goto done;
     }
 
-    if (njs_is_data_descriptor(prev) !=  (!unset_writable ||
+    if (njs_is_data_descriptor(prev) !=  (set_writable ||
         njs_is_data_descriptor(prop)))
     {
         if (!prev->configurable) {
@@ -459,7 +460,7 @@ set_prop:
         prev->type = prop->type;
 
     } else if (njs_is_data_descriptor(prev)
-               && (!unset_writable || njs_is_data_descriptor(prop)))
+               && (set_writable || njs_is_data_descriptor(prop)))
     {
         if (!prev->configurable && !prev->writable) {
             if (prop->writable == NJS_ATTRIBUTE_TRUE) {
@@ -495,7 +496,7 @@ done:
 
     if (njs_slow_path(njs_is_fast_array(object)
                       && pq.lhq.key_hash == NJS_ATOM_STRING_length)
-                      && (!unset_writable && prop->writable == NJS_ATTRIBUTE_FALSE))
+                      && (set_writable && prop->writable == NJS_ATTRIBUTE_FALSE))
     {
         array = njs_array(object);
         length = array->length;
@@ -559,7 +560,7 @@ done:
                     return NJS_ERROR;
                 }
 
-                if (!unset_writable) {
+                if (set_writable) {
                     prev->writable = prop->writable;
                 }
 
@@ -576,15 +577,15 @@ done:
      * attribute of the property named P of object O to the value of the field.
      */
 
-    if (!unset_writable) {
+    if (set_writable) {
         prev->writable = prop->writable;
     }
 
-    if (!unset_enumerable) {
+    if (set_enumerable) {
         prev->enumerable = prop->enumerable;
     }
 
-    if (!unset_configurable) {
+    if (set_configurable) {
         prev->configurable = prop->configurable;
     }
 
@@ -694,8 +695,8 @@ njs_prop_private_copy(njs_vm_t *vm, njs_property_query_t *pq,
 
 static njs_object_prop_t *
 njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *desc,
-    njs_object_prop_t *prop, uint32_t *unset_enumerable,
-    uint32_t *unset_configurable, uint32_t *unset_writable)
+    njs_object_prop_t *prop, uint32_t *set_enumerable,
+    uint32_t *set_configurable, uint32_t *set_writable)
 {
     njs_int_t            ret;
     njs_bool_t           data, accessor;
@@ -710,10 +711,9 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *desc,
     }
 
     *prop = njs_object_prop(&njs_value_invalid, 128);
-    *unset_enumerable = 1;
-    *unset_configurable = 1;
-    *unset_writable = 1;
-
+    *set_enumerable = 0;
+    *set_configurable = 0;
+    *set_writable = 0;
 
     data = 0;
     accessor = 0;
@@ -778,10 +778,7 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *desc,
     if (ret == NJS_OK) {
         data = 1;
         prop->writable = njs_is_true(&value);
-        *unset_writable = 0;
-
-    } else {
-        *unset_writable = 1;
+        *set_writable = 1;
     }
 
     if (accessor && data) {
@@ -799,10 +796,7 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *desc,
 
     if (ret == NJS_OK) {
         prop->enumerable = njs_is_true(&value);
-        *unset_enumerable = 0;
-
-    } else {
-        *unset_enumerable = 1;
+        *set_enumerable = 1;
     }
 
     lhq.key_hash = NJS_ATOM_STRING_configurable;
@@ -814,10 +808,7 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *desc,
 
     if (ret == NJS_OK) {
         prop->configurable = njs_is_true(&value);
-        *unset_configurable = 0;
-
-    } else {
-        *unset_configurable = 1;
+        *set_configurable = 1;
     }
 
     if (accessor) {
