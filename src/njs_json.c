@@ -411,7 +411,6 @@ njs_json_parse_object(njs_json_parse_ctx_t *ctx, njs_value_t *value,
         prop->enumerable = 1;
         prop->configurable = 1;
         prop->writable = 1;
-
         prop->u.value = prop_value;
 
         p = njs_json_skip_space(p, ctx->end);
@@ -1628,7 +1627,6 @@ njs_json_wrap_value(njs_vm_t *vm, njs_value_t *wrapper,
     prop->enumerable = 1;
     prop->configurable = 1;
     prop->writable = 1;
-
     prop->u.value = *value;
 
     return wrapper->data.u.object;

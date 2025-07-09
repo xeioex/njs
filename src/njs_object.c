@@ -2471,7 +2471,6 @@ njs_property_constructor_set(njs_vm_t *vm, njs_flathsh_t *hash,
 
     prop->u.value = *constructor;
 
-
     return njs_prop_value(prop);
 
 }

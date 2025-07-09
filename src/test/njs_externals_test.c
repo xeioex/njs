@@ -61,7 +61,7 @@ lvlhsh_unit_test_key_test(njs_lvlhsh_query_t *lhq, void *data)
     njs_str_t             name;
     njs_unit_test_prop_t  *prop;
 
-    prop = *(njs_unit_test_prop_t **)data;
+    prop = *(njs_unit_test_prop_t **) data;
     name = prop->name;
 
     if (name.length != lhq->key.length) {
@@ -135,7 +135,7 @@ lvlhsh_unit_test_add(njs_mp_t *pool, njs_unit_test_req_t *r,
     switch (njs_lvlhsh_insert(&r->hash, &lhq)) {
 
     case NJS_OK:
-        ((njs_flathsh_elt_t *)lhq.value)->value[0] = (void *) prop;
+        ((njs_flathsh_elt_t *) lhq.value)->value[0] = (void *) prop;
         return NJS_OK;
 
     case NJS_DECLINED:
@@ -292,7 +292,7 @@ njs_unit_test_r_vars(njs_vm_t *vm, njs_object_prop_t *self, uint32_t atom_id,
     ret = njs_lvlhsh_find(&r->hash, &lhq);
 
     if (ret == NJS_OK) {
-        prop = ((njs_flathsh_elt_t *)lhq.value)->value[0];
+        prop = ((njs_flathsh_elt_t *) lhq.value)->value[0];
 
         if (retval == NULL) {
             njs_value_invalid_set(njs_value_arg(&prop->value));

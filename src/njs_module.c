@@ -13,7 +13,7 @@ njs_module_hash_test(njs_lvlhsh_query_t *lhq, void *data)
 {
     njs_mod_t  *module;
 
-    module = *(njs_mod_t **)data;
+    module = *(njs_mod_t **) data;
 
     if (njs_strstr_eq(&lhq->key, &module->name)) {
         return NJS_OK;
@@ -42,17 +42,16 @@ njs_module_find(njs_vm_t *vm, njs_str_t *name, njs_bool_t shared)
     njs_object_prop_t   *prop;
     njs_lvlhsh_query_t  lhq;
 
-
     lhq.key = *name;
     lhq.key_hash = njs_djb_hash(name->start, name->length);
     lhq.proto = &njs_modules_hash_proto;
 
     if (njs_lvlhsh_find(&vm->modules_hash, &lhq) == NJS_OK) {
-        return ((njs_object_prop_t *) lhq.value)->u.mod;
+        return njs_prop_module(lhq.value);
     }
 
     if (njs_lvlhsh_find(&vm->shared->modules_hash, &lhq) == NJS_OK) {
-        shrd = ((njs_object_prop_t *) lhq.value)->u.mod;
+        shrd = njs_prop_module(lhq.value);
 
         if (shared) {
             return shrd;

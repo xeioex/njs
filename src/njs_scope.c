@@ -108,7 +108,7 @@ njs_scope_values_hash_test(njs_lvlhsh_query_t *lhq, void *data)
     njs_str_t    string;
     njs_value_t  *value;
 
-    value = *(njs_value_t **)data;
+    value = *(njs_value_t **) data;
 
     if (njs_is_string(value)) {
         /* parser strings are always initialized. */

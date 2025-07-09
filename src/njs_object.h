@@ -124,7 +124,6 @@ njs_is_data_descriptor(njs_object_prop_t *prop)
 {
     return (prop->type != NJS_ACCESSOR && njs_is_valid(njs_prop_value(prop)))
            || prop->type == NJS_PROPERTY_HANDLER;
-
 }
 
 
