@@ -8,67 +8,37 @@
 #include <njs_main.h>
 
 
-static njs_object_prop_t njs_object_prop2(
-    njs_object_prop_type_t type, unsigned flags);
 static njs_object_prop_t *njs_descriptor_prop(njs_vm_t *vm,
     const njs_value_t *desc, njs_object_prop_t *prop,
     uint32_t *unset_enumerable, uint32_t *unset_configuarble,
     uint32_t *enum_writable);
 
 
-njs_object_prop_t
-njs_object_prop(const njs_value_t *value, uint8_t attributes)
+void
+njs_object_prop_init(njs_object_prop_t *prop, njs_object_prop_type_t type,
+    uint8_t flags)
 {
-    unsigned           flags;
-    njs_object_prop_t  prop;
+    prop->next_elt = 0;
+    prop->atom_id = 0;
 
-    switch (attributes) {
-    case 0:
-    case 1:
-        flags = attributes ? NJS_OBJECT_PROP_VALUE_ECW : 0;
-        break;
-
-    default:
-        flags = NJS_OBJECT_PROP_UNSET;
-        break;
-    }
-
-    prop = njs_object_prop2(NJS_PROPERTY, flags);
-
-    njs_value_assign(njs_prop_value((&prop)), value);
-
-    return prop;
-}
-
-
-static njs_object_prop_t
-njs_object_prop2(njs_object_prop_type_t type, unsigned flags)
-{
-    njs_object_prop_t  prop;
-
-    prop.next_elt = 0;
-    prop.atom_id = 0;
-
-    prop.type = type;
+    prop->type = type;
 
     if (flags != NJS_OBJECT_PROP_UNSET) {
-        prop.enumerable = !!(flags & NJS_OBJECT_PROP_ENUMERABLE);
-        prop.configurable = !!(flags & NJS_OBJECT_PROP_CONFIGURABLE);
+        prop->enumerable = !!(flags & NJS_OBJECT_PROP_ENUMERABLE);
+        prop->configurable = !!(flags & NJS_OBJECT_PROP_CONFIGURABLE);
 
         if (type == NJS_PROPERTY) {
-            prop.writable = !!(flags & NJS_OBJECT_PROP_WRITABLE);
+            prop->writable = !!(flags & NJS_OBJECT_PROP_WRITABLE);
 
         } else {
-            prop.writable = 0;
+            prop->writable = 0;
         }
 
     } else {
-        prop.enumerable = 0;
-        prop.configurable = 0;
-        prop.writable = 0;
+        prop->enumerable = 0;
+        prop->configurable = 0;
+        prop->writable = 0;
     }
-
-    return prop;
 }
 
 
@@ -213,12 +183,8 @@ again:
             }
         }
 
-        _prop = njs_object_prop2(NJS_PROPERTY,
-                                 flags & NJS_OBJECT_PROP_VALUE_ECW);
-        if (njs_slow_path(prop == NULL)) {
-            return NJS_ERROR;
-        }
-
+        njs_object_prop_init(prop, NJS_PROPERTY,
+                              flags & NJS_OBJECT_PROP_VALUE_ECW);
         njs_value_assign(njs_prop_value(prop), value);
         break;
 
@@ -227,10 +193,7 @@ again:
     default:
         njs_assert(njs_is_function(value));
 
-        _prop = njs_object_prop2(NJS_ACCESSOR, NJS_OBJECT_PROP_VALUE_EC);
-        if (njs_slow_path(prop == NULL)) {
-            return NJS_ERROR;
-        }
+        njs_object_prop_init(prop, NJS_ACCESSOR, NJS_OBJECT_PROP_VALUE_EC);
 
         set_writable = 0;
 
@@ -324,13 +287,13 @@ set_prop:
                 njs_internal_error(vm, "lvlhsh insert failed");
                 return NJS_ERROR;
             }
-            obj_prop = (njs_object_prop_t *)(pq.lhq.value);
+
+            obj_prop = pq.lhq.value;
             obj_prop->enumerable = prop->enumerable;
             obj_prop->configurable = prop->configurable;
             obj_prop->writable = prop->writable;
             obj_prop->type = prop->type;
             obj_prop->u.value = prop->u.value;
-
         }
 
         return NJS_OK;
@@ -710,7 +673,9 @@ njs_descriptor_prop(njs_vm_t *vm, const njs_value_t *desc,
         return NULL;
     }
 
-    *prop = njs_object_prop(&njs_value_invalid, 128);
+    njs_object_prop_init(prop, NJS_PROPERTY, NJS_OBJECT_PROP_UNSET);
+    *njs_prop_value(prop) = njs_value_invalid;
+
     *set_enumerable = 0;
     *set_configurable = 0;
     *set_writable = 0;
@@ -1035,7 +1000,7 @@ njs_prop_type_string(njs_object_prop_type_t type)
 
 
 njs_int_t
-njs_object_prop_init(njs_vm_t *vm, const njs_object_init_t* init,
+njs_object_props_init(njs_vm_t *vm, const njs_object_init_t* init,
     njs_object_prop_t *base, uint32_t atom_id, njs_value_t *value,
     njs_value_t *retval)
 {

@@ -941,12 +941,13 @@ njs_int_t
 njs_vm_bind(njs_vm_t *vm, const njs_str_t *var_name, const njs_value_t *value,
     njs_bool_t shared)
 {
-    njs_object_prop_t  _prop;
-    njs_object_prop_t  *prop = &_prop;
+    njs_object_prop_t  prop;
 
-    _prop = njs_object_prop(value, 1);
+    njs_object_prop_init(&prop, NJS_PROPERTY,
+                         NJS_OBJECT_PROP_VALUE_ECW);
+    *njs_prop_value(&prop) = *value;
 
-    return njs_vm_bind2(vm, var_name, prop, shared);
+    return njs_vm_bind2(vm, var_name, &prop, shared);
 }
 
 
@@ -955,19 +956,18 @@ njs_vm_bind_handler(njs_vm_t *vm, const njs_str_t *var_name,
     njs_prop_handler_t handler, uint16_t magic16, uint32_t magic32,
     njs_bool_t shared)
 {
-    njs_object_prop_t  _prop;
-    njs_object_prop_t  *prop = &_prop;
+    njs_object_prop_t  prop;
 
-    _prop = njs_object_prop(&njs_value_invalid, 1);
+    njs_object_prop_init(&prop, NJS_PROPERTY_HANDLER,
+                         NJS_OBJECT_PROP_VALUE_ECW);
 
-    prop->type = NJS_PROPERTY_HANDLER;
-    prop->u.value.type = NJS_INVALID;
-    prop->u.value.data.truth = 1;
-    njs_prop_magic16(prop) = magic16;
-    njs_prop_magic32(prop) = magic32;
-    njs_prop_handler(prop) = handler;
+    prop.u.value.type = NJS_INVALID;
+    prop.u.value.data.truth = 1;
+    njs_prop_magic16(&prop) = magic16;
+    njs_prop_magic32(&prop) = magic32;
+    njs_prop_handler(&prop) = handler;
 
-    return njs_vm_bind2(vm, var_name, prop, shared);
+    return njs_vm_bind2(vm, var_name, &prop, shared);
 }
 
 
