@@ -23,8 +23,8 @@ njs_object_prop(const njs_value_t *value, uint8_t attributes)
     njs_object_prop_t  prop;
 
     switch (attributes) {
-    case NJS_ATTRIBUTE_FALSE:
-    case NJS_ATTRIBUTE_TRUE:
+    case 0:
+    case 1:
         flags = attributes ? NJS_OBJECT_PROP_VALUE_ECW : 0;
         break;
 
@@ -59,13 +59,13 @@ njs_object_prop2(njs_object_prop_type_t type, unsigned flags)
             prop.writable = !!(flags & NJS_OBJECT_PROP_WRITABLE);
 
         } else {
-            prop.writable = NJS_ATTRIBUTE_FALSE;
+            prop.writable = 0;
         }
 
     } else {
-        prop.enumerable = NJS_ATTRIBUTE_FALSE;
-        prop.configurable = NJS_ATTRIBUTE_FALSE;
-        prop.writable = NJS_ATTRIBUTE_FALSE;
+        prop.enumerable = 0;
+        prop.configurable = 0;
+        prop.writable = 0;
     }
 
     return prop;
@@ -350,9 +350,9 @@ set_prop:
     case NJS_PROPERTY_PLACE_REF:
         if (prev->type == NJS_PROPERTY_REF
             && !njs_is_accessor_descriptor(prop)
-            && (!set_configurable || prop->configurable != NJS_ATTRIBUTE_FALSE)
-            && (!set_enumerable || prop->enumerable != NJS_ATTRIBUTE_FALSE)
-            && (!set_writable || prop->writable != NJS_ATTRIBUTE_FALSE))
+            && (!set_configurable || prop->configurable)
+            && (!set_enumerable || prop->enumerable)
+            && (!set_writable || prop->writable))
         {
             if (njs_is_valid(njs_prop_value(prop))) {
                 njs_value_assign(njs_prop_ref(prev), njs_prop_value(prop));
@@ -383,9 +383,9 @@ set_prop:
             goto exception;
         }
 
-        if ((set_configurable && prop->configurable == NJS_ATTRIBUTE_TRUE)
-            || (set_enumerable && prop->enumerable == NJS_ATTRIBUTE_FALSE)
-            || (set_writable && prop->writable == NJS_ATTRIBUTE_FALSE))
+        if ((set_configurable && prop->configurable)
+            || (set_enumerable && !prop->enumerable)
+            || (set_writable && !prop->writable))
         {
             goto exception;
         }
@@ -411,7 +411,7 @@ set_prop:
 
     if (!prev->configurable) {
 
-        if (prop->configurable == NJS_ATTRIBUTE_TRUE) {
+        if (prop->configurable) {
             goto exception;
         }
 
@@ -420,14 +420,14 @@ set_prop:
         }
     }
 
-    if (!(set_writable  || njs_is_data_descriptor(prop)) &&
-        !njs_is_accessor_descriptor(prop))
+    if (!(set_writable || njs_is_data_descriptor(prop))
+        && !njs_is_accessor_descriptor(prop))
     {
         goto done;
     }
 
-    if (njs_is_data_descriptor(prev) !=  (set_writable ||
-        njs_is_data_descriptor(prop)))
+    if (njs_is_data_descriptor(prev)
+        != (set_writable || njs_is_data_descriptor(prop)))
     {
         if (!prev->configurable) {
             goto exception;
@@ -447,12 +447,12 @@ set_prop:
         }
 
         if (njs_is_data_descriptor(prev)) {
-            prev->writable = NJS_ATTRIBUTE_FALSE;
+            set_writable = 0;
             njs_prop_getter(prev) = NULL;
             njs_prop_setter(prev) = NULL;
 
         } else {
-            prev->writable = NJS_ATTRIBUTE_FALSE;
+            prev->writable = 0;
 
             njs_set_undefined(njs_prop_value(prev));
         }
@@ -463,7 +463,7 @@ set_prop:
                && (set_writable || njs_is_data_descriptor(prop)))
     {
         if (!prev->configurable && !prev->writable) {
-            if (prop->writable == NJS_ATTRIBUTE_TRUE) {
+            if (prop->writable) {
                 goto exception;
             }
 
@@ -496,7 +496,7 @@ done:
 
     if (njs_slow_path(njs_is_fast_array(object)
                       && pq.lhq.key_hash == NJS_ATOM_STRING_length)
-                      && (set_writable && prop->writable == NJS_ATTRIBUTE_FALSE))
+                      && (set_writable && !prop->writable))
     {
         array = njs_array(object);
         length = array->length;
@@ -551,8 +551,8 @@ done:
             if (njs_slow_path(njs_is_array(object)
                               && pq.lhq.key_hash == NJS_ATOM_STRING_length))
             {
-                if (prev->configurable != NJS_ATTRIBUTE_TRUE
-                    && prev->writable != NJS_ATTRIBUTE_TRUE
+                if (!prev->configurable
+                    && !prev->writable
                     && !njs_values_strict_equal(vm, njs_prop_value(prev),
                                                 njs_prop_value(prop)))
                 {

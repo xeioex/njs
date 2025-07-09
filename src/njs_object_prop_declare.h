@@ -45,7 +45,7 @@
             .atom_id = NJS_ATOM_ ## _name,                                    \
             .type = NJS_ACCESSOR,                                             \
             .u.accessor = njs_getter(_native, _magic),                        \
-            .writable = NJS_ATTRIBUTE_FALSE,                                  \
+            .writable = 0,                                                    \
             .configurable = 1,                                                \
         },                                                                    \
     }

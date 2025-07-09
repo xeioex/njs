@@ -306,14 +306,6 @@ typedef enum {
 } njs_prop_query_t;
 
 
-/*
- * Attributes are used as Boolean values.
- */
-typedef enum {
-    NJS_ATTRIBUTE_FALSE = 0,
-    NJS_ATTRIBUTE_TRUE = 1,
-} njs_object_attribute_t;
-
 /* njs_object_prop_s: same structure and length as njs_flathsh_elt_t. */
 
 struct njs_object_prop_s {
