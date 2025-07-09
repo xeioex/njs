@@ -122,7 +122,9 @@ njs_int_t njs_object_props_init(njs_vm_t *vm, const njs_object_init_t* init,
 njs_inline njs_bool_t
 njs_is_data_descriptor(njs_object_prop_t *prop)
 {
-    return (prop->type != NJS_ACCESSOR && njs_is_valid(njs_prop_value(prop)))
+    return (prop->type == NJS_PROPERTY && njs_is_valid(njs_prop_value(prop)))
+           || prop->type == NJS_PROPERTY_REF
+           || prop->type == NJS_PROPERTY_PLACE_REF
            || prop->type == NJS_PROPERTY_HANDLER;
 }
 

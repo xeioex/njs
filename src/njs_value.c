@@ -1058,9 +1058,7 @@ slow_path:
         switch (prop->type) {
         case NJS_PROPERTY:
         case NJS_ACCESSOR:
-            if (njs_is_data_descriptor(prop) ||
-                prop->type == NJS_PROPERTY_PLACE_REF)
-            {
+            if (njs_is_data_descriptor(prop)) {
                 njs_value_assign(retval, njs_prop_value(prop));
                 break;
             }
@@ -1180,9 +1178,7 @@ slow_path:
     case NJS_OK:
         prop = pq.lhq.value;
 
-        if (njs_is_data_descriptor(prop) ||
-            prop->type == NJS_PROPERTY_PLACE_REF)
-        {
+        if (njs_is_data_descriptor(prop)) {
             if (!prop->writable) {
                 njs_atom_string_get(vm, atom_id, &pq.lhq.key);
                 njs_type_error(vm,
