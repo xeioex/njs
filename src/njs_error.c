@@ -212,7 +212,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     lhq.proto = &njs_object_hash_proto;
 
     if (name != NULL) {
-
         lhq.key_hash = NJS_ATOM_STRING_name;
 
         ret = njs_flathsh_unique_insert(&error->hash, &lhq);
@@ -232,7 +231,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
     }
 
     if (message!= NULL) {
-
         lhq.key_hash = NJS_ATOM_STRING_message;
 
         ret = njs_flathsh_unique_insert(&error->hash, &lhq);
@@ -249,11 +247,9 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         prop->writable = 1;
 
         prop->u.value = *message;
-
     }
 
     if (errors != NULL) {
-
         lhq.key_hash = NJS_ATOM_STRING_errors;
 
         ret = njs_flathsh_unique_insert(&error->hash, &lhq);
@@ -261,7 +257,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
             njs_internal_error(vm, "lvlhsh insert failed");
             return NULL;
         }
-
 
         prop = lhq.value;
 
@@ -271,7 +266,6 @@ njs_error_alloc(njs_vm_t *vm, njs_object_t *proto, const njs_value_t *name,
         prop->writable = 1;
 
         prop->u.value = *errors;
-
     }
 
     return error;

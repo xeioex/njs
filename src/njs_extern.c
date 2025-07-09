@@ -84,7 +84,6 @@ njs_external_add(njs_vm_t *vm, njs_arr_t *protos,
         prop->enumerable = external->enumerable;
         prop->configurable = external->configurable;
         prop->writable = external->writable;
-
         prop->u.value = njs_value_invalid;
 
 

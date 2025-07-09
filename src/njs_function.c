@@ -126,7 +126,6 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
     njs_object_prop_t    *prop;
     njs_flathsh_query_t  lhq;
 
-
     lhq.key_hash = NJS_ATOM_STRING_name;
     lhq.replace = 0;
     lhq.pool = vm->mem_pool;
@@ -144,7 +143,6 @@ njs_function_name_set(njs_vm_t *vm, njs_function_t *function,
     prop->enumerable = 0;
     prop->configurable = 1;
     prop->writable = 0;
-
     prop->u.value = *name;
 
     symbol = 0;
@@ -914,7 +912,6 @@ njs_function_property_prototype_set(njs_vm_t *vm, njs_flathsh_t *hash,
     prop->enumerable = 0;
     prop->configurable = 0;
     prop->writable = 1;
-
     prop->u.value = *prototype;
 
     return njs_prop_value(prop);
