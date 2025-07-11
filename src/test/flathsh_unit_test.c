@@ -9,9 +9,9 @@
 
 
 static njs_int_t
-lvlhsh_unit_test_key_test(njs_lvlhsh_query_t *lhq, void *data)
+flathsh_unit_test_key_test(njs_flathsh_query_t *fhq, void *data)
 {
-    if (*(uintptr_t *) lhq->key.start == *(uintptr_t *) data) {
+    if (*(uintptr_t *) fhq->key.start == *(uintptr_t *)data) {
         return NJS_OK;
     }
 
@@ -19,49 +19,48 @@ lvlhsh_unit_test_key_test(njs_lvlhsh_query_t *lhq, void *data)
 }
 
 
-static void *
-lvlhsh_unit_test_pool_alloc(void *pool, size_t size)
+static njs_flathsh_descr_t *
+flathsh_unit_test_pool_alloc(void *pool, size_t size)
 {
     return njs_mp_align(pool, NJS_MAX_ALIGNMENT, size);
 }
 
 
 static void
-lvlhsh_unit_test_pool_free(void *pool, void *p, size_t size)
+flathsh_unit_test_pool_free(void *pool, void *p, size_t size)
 {
     njs_mp_free(pool, p);
 }
 
 
-static const njs_lvlhsh_proto_t  lvlhsh_proto  njs_aligned(64) = {
-    NJS_LVLHSH_LARGE_SLAB,
-    lvlhsh_unit_test_key_test,
-    lvlhsh_unit_test_pool_alloc,
-    lvlhsh_unit_test_pool_free,
+static const njs_flathsh_proto_t  flathsh_proto  njs_aligned(64) = {
+    flathsh_unit_test_key_test,
+    flathsh_unit_test_pool_alloc,
+    flathsh_unit_test_pool_free,
 };
 
 
 static njs_int_t
-lvlhsh_unit_test_add(njs_lvlhsh_t *lh, const njs_lvlhsh_proto_t *proto,
+flathsh_unit_test_add(njs_flathsh_t *lh, const njs_flathsh_proto_t *proto,
     void *pool, uintptr_t key)
 {
-    njs_lvlhsh_query_t  lhq;
+    njs_flathsh_query_t  fhq;
 
-    lhq.key_hash = key;
-    lhq.replace = 0;
-    lhq.key.length = sizeof(uintptr_t);
-    lhq.key.start = (u_char *) &key;
-    lhq.proto = proto;
-    lhq.pool = pool;
+    fhq.key_hash = key;
+    fhq.replace = 0;
+    fhq.key.length = sizeof(uintptr_t);
+    fhq.key.start = (u_char *) &key;
+    fhq.proto = proto;
+    fhq.pool = pool;
 
-    switch (njs_lvlhsh_insert(lh, &lhq)) {
+    switch (njs_flathsh_insert(lh, &fhq)) {
 
     case NJS_OK:
-        ((njs_flathsh_elt_t *) lhq.value)->value[0] = (void *) key;
+        ((njs_flathsh_elt_t *) fhq.value)->value[0] = (void *) key;
         return NJS_OK;
 
     case NJS_DECLINED:
-        njs_printf("lvlhsh unit test failed: key %08Xl is already in hash\n",
+        njs_printf("flathsh unit test failed: key %08Xl is already in hash\n",
                    (long) key);
         /* Fall through. */
 
@@ -72,24 +71,24 @@ lvlhsh_unit_test_add(njs_lvlhsh_t *lh, const njs_lvlhsh_proto_t *proto,
 
 
 static njs_int_t
-lvlhsh_unit_test_get(njs_lvlhsh_t *lh, const njs_lvlhsh_proto_t *proto,
+flathsh_unit_test_get(njs_flathsh_t *lh, const njs_flathsh_proto_t *proto,
     uintptr_t key)
 {
-    njs_lvlhsh_query_t  lhq;
+    njs_flathsh_query_t  fhq;
 
-    lhq.key_hash = key;
-    lhq.key.length = sizeof(uintptr_t);
-    lhq.key.start = (u_char *) &key;
-    lhq.proto = proto;
+    fhq.key_hash = key;
+    fhq.key.length = sizeof(uintptr_t);
+    fhq.key.start = (u_char *) &key;
+    fhq.proto = proto;
 
-    if (njs_lvlhsh_find(lh, &lhq) == NJS_OK) {
+    if (njs_flathsh_find(lh, &fhq) == NJS_OK) {
 
-        if (key == (uintptr_t) ((njs_flathsh_elt_t *) lhq.value)->value[0]) {
+        if (key == (uintptr_t) ((njs_flathsh_elt_t *) fhq.value)->value[0]) {
             return NJS_OK;
         }
     }
 
-    njs_printf("lvlhsh unit test failed: key %08Xl not found in hash\n",
+    njs_printf("flathsh unit test failed: key %08Xl not found in hash\n",
                (long) key);
 
     return NJS_ERROR;
@@ -97,23 +96,23 @@ lvlhsh_unit_test_get(njs_lvlhsh_t *lh, const njs_lvlhsh_proto_t *proto,
 
 
 static njs_int_t
-lvlhsh_unit_test_delete(njs_lvlhsh_t *lh, const njs_lvlhsh_proto_t *proto,
+flathsh_unit_test_delete(njs_flathsh_t *lh, const njs_flathsh_proto_t *proto,
     void *pool, uintptr_t key)
 {
-    njs_int_t           ret;
-    njs_lvlhsh_query_t  lhq;
+    njs_int_t            ret;
+    njs_flathsh_query_t  fhq;
 
-    lhq.key_hash = key;
-    lhq.key.length = sizeof(uintptr_t);
-    lhq.key.start = (u_char *) &key;
-    lhq.proto = proto;
-    lhq.pool = pool;
+    fhq.key_hash = key;
+    fhq.key.length = sizeof(uintptr_t);
+    fhq.key.start = (u_char *) &key;
+    fhq.proto = proto;
+    fhq.pool = pool;
 
-    ret = njs_lvlhsh_delete(lh, &lhq);
+    ret = njs_flathsh_delete(lh, &fhq);
 
     if (ret != NJS_OK) {
-        njs_printf("lvlhsh unit test failed: key %08lX not found in hash\n",
-               (long) key);
+        njs_printf("flathsh unit test failed: key %08lX not found in hash\n",
+                   (long) key);
     }
 
     return ret;
@@ -121,13 +120,13 @@ lvlhsh_unit_test_delete(njs_lvlhsh_t *lh, const njs_lvlhsh_proto_t *proto,
 
 
 static njs_int_t
-lvlhsh_unit_test(njs_uint_t n)
+flathsh_unit_test(njs_uint_t n)
 {
-    njs_mp_t           *pool;
-    uint32_t           key;
-    njs_uint_t         i;
-    njs_lvlhsh_t       lh;
-    njs_lvlhsh_each_t  lhe;
+    njs_mp_t            *pool;
+    uint32_t            key;
+    njs_uint_t          i;
+    njs_flathsh_t       lh;
+    njs_flathsh_each_t  lhe;
 
     const size_t       min_chunk_size = 32;
     const size_t       page_size = 1024;
@@ -140,16 +139,16 @@ lvlhsh_unit_test(njs_uint_t n)
         return NJS_ERROR;
     }
 
-    njs_printf("lvlhsh unit test started: %l items\n", (long) n);
+    njs_printf("flathsh unit test started: %l items\n", (long) n);
 
-    njs_memzero(&lh, sizeof(njs_lvlhsh_t));
+    njs_memzero(&lh, sizeof(njs_flathsh_t));
 
     key = 0;
     for (i = 0; i < n; i++) {
         key = njs_murmur_hash2(&key, sizeof(uint32_t));
 
-        if (lvlhsh_unit_test_add(&lh, &lvlhsh_proto, pool, key) != NJS_OK) {
-            njs_printf("lvlhsh add unit test failed at %l\n", (long) i);
+        if (flathsh_unit_test_add(&lh, &flathsh_proto, pool, key) != NJS_OK) {
+            njs_printf("flathsh add unit test failed at %l\n", (long) i);
             return NJS_ERROR;
         }
     }
@@ -158,21 +157,21 @@ lvlhsh_unit_test(njs_uint_t n)
     for (i = 0; i < n; i++) {
         key = njs_murmur_hash2(&key, sizeof(uint32_t));
 
-        if (lvlhsh_unit_test_get(&lh, &lvlhsh_proto, key) != NJS_OK) {
+        if (flathsh_unit_test_get(&lh, &flathsh_proto, key) != NJS_OK) {
             return NJS_ERROR;
         }
     }
 
-    njs_lvlhsh_each_init(&lhe, &lvlhsh_proto);
+    njs_flathsh_each_init(&lhe, &flathsh_proto);
 
     for (i = 0; i < n + 1; i++) {
-        if (njs_lvlhsh_each(&lh, &lhe) == NULL) {
+        if (njs_flathsh_each(&lh, &lhe) == NULL) {
             break;
         }
     }
 
     if (i != n) {
-        njs_printf("lvlhsh each unit test failed at %l of %l\n",
+        njs_printf("flathsh each unit test failed at %l of %l\n",
                    (long) i, (long) n);
         return NJS_ERROR;
     }
@@ -181,7 +180,7 @@ lvlhsh_unit_test(njs_uint_t n)
     for (i = 0; i < n; i++) {
         key = njs_murmur_hash2(&key, sizeof(uint32_t));
 
-        if (lvlhsh_unit_test_delete(&lh, &lvlhsh_proto, pool, key) != NJS_OK) {
+        if (flathsh_unit_test_delete(&lh, &flathsh_proto, pool, key) != NJS_OK) {
             return NJS_ERROR;
         }
     }
@@ -193,7 +192,7 @@ lvlhsh_unit_test(njs_uint_t n)
 
     njs_mp_destroy(pool);
 
-    njs_printf("lvlhsh unit test passed\n");
+    njs_printf("flathsh unit test passed\n");
 
     return NJS_OK;
 }
@@ -202,5 +201,5 @@ lvlhsh_unit_test(njs_uint_t n)
 int
 main(void)
 {
-     return lvlhsh_unit_test(1000 * 1000);
+     return flathsh_unit_test(1000 * 1000);
 }
