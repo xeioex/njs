@@ -253,8 +253,8 @@ njs_int_t njs_builtin_match_native_function(njs_vm_t *vm,
 void njs_disassemble(u_char *start, u_char *end, njs_int_t count,
     njs_arr_t *lines);
 
-njs_flathsh_descr_t *njs_flathsh_alloc(void *data, size_t size);
-void njs_flathsh_free(void *data, void *p, size_t size);
+void *njs_flathsh_proto_alloc(void *data, size_t size);
+void njs_flathsh_proto_free(void *data, void *p, size_t size);
 
 
 extern const njs_str_t    njs_entry_empty;

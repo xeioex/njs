@@ -27,8 +27,8 @@ const njs_flathsh_proto_t  njs_modules_hash_proto
     njs_aligned(64) =
 {
     njs_module_hash_test,
-    njs_flathsh_alloc,
-    njs_flathsh_free,
+    njs_flathsh_proto_alloc,
+    njs_flathsh_proto_free,
 };
 
 
@@ -40,7 +40,6 @@ njs_module_find(njs_vm_t *vm, njs_str_t *name, njs_bool_t shared)
     njs_object_t         *object;
     njs_object_prop_t    *prop;
     njs_flathsh_query_t  fhq;
-
 
     fhq.key = *name;
     fhq.key_hash = njs_djb_hash(name->start, name->length);

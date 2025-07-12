@@ -1636,15 +1636,15 @@ njs_vm_string_compare(njs_vm_t *vm, const njs_value_t *v1,
 }
 
 
-njs_flathsh_descr_t *
-njs_flathsh_alloc(void *data, size_t size)
+void *
+njs_flathsh_proto_alloc(void *data, size_t size)
 {
     return njs_mp_align(data, NJS_MAX_ALIGNMENT, size);
 }
 
 
 void
-njs_flathsh_free(void *data, void *p, size_t size)
+njs_flathsh_proto_free(void *data, void *p, size_t size)
 {
     njs_mp_free(data, p);
 }

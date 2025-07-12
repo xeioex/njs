@@ -194,8 +194,8 @@ const njs_flathsh_proto_t  njs_object_hash_proto
     njs_aligned(64) =
 {
     NULL,
-    njs_flathsh_alloc,
-    njs_flathsh_free,
+    njs_flathsh_proto_alloc,
+    njs_flathsh_proto_free,
 };
 
 

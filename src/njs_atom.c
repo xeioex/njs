@@ -37,8 +37,8 @@ const njs_flathsh_proto_t  njs_lexer_hash_proto
     njs_aligned(64) =
 {
     njs_lexer_hash_test,
-    njs_flathsh_alloc,
-    njs_flathsh_free,
+    njs_flathsh_proto_alloc,
+    njs_flathsh_proto_free,
 };
 
 
@@ -46,8 +46,8 @@ const njs_flathsh_proto_t  njs_atom_hash_proto
     njs_aligned(64) =
 {
     njs_atom_hash_test,
-    njs_flathsh_alloc,
-    njs_flathsh_free,
+    njs_flathsh_proto_alloc,
+    njs_flathsh_proto_free,
 };
 
 
@@ -128,9 +128,11 @@ static njs_value_t *
 njs_atom_find_or_add_string(njs_vm_t *vm, njs_value_t *value,
     uint32_t hash)
 {
-    njs_int_t           ret;
+    njs_int_t            ret;
     njs_object_prop_t    *prop;
     njs_flathsh_query_t  fhq;
+
+    njs_assert(njs_is_string(value));
 
     fhq.key.start = value->string.data->start;
     fhq.key.length = value->string.data->size;

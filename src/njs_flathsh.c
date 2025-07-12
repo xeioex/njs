@@ -76,7 +76,7 @@
 #define NJS_FLATHSH_ELTS_MINIMUM_TO_SHRINK    8
 
 
-static njs_flathsh_descr_t *njs_flathsh_alloc_(njs_flathsh_query_t *fhq,
+static njs_flathsh_descr_t *njs_flathsh_alloc(njs_flathsh_query_t *fhq,
     size_t hash_size, size_t elts_size);
 static njs_flathsh_descr_t *njs_expand_elts(njs_flathsh_query_t *fhq,
     njs_flathsh_descr_t *h);
@@ -104,7 +104,7 @@ njs_flathsh_malloc(njs_flathsh_query_t *fhq, size_t size)
 
 
 njs_inline void
-njs_flathsh_free_(njs_flathsh_query_t *fhq, void *ptr)
+njs_flathsh_free(njs_flathsh_query_t *fhq, void *ptr)
 {
 #ifdef NJS_FLATHSH_USE_SYSTEM_ALLOCATOR
     free(ptr)
@@ -142,22 +142,22 @@ njs_flathsh_chunk(njs_flathsh_descr_t *h)
 njs_flathsh_descr_t *
 njs_flathsh_new(njs_flathsh_query_t *fhq)
 {
-    return njs_flathsh_alloc_(fhq, NJS_FLATHSH_HASH_INITIAL_SIZE,
-                           NJS_FLATHSH_ELTS_INITIAL_SIZE);
+    return njs_flathsh_alloc(fhq, NJS_FLATHSH_HASH_INITIAL_SIZE,
+                             NJS_FLATHSH_ELTS_INITIAL_SIZE);
 }
 
 
 void
 njs_flathsh_destroy(njs_flathsh_t *fh, njs_flathsh_query_t *fhq)
 {
-    njs_flathsh_free_(fhq, njs_flathsh_chunk(fh->slot));
+    njs_flathsh_free(fhq, njs_flathsh_chunk(fh->slot));
 
     fh->slot = NULL;
 }
 
 
 static njs_flathsh_descr_t *
-njs_flathsh_alloc_(njs_flathsh_query_t *fhq, size_t hash_size, size_t elts_size)
+njs_flathsh_alloc(njs_flathsh_query_t *fhq, size_t hash_size, size_t elts_size)
 {
     void                 *chunk;
     size_t               size;
@@ -277,7 +277,7 @@ njs_expand_elts(njs_flathsh_query_t *fhq, njs_flathsh_descr_t *h)
             }
         }
 
-        njs_flathsh_free_(fhq, njs_flathsh_chunk(h_src));
+        njs_flathsh_free(fhq, njs_flathsh_chunk(h_src));
 
     } else {
 
@@ -531,7 +531,7 @@ njs_shrink_elts(njs_flathsh_query_t *fhq, njs_flathsh_descr_t *h)
     h->elts_deleted_count = 0;
     h->elts_count = j;
 
-    njs_flathsh_free_(fhq, njs_flathsh_chunk(h_src));
+    njs_flathsh_free(fhq, njs_flathsh_chunk(h_src));
 
     return h;
 }
@@ -589,7 +589,7 @@ njs_flathsh_delete(njs_flathsh_t *fh, njs_flathsh_query_t *fhq)
             }
 
             if (h->elts_deleted_count == h->elts_count) {
-                njs_flathsh_free_(fhq, njs_flathsh_chunk(h));
+                njs_flathsh_free(fhq, njs_flathsh_chunk(h));
                 fh->slot = NULL;
             }
 
@@ -654,7 +654,7 @@ njs_flathsh_unique_delete(njs_flathsh_t *fh, njs_flathsh_query_t *fhq)
             }
 
             if (h->elts_deleted_count == h->elts_count) {
-                njs_flathsh_free_(fhq, njs_flathsh_chunk(h));
+                njs_flathsh_free(fhq, njs_flathsh_chunk(h));
                 fh->slot = NULL;
             }
 

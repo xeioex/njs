@@ -39,7 +39,7 @@ typedef struct {
 typedef struct njs_flathsh_query_s  njs_flathsh_query_t;
 
 typedef njs_int_t (*njs_flathsh_test_t)(njs_flathsh_query_t *fhq, void *data);
-typedef njs_flathsh_descr_t *(*njs_flathsh_alloc_t)(void *ctx, size_t size);
+typedef void *(*njs_flathsh_alloc_t)(void *ctx, size_t size);
 typedef void (*njs_flathsh_free_t)(void *ctx, void *p, size_t size);
 
 typedef struct njs_flathsh_proto_s  njs_flathsh_proto_t;

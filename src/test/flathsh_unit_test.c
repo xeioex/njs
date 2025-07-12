@@ -11,7 +11,7 @@
 static njs_int_t
 flathsh_unit_test_key_test(njs_flathsh_query_t *fhq, void *data)
 {
-    if (*(uintptr_t *) fhq->key.start == *(uintptr_t *)data) {
+    if (*(uintptr_t *) fhq->key.start == *(uintptr_t *) data) {
         return NJS_OK;
     }
 
@@ -19,7 +19,7 @@ flathsh_unit_test_key_test(njs_flathsh_query_t *fhq, void *data)
 }
 
 
-static njs_flathsh_descr_t *
+static void *
 flathsh_unit_test_pool_alloc(void *pool, size_t size)
 {
     return njs_mp_align(pool, NJS_MAX_ALIGNMENT, size);

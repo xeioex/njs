@@ -76,7 +76,7 @@ flathsh_unit_test_key_test(njs_flathsh_query_t *fhq, void *data)
 }
 
 
-static njs_flathsh_descr_t *
+static void *
 flathsh_unit_test_pool_alloc(void *pool, size_t size)
 {
     return njs_mp_align(pool, NJS_MAX_ALIGNMENT, size);
