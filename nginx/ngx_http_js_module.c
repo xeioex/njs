@@ -1406,6 +1406,8 @@ ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id)
         return NGX_ERROR;
     }
 
+    r->disable_not_modified = 1;
+
     return NGX_OK;
 }
 
