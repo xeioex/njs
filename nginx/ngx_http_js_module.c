@@ -2186,6 +2186,8 @@ ngx_http_js_ext_send_header(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
         return NJS_ERROR;
     }
 
+    r->disable_not_modified = 1;
+
     if (ngx_http_send_header(r) == NGX_ERROR) {
         return NJS_ERROR;
     }
@@ -2466,6 +2468,8 @@ ngx_http_js_ext_return(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
         cv.value.data = text.start;
         cv.value.len = text.length;
+
+        r->disable_not_modified = 1;
 
         ctx->status = ngx_http_send_response(r, status, NULL, &cv);
 
