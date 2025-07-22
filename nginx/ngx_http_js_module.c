@@ -104,7 +104,7 @@ static ngx_int_t ngx_http_js_variable_set(ngx_http_request_t *r,
 static ngx_int_t ngx_http_js_variable_var(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 static ngx_int_t ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id);
-static void ngx_http_js_cleanup_ctx(void *data);
+static void ngx_http_js_cleanup_ctx2(void *data);
 
 static njs_int_t ngx_http_js_ext_keys_header(njs_vm_t *vm, njs_value_t *value,
     njs_value_t *keys, ngx_list_t *headers);
@@ -1367,7 +1367,7 @@ ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id)
 
     ctx->log = r->connection->log;
 
-    cln->handler = ngx_http_js_cleanup_ctx;
+    cln->handler = ngx_http_js_cleanup_ctx2;
     cln->data = ctx;
 
     /* bind objects from preload vm */
@@ -1406,6 +1406,8 @@ ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id)
         return NGX_ERROR;
     }
 
+    ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "js_init_vm(): r->disable_not_modified = 1");
+
     r->disable_not_modified = 1;
 
     return NGX_OK;
@@ -1413,7 +1415,7 @@ ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id)
 
 
 static void
-ngx_http_js_cleanup_ctx(void *data)
+ngx_http_js_cleanup_ctx2(void *data)
 {
     ngx_http_js_ctx_t *ctx = data;
 
@@ -2506,7 +2508,14 @@ ngx_http_js_ext_internal_redirect(njs_vm_t *vm, njs_value_t *args,
         return NJS_ERROR;
     }
 
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                  "internalRedict(): r->disable_not_modified=%ui",
+                  (ngx_uint_t) r->disable_not_modified);
+
     ctx = ngx_http_get_module_ctx(r, ngx_http_js_module);
+
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                  "internalRedict(): ctx=%p", ctx);
 
     if (ctx->filter) {
         njs_vm_error(vm, "internalRedirect cannot be called while filtering");
