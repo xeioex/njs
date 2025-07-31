@@ -122,6 +122,12 @@ static njs_int_t ngx_js_ext_version(njs_vm_t *vm, njs_object_prop_t *prop,
 static njs_int_t ngx_js_ext_worker_id(njs_vm_t *vm, njs_object_prop_t *prop,
     uint32_t unused, njs_value_t *value, njs_value_t *setval,
     njs_value_t *retval);
+
+#if (NJS_HAVE_NATS)
+static njs_int_t ngx_js_ext_nats_publish(njs_vm_t *vm, njs_value_t *args,
+    njs_uint_t nargs, njs_index_t unused, njs_value_t *retval);
+#endif
+
 static njs_int_t ngx_js_ext_console_time(njs_vm_t *vm, njs_value_t *args,
     njs_uint_t nargs, njs_index_t unused, njs_value_t *retval);
 static njs_int_t ngx_js_ext_console_time_end(njs_vm_t *vm, njs_value_t *args,
@@ -168,6 +174,34 @@ static njs_external_t  ngx_js_ext_global_shared[] = {
     },
 
 };
+
+
+#if (NJS_HAVE_NATS)
+
+static njs_external_t  ngx_js_ext_nats[] = {
+
+    {
+        .flags = NJS_EXTERN_PROPERTY | NJS_EXTERN_SYMBOL,
+        .name.symbol = NJS_SYMBOL_TO_STRING_TAG,
+        .u.property = {
+            .value = "Nats",
+        }
+    },
+
+    {
+        .flags = NJS_EXTERN_METHOD,
+        .name.string = njs_str("publish"),
+        .writable = 1,
+        .configurable = 1,
+        .enumerable = 1,
+        .u.method = {
+            .native = ngx_js_ext_nats_publish,
+        }
+    },
+
+};
+
+#endif
 
 
 static njs_external_t  ngx_js_ext_core[] = {
@@ -309,6 +343,22 @@ static njs_external_t  ngx_js_ext_core[] = {
             .handler = ngx_js_ext_worker_id,
         }
     },
+
+#if (NJS_HAVE_NATS)
+
+    {
+        .flags = NJS_EXTERN_OBJECT,
+        .name.string = njs_str("nats"),
+        .enumerable = 1,
+        .writable = 1,
+        .u.object = {
+            .enumerable = 1,
+            .properties = ngx_js_ext_nats,
+            .nproperties = njs_nitems(ngx_js_ext_nats),
+        }
+    },
+
+#endif
 
 };
 
@@ -2604,6 +2654,85 @@ ngx_js_ext_worker_id(njs_vm_t *vm, njs_object_prop_t *prop, uint32_t unused,
     return NJS_OK;
 }
 
+#if (NJS_HAVE_NATS)
+
+#include <ngx_nats.h>
+
+static ngx_int_t ngx_js_nats_module_available = NGX_CONF_UNSET;
+
+
+njs_int_t
+ngx_js_ext_nats_publish(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
+    njs_index_t unused, njs_value_t *retval)
+{
+    ngx_int_t  rc;
+    njs_int_t  ret;
+    ngx_str_t  subject, data;
+
+    if (ngx_js_nats_module_available == NGX_CONF_UNSET) {
+        ngx_js_nats_module_available =
+                                ngx_js_module_loaded((ngx_cycle_t *) ngx_cycle,
+                                                     "ngx_nats_module");
+    }
+
+    if (ngx_js_nats_module_available == NGX_DECLINED) {
+        njs_vm_error(vm, "NATS module is not available");
+        return NJS_ERROR;
+    }
+
+    if (nargs < 3) {
+        njs_vm_error(vm, "NATS publish requires at 2 arguments");
+        return NJS_ERROR;
+    }
+
+    ret = njs_value_to_string(vm, njs_argument(args, 1), njs_argument(args, 1));
+    if (ret != NJS_OK) {
+        return ret;
+    }
+
+    if (ngx_js_ngx_string(vm, njs_argument(args, 1), &subject) != NGX_OK) {
+        njs_vm_error(vm, "NATS publish cannot convert subject to string");
+        return NJS_ERROR;
+    }
+
+    ret = njs_value_to_string(vm, njs_argument(args, 2), njs_argument(args, 2));
+    if (ret != NJS_OK) {
+        return ret;
+    }
+
+    if (ngx_js_ngx_string(vm, njs_argument(args, 2), &data) != NGX_OK) {
+        njs_vm_error(vm, "NATS publish cannot convert data to string");
+        return NJS_ERROR;
+    }
+
+    rc = ngx_nats_publish(NULL, &subject, NULL, data.data, data.len);
+
+    if (rc != NGX_OK) {
+        switch (rc) {
+        case NGX_ABORT:
+            njs_vm_error(vm, "NATS is not configured");
+            return NJS_ERROR;
+
+        case NGX_ERROR:
+            njs_vm_error(vm, "NATS is not connected or cannot publish");
+            return NJS_ERROR;
+
+        case NGX_DECLINED:
+            njs_vm_error(vm, "NATS publish subject is too long");
+            return NJS_ERROR;
+
+        default:
+            njs_vm_error(vm, "NATS publish failed with code %d", rc);
+            return NJS_ERROR;
+        }
+    }
+
+    njs_value_undefined_set(retval);
+
+    return NJS_OK;
+}
+
+#endif
 
 njs_int_t
 ngx_js_ext_log(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
@@ -4534,4 +4663,22 @@ ngx_js_queue_pop(ngx_js_queue_t *queue)
     queue->size--;
 
     return item;
+}
+
+
+ngx_int_t
+ngx_js_module_loaded(ngx_cycle_t *cycle, const char *name)
+{
+    ngx_uint_t   i;
+    ngx_module_t *module;
+
+    for (i = 0; cycle->modules[i]; i++) {
+        module = cycle->modules[i];
+
+        if (ngx_strncmp(module->name, name, strlen(name)) == 0) {
+            return NGX_OK;
+        }
+    }
+
+    return NGX_DECLINED;
 }

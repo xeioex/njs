@@ -432,6 +432,8 @@ ngx_js_queue_t *ngx_js_queue_create(ngx_pool_t *pool, ngx_uint_t capacity);
 ngx_int_t ngx_js_queue_push(ngx_js_queue_t *queue, void *item);
 void *ngx_js_queue_pop(ngx_js_queue_t *queue);
 
+ngx_int_t ngx_js_module_loaded(ngx_cycle_t *cycle, const char *name);
+
 
 extern njs_module_t  ngx_js_ngx_module;
 extern njs_module_t  njs_webcrypto_module;

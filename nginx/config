@@ -4,6 +4,7 @@ NJS_OPENSSL=${NJS_OPENSSL:-YES}
 NJS_LIBXSLT=${NJS_LIBXSLT:-YES}
 NJS_ZLIB=${NJS_ZLIB:-YES}
 NJS_QUICKJS=${NJS_QUICKJS:-YES}
+NJS_NATS=${NJS_NATS:-YES}
 
 NJS_DEPS="$ngx_addon_dir/ngx_js.h \
     $ngx_addon_dir/ngx_js_http.h \
@@ -24,6 +25,7 @@ NJS_ZLIB_LIB=
 NJS_QUICKJS_LIB=
 NJS_QUICKJS_INC=
 NJS_HAVE_QUICKJS=
+NJS_HAVE_NATS=
 
 if [ $NJS_QUICKJS != NO ]; then
 
@@ -113,6 +115,24 @@ if [ $NJS_QUICKJS != NO ]; then
         echo " enabled QuickJS engine"
     fi
 fi
+
+if [ $NJS_NATS != NO ]; then
+    ngx_feature="nginx-nats module headers"
+    ngx_feature_name=NJS_HAVE_NATS
+    ngx_feature_run=no
+    ngx_feature_incs="#include <ngx_nats.h>"
+    ngx_feature_path="$CORE_INCS $NGX_OBJS"
+    ngx_feature_libs=""
+    ngx_feature_test="ngx_nats_client_t *client = NULL;"
+    . auto/feature
+
+    if [ $ngx_found = yes ]; then
+        NJS_HAVE_NATS=YES
+
+        echo " enabled NATS module API"
+    fi
+fi
+
 
 if [ $NJS_OPENSSL != NO ]; then
     NJS_OPENSSL_LIB=OPENSSL
