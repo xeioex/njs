@@ -2359,6 +2359,7 @@ ngx_stream_qjs_ext_send(JSContext *cx, JSValueConst this_val, int argc,
     }
 
     str = NULL;
+    buf = JS_UNDEFINED;
 
     if (JS_IsString(val)) {
         goto string;
@@ -2367,8 +2368,6 @@ ngx_stream_qjs_ext_send(JSContext *cx, JSValueConst this_val, int argc,
     buf = JS_GetTypedArrayBuffer(cx, val, &byte_offset, &byte_length, NULL);
     if (!JS_IsException(buf)) {
         buffer.data = JS_GetArrayBuffer(cx, &buffer.len, buf);
-
-        JS_FreeValue(cx, buf);
 
         if (buffer.data != NULL) {
             buffer.data += byte_offset;
@@ -2452,6 +2451,8 @@ string:
         JS_FreeCString(cx, str);
     }
 
+    JS_FreeValue(cx, buf);
+
     return JS_UNDEFINED;
 
 out_of_memory:
@@ -2459,6 +2460,8 @@ out_of_memory:
     if (str != NULL) {
         JS_FreeCString(cx, str);
     }
+
+    JS_FreeValue(cx, buf);
 
     return JS_ThrowInternalError(cx, "memory error");
 }
