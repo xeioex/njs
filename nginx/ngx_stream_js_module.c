@@ -2404,15 +2404,6 @@ string:
             b->end = b->start + len;
 
         } else {
-            if (buffer.len != 0 && ngx_buf_size(b) == 0) {
-                b->start = ngx_pnalloc(c->pool, buffer.len);
-                if (b->start == NULL) {
-                    goto out_of_memory;
-                }
-
-                b->end = b->start + buffer.len;
-            }
-
             len = ngx_min(buffer.len, (size_t) (b->end - b->start));
         }
 
