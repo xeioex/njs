@@ -5662,11 +5662,13 @@ ngx_http_qjs_ext_send_buffer(JSContext *cx, JSValueConst this_val,
     buf = JS_GetTypedArrayBuffer(cx, val, &byte_offset, &byte_length, NULL);
     if (!JS_IsException(buf)) {
         buffer.data = JS_GetArrayBuffer(cx, &buffer.len, buf);
-
-        if (buffer.data != NULL) {
-            buffer.data += byte_offset;
-            buffer.len = byte_length;
+        if (buffer.data == NULL) {
+            JS_FreeValue(cx, buf);
+            return JS_EXCEPTION;
         }
+
+        buffer.data += byte_offset;
+        buffer.len = byte_length;
 
     } else {
 string:
