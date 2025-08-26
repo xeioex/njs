@@ -2422,8 +2422,8 @@ string:
             b->flush = 0;
         }
 
-        b->memory = (buffer.len ? 1 : 0);
-        b->sync = (buffer.len ? 0 : 1);
+        b->memory = (len ? 1 : 0);
+        b->sync = (len ? 0 : 1);
         b->tag = (ngx_buf_tag_t) &ngx_stream_js_module;
 
         buffer.data += len;
