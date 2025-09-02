@@ -22,5 +22,3 @@
 #ifndef JS_BOOL
     #define JS_BOOL bool
 #endif
-
-#include <pthread.h>

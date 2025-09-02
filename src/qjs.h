@@ -19,7 +19,7 @@
 #include <njs_chb.h>
 #include <njs_utils.h>
 #include <njs_assert.h>
-#include <quickjs_adapted.h>
+#include <quickjs_compat.h>
 
 
 #define QJS_CORE_CLASS_ID_OFFSET    64
