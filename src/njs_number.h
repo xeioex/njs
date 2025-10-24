@@ -14,8 +14,6 @@
 
 
 double njs_key_to_index(const njs_value_t *value);
-double njs_number_dec_parse(const u_char **start, const u_char *end,
-    njs_bool_t literal);
 double njs_number_oct_parse(const u_char **start, const u_char *end,
     njs_bool_t literal);
 double njs_number_bin_parse(const u_char **start, const u_char *end,
@@ -187,7 +185,7 @@ njs_uint32_to_string(njs_vm_t *vm, njs_value_t *value, uint32_t u32)
         return NJS_ERROR;
     }
 
-    size = njs_sprintf(p, p + 10, "%uD", u32) - p;
+    size = njs_u32toa((char *) p, u32);
     value->string.data->length = size;
     value->string.data->size = size;
 

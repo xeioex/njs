@@ -881,7 +881,9 @@ njs_lexer_number(njs_lexer_t *lexer, njs_lexer_token_t *token)
     }
 
     p--;
-    token->number = njs_number_dec_parse(&p, lexer->end, 1);
+    token->number = njs_atod((const char *) p, (const char **) &p, 0,
+                             JS_ATOD_ACCEPT_BIN_OCT
+                             | JS_ATOD_ACCEPT_UNDERSCORES);
 
 done:
 

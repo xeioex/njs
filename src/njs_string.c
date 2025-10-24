@@ -608,7 +608,8 @@ njs_string_prototype_concat(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
     njs_int_t          ret;
     njs_uint_t         i;
     njs_string_prop_t  string;
-    char               buf[512];
+#define NJS_DTOA_MAX_LEN  njs_length("-1.7976931348623157e+308")
+    char               buf[512], num_buf[NJS_DTOA_MAX_LEN];
 
 #define NJS_SZ_LAST    64
 
@@ -724,8 +725,13 @@ njs_string_prototype_concat(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
                     np += sz;
 
                 } else {
-                    sz = njs_dtoa(num, (char *) p);
-                    p += sz;
+                    /*
+                     * Writing to a temporary buffer to avoid
+                     * overwriting past the end of the string buffer.
+                     * njs_dtoa() writes \0 past the sz bytes.
+                     */
+                    sz = njs_dtoa(num, (char *) num_buf);
+                    p = njs_cpymem(p, num_buf, sz);
                 }
             }
 
@@ -3306,73 +3312,82 @@ njs_string_prototype_iterator_obj(njs_vm_t *vm, njs_value_t *args,
 double
 njs_string_to_number(njs_vm_t *vm, const njs_value_t *value)
 {
+    int                flags;
+    size_t             len, size;
     double             num;
-    njs_bool_t         minus;
-    const u_char       *p, *start, *end;
+    const char         *next;
+    const u_char       *p, *start;
     njs_string_prop_t  string;
-
-    const size_t  infinity = njs_length("Infinity");
+    char               stack_buf[512], *buf;
 
     (void) njs_string_trim(vm, value, &string, NJS_TRIM_START);
 
-    p = string.start;
-    end = p + string.size;
-
-    if (p == end) {
+    if (string.size == 0) {
         return 0.0;
     }
 
-    minus = 0;
+    flags = JS_ATOD_ACCEPT_BIN_OCT;
+    p = string.start;
+    start = p;
+    len = string.size;
 
-    if (p + 2 < end && p[0] == '0'
-        && (p[1] == 'x' || p[1] == 'X'
-            || p[1] == 'b' || p[1] == 'B'
-            || p[1] == 'o' || p[1] == 'O'))
+    if (len >= 2 && start[0] == '0'
+        && (start[1] == 'x' || start[1] == 'X'
+            || start[1] == 'b' || start[1] == 'B'
+            || start[1] == 'o' || start[1] == 'O'))
     {
-        p += 2;
-
-        if (p[-1] == 'x' || p[-1] == 'X') {
-            num = njs_number_hex_parse(&p, end, 0);
-
-        } else if (p[-1] == 'b' || p[-1] == 'B') {
-            num = njs_number_bin_parse(&p, end, 0);
-
-        } else {
-            num = njs_number_oct_parse(&p, end, 0);
-        }
-
-    } else {
-
-        if (*p == '+') {
-            p++;
-
-        } else if (*p == '-') {
-            p++;
-            minus = 1;
-        }
-
-        start = p;
-        num = njs_number_dec_parse(&p, end, 0);
-
-        if (p == start) {
-            if (p + infinity > end || memcmp(p, "Infinity", infinity) != 0) {
-                return NAN;
-            }
-
-            num = INFINITY;
-            p += infinity;
-        }
+        flags |= JS_ATOD_INT_ONLY;
     }
 
-    while (p < end) {
-        if (!njs_is_whitespace(*p)) {
+    if (*start == '+' || *start == '-') {
+        start++;
+        len--;
+
+        /* Sign before prefix is not allowed. */
+        if (len >= 2 && start[0] == '0'
+            && (start[1] == 'x' || start[1] == 'X'
+                || start[1] == 'b' || start[1] == 'B'
+                || start[1] == 'o' || start[1] == 'O'))
+        {
             return NAN;
         }
-
-        p++;
     }
 
-    return minus ? -num : num;
+    /* Prepare null-terminated buffer for njs_atod(). */
+    if (string.size < sizeof(stack_buf)) {
+        buf = stack_buf;
+
+    } else {
+        buf = malloc(string.size + 1);
+        if (buf == NULL) {
+            return NAN;
+        }
+    }
+
+    memcpy(buf, p, string.size);
+    buf[string.size] = '\0';
+
+    num = njs_atod(buf, &next, 0, flags);
+
+    size = next - buf;
+
+    /* Validate remaining characters are whitespace. */
+    while (size < string.size) {
+        if (!njs_is_whitespace(p[size])) {
+            num = NAN;
+            goto done;
+        }
+
+        size++;
+    }
+
+done:
+
+    if (buf != stack_buf) {
+        free(buf);
+    }
+
+    return num;
 }
 
 
@@ -3381,9 +3396,8 @@ njs_string_to_index(const njs_value_t *value)
 {
     size_t        size, len;
     double        num;
-    njs_bool_t    minus;
-    const u_char  *p, *start, *end;
-    u_char        buf[128];
+    const u_char    *start;
+    char        buf[128];
 
     if (njs_slow_path(value->type == NJS_SYMBOL)) {
         return NAN;
@@ -3396,68 +3410,15 @@ njs_string_to_index(const njs_value_t *value)
     size = value->string.data->size;
     start = value->string.data->start;
 
-    p = start;
-    end = p + size;
-    minus = 0;
-
-    if (size > 1) {
-        switch (p[0]) {
-        case '0':
-            if (size != 1) {
-                return NAN;
-            }
-
-            /* Fall through. */
-
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            break;
-
-        case '-':
-            if (size == 2 && p[1] == '0') {
-                return -0.0;
-            }
-
-            if (size == njs_length("-Infinity")
-                && memcmp(&p[1], "Infinity", njs_length("Infinity")) == 0)
-            {
-                return -INFINITY;
-            }
-
-            p++;
-            minus = 1;
-
-            break;
-
-        case 'I':
-            if (size == njs_length("Infinity")
-                && memcmp(p, "Infinity", njs_length("Infinity")) == 0)
-            {
-                return INFINITY;
-            }
-
-            /* Fall through. */
-
-        default:
-            return NAN;
-        }
+    if (size == 2 && start[0] == '-' && start[1] == '0') {
+        return -0.0;
     }
 
-    num = njs_strtod(&p, end, 0);
-    if (p != end) {
+    if (njs_atod_buf(start, size, 10, 0, &num) < 0) {
         return NAN;
     }
 
-    num = minus ? -num : num;
-
-    len = njs_dtoa(num, (char *) buf);
+    len = njs_dtoa(num, buf);
     if (size != len || memcmp(start, buf, size) != 0) {
         return NAN;
     }

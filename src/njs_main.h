@@ -19,8 +19,6 @@
 #include <njs_utf16.h>
 #include <njs_diyfp.h>
 #include <njs_dtoa.h>
-#include <njs_dtoa_fixed.h>
-#include <njs_strtod.h>
 #include <njs_djb_hash.h>
 #include <njs_murmur_hash.h>
 #include <njs_trace.h>
