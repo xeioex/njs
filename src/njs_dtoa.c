@@ -1503,24 +1503,26 @@ double njs_atod2(const char *str, const char **pnext, int radix, int flags,
         p > p_start) {
         BOOL exp_is_neg;
         int c;
-        is_bin_exp = (*p == 'p' || *p == 'P');
-        p++;
+        const char *p1;
+        p1 = p;
+        is_bin_exp = (*p1 == 'p' || *p1 == 'P');
+        p1++;
         exp_is_neg = 0;
-        if (*p == '+') {
-            p++;
-        } else if (*p == '-') {
+        if (*p1 == '+') {
+            p1++;
+        } else if (*p1 == '-') {
             exp_is_neg = 1;
-            p++;
+            p1++;
         }
-        c = to_digit(*p);
+        c = to_digit(*p1);
         if (c >= 10)
-            goto fail; /* XXX: could stop before the exponent part */
+            goto skip_exp;
         expn = c;
-        p++;
+        p1++;
         for(;;) {
-            if (*p == sep && to_digit(p[1]) < 10)
-                p++;
-            c = to_digit(*p);
+            if (*p1 == sep && to_digit(p1[1]) < 10)
+                p1++;
+            c = to_digit(*p1);
             if (c >= 10)
                 break;
             if (!expn_overflow) {
@@ -1530,8 +1532,9 @@ double njs_atod2(const char *str, const char **pnext, int radix, int flags,
                     expn = expn * 10 + c;
                 }
             }
-            p++;
+            p1++;
         }
+        p = p1;
         if (exp_is_neg)
             expn = -expn;
         /* if zero result, the exponent can be arbitrarily large */
@@ -1544,6 +1547,7 @@ double njs_atod2(const char *str, const char **pnext, int radix, int flags,
         }
     }
 
+skip_exp:
     if (p == p_start)
         goto fail;
 
