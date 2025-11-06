@@ -197,6 +197,7 @@ njs_vm_call_exit_hook(njs_vm_t *vm)
     if (vm->hooks[NJS_HOOK_EXIT] != NULL) {
         return njs_vm_call(vm, vm->hooks[NJS_HOOK_EXIT], NULL, 0);
     }
+
     return NJS_OK;
 }
 

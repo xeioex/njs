@@ -98,10 +98,8 @@ $t->stop();
 
 my $error_log = $t->read_file('error.log');
 
-like($error_log, qr/\[warn\].*exit hook: bs: \d+/,
-	'exit hook logged');
-like($error_log, qr/\[warn\].*exit hook promise/,
-	'exit hook promise logged');
+like($error_log, qr/\[warn\].*exit hook: bs: \d+/, 'exit hook logged');
+like($error_log, qr/\[warn\].*exit hook promise/, 'exit hook promise logged');
 like($t->read_file('access.log'), qr/\[var:\d+ header:626172 url:\/test\]/,
 	'access log has bytes_sent');
 
