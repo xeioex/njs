@@ -797,7 +797,7 @@ njs_number_parse_int(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     (void) njs_string_trim(vm, value, &string, NJS_TRIM_START);
 
-    if (njs_atod_buf(string.start, string.size, radix, JS_ATOD_INT_ONLY,
+    if (njs_atod_buf(string.start, string.size, NULL, radix, JS_ATOD_INT_ONLY,
                      &num) < 0)
     {
         njs_memory_error(vm);
@@ -830,7 +830,7 @@ njs_number_parse_float(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     (void) njs_string_trim(vm, value, &string, NJS_TRIM_START);
 
-    if (njs_atod_buf(string.start, string.size, 10, 0, &num) < 0) {
+    if (njs_atod_buf(string.start, string.size, NULL, 10, 0, &num) < 0) {
         njs_memory_error(vm);
         return NJS_ERROR;
     }

@@ -108,8 +108,8 @@ njs_atod(const char *str, const char **pnext, int radix, int flags)
 
 
 njs_inline int
-njs_atod_buf(const u_char *str, size_t size, int radix, int flags,
-    double *result)
+njs_atod_buf(const u_char *str, size_t size, const char **pnext, int radix,
+    int flags, double *result)
 {
     int             buf_allocated;
     char           *start;
@@ -136,7 +136,7 @@ njs_atod_buf(const u_char *str, size_t size, int radix, int flags,
         buf_allocated = 1;
     }
 
-    num = njs_atod2(start, NULL, radix, flags, &tmp_mem);
+    num = njs_atod2(start, pnext, radix, flags, &tmp_mem);
 
     if (buf_allocated) {
         free(start);

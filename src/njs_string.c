@@ -3318,7 +3318,6 @@ njs_string_to_number(njs_vm_t *vm, const njs_value_t *value)
     const char         *next;
     const u_char       *p, *start;
     njs_string_prop_t  string;
-    char               stack_buf[512], *buf;
 
     (void) njs_string_trim(vm, value, &string, NJS_TRIM_START);
 
@@ -3326,22 +3325,21 @@ njs_string_to_number(njs_vm_t *vm, const njs_value_t *value)
         return 0.0;
     }
 
-    flags = JS_ATOD_ACCEPT_BIN_OCT;
     p = string.start;
-    start = p;
     len = string.size;
+    flags = JS_ATOD_ACCEPT_BIN_OCT;
 
-    if (len >= 2 && start[0] == '0'
-        && (start[1] == 'x' || start[1] == 'X'
-            || start[1] == 'b' || start[1] == 'B'
-            || start[1] == 'o' || start[1] == 'O'))
+    if (len >= 2 && p[0] == '0'
+        && (p[1] == 'x' || p[1] == 'X'
+            || p[1] == 'b' || p[1] == 'B'
+            || p[1] == 'o' || p[1] == 'O'))
     {
         flags |= JS_ATOD_INT_ONLY;
     }
 
-    if (*start == '+' || *start == '-') {
-        start++;
+    if (*p == '+' || *p == '-') {
         len--;
+        start = p + 1;
 
         /* Sign before prefix is not allowed. */
         if (len >= 2 && start[0] == '0'
@@ -3353,38 +3351,21 @@ njs_string_to_number(njs_vm_t *vm, const njs_value_t *value)
         }
     }
 
-    /* Prepare null-terminated buffer for njs_atod(). */
-    if (string.size < sizeof(stack_buf)) {
-        buf = stack_buf;
-
-    } else {
-        buf = malloc(string.size + 1);
-        if (buf == NULL) {
-            return NAN;
-        }
+    if (njs_atod_buf(string.start, string.size, &next, 0, flags, &num) < 0) {
+        njs_memory_error(vm);
+        return NAN;
     }
 
-    memcpy(buf, p, string.size);
-    buf[string.size] = '\0';
-
-    num = njs_atod(buf, &next, 0, flags);
-
-    size = next - buf;
+    size = (u_char *) next - p;
 
     /* Validate remaining characters are whitespace. */
     while (size < string.size) {
         if (!njs_is_whitespace(p[size])) {
             num = NAN;
-            goto done;
+            break;
         }
 
         size++;
-    }
-
-done:
-
-    if (buf != stack_buf) {
-        free(buf);
     }
 
     return num;
@@ -3414,7 +3395,7 @@ njs_string_to_index(const njs_value_t *value)
         return -0.0;
     }
 
-    if (njs_atod_buf(start, size, 10, 0, &num) < 0) {
+    if (njs_atod_buf(start, size, NULL, 10, 0, &num) < 0) {
         return NAN;
     }
 
