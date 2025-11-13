@@ -16914,18 +16914,18 @@ static njs_unit_test_t  njs_test[] =
 
     { njs_str("var y = Object.defineProperty({}, Symbol.toPrimitive, {"
               "    get: function() {"
-              "        throw new Test262Error();"
+              "        throw 'toPrimitive called';"
               "    }"
               "});"
-              "new Date(y);"),
-      njs_str("ReferenceError") },
+              "new Date(y)"),
+      njs_str("toPrimitive called") },
 
     { njs_str("var y = {};"
               "y[Symbol.toPrimitive] = function() {"
-              "     throw new Test262Error();"
+              "     throw 'toPrimitive called';"
               "};"
-              "new Date(y);"),
-      njs_str("ReferenceError") },
+              "new Date(y)"),
+      njs_str("toPrimitive called") },
 
     { njs_str("var y = {};"
               "var callCount = 0;"
@@ -16945,15 +16945,15 @@ static njs_unit_test_t  njs_test[] =
               "    return retVal;"
               "};"
               "retVal = {};"
-              "new Date(y);"),
+              "new Date(y)"),
       njs_str("TypeError") },
 
     { njs_str("var badToPrimitive = {};"
               "badToPrimitive[Symbol.toPrimitive] = function() {"
-              "    throw new Test262Error();"
+              "    throw 'toPrimitive called';"
               "};"
-              "new Date(badToPrimitive);"),
-      njs_str("ReferenceError") },
+              "new Date(badToPrimitive)"),
+      njs_str("toPrimitive called") },
 
     { njs_str("var spyToPrimitive = {};"
               "var callCount = 0;"
@@ -16971,18 +16971,18 @@ static njs_unit_test_t  njs_test[] =
               "var poisonedDate = new Date();"
               "Object.defineProperty(poisonedObject, Symbol.toPrimitive, {"
               "    get: function() {"
-              "        throw new Test262Error();"
+              "        throw 'poisonedObject toPrimitive called';"
               "    }"
               "});"
               "Object.defineProperty(poisonedDate, Symbol.toPrimitive, {"
               "    get: function() {"
-              "        throw new Test262Error();"
+              "        throw 'poisonedDate toPrimitive called';"
               "    }"
               "});"
               "Date(poisonedObject);"
               "new Date(poisonedDate);"
-              "new Date(poisonedObject);"),
-      njs_str("ReferenceError") },
+              "new Date(poisonedObject)"),
+      njs_str("poisonedObject toPrimitive called") },
 
     { njs_str("var faultyToPrimitive = {};"
               "var returnValue;"
@@ -16990,7 +16990,7 @@ static njs_unit_test_t  njs_test[] =
               "    return returnValue;"
               "};"
               "returnValue = {};"
-              "new Date(faultyToPrimitive);"),
+              "new Date(faultyToPrimitive)"),
       njs_str("TypeError") },
 
     { njs_str("var stringToPrimitive = {};"
