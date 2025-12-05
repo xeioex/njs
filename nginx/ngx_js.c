@@ -3603,34 +3603,10 @@ ngx_js_merge_vm(ngx_conf_t *cf, ngx_js_loc_conf_t *conf,
     ngx_int_t (*init_vm) (ngx_conf_t *cf, ngx_js_loc_conf_t *conf))
 {
     ngx_str_t            *path, *s;
+    ngx_int_t             rc;
     ngx_uint_t            i;
     ngx_array_t          *imports, *preload_objects, *paths;
     ngx_js_named_path_t  *import, *pi, *pij, *preload;
-
-    if (prev->imports != NGX_CONF_UNSET_PTR && prev->engine == NULL) {
-        /*
-         * special handling to preserve conf->engine
-         * in the "http" or "stream" section to inherit it to all servers
-         */
-        if (init_vm(cf, (ngx_js_loc_conf_t *) prev) != NGX_OK) {
-            return NGX_ERROR;
-        }
-    }
-
-    if (conf->imports == NGX_CONF_UNSET_PTR
-        && conf->type == prev->type
-        && conf->paths == NGX_CONF_UNSET_PTR
-        && conf->preload_objects == NGX_CONF_UNSET_PTR)
-    {
-        if (prev->engine != NULL) {
-            conf->preload_objects = prev->preload_objects;
-            conf->imports = prev->imports;
-            conf->type = prev->type;
-            conf->paths = prev->paths;
-            conf->engine = prev->engine;
-            return NGX_OK;
-        }
-    }
 
     if (prev->preload_objects != NGX_CONF_UNSET_PTR) {
         if (conf->preload_objects == NGX_CONF_UNSET_PTR) {
@@ -3742,11 +3718,34 @@ ngx_js_merge_vm(ngx_conf_t *cf, ngx_js_loc_conf_t *conf,
         }
     }
 
+    if (conf->imports == prev->imports
+        && conf->preload_objects == prev->preload_objects
+        && conf->paths == prev->paths
+        && prev->engine != NULL)
+    {
+        conf->engine = prev->engine;
+        return NGX_OK;
+    }
+
     if (conf->imports == NGX_CONF_UNSET_PTR) {
         return NGX_OK;
     }
 
-    return init_vm(cf, (ngx_js_loc_conf_t *) conf);
+    rc = init_vm(cf, (ngx_js_loc_conf_t *) conf);
+
+    if (rc == NGX_OK) {
+
+        /*
+         * special handling to preserve conf->engine
+         * in the "http" or "stream" section to inherit it to all servers
+         */
+
+        if (prev->imports != NGX_CONF_UNSET_PTR && prev->engine == NULL) {
+            prev->engine = conf->engine;
+        }
+    }
+
+    return rc;
 }
 
 
@@ -4196,6 +4195,7 @@ ngx_js_create_conf(ngx_conf_t *cf, size_t size)
     /*
      * set by ngx_pcalloc():
      *
+     *     conf->engine = NULL;
      *     conf->reuse_queue = NULL;
      *     conf->fetch_proxy_auth_header = { 0, NULL };
      */
@@ -4317,10 +4317,6 @@ ngx_js_merge_conf(ngx_conf_t *cf, void *parent, void *child,
     ngx_js_loc_conf_t *conf = child;
 
     ngx_conf_merge_uint_value(conf->type, prev->type, NGX_ENGINE_NJS);
-    if (prev->type == NGX_CONF_UNSET_UINT) {
-        prev->type = NGX_ENGINE_NJS;
-    }
-
     ngx_conf_merge_msec_value(conf->timeout, prev->timeout, 60000);
     ngx_conf_merge_size_value(conf->reuse, prev->reuse, 128);
     ngx_conf_merge_size_value(conf->reuse_max_size, prev->reuse_max_size,
