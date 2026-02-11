@@ -1503,6 +1503,137 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("null ?? 0 || 1"),
       njs_str("SyntaxError: Unexpected token \"||\"") },
 
+    /* Optional chaining: property access. */
+
+    { njs_str("var o = {a: 1}; o?.a"),
+      njs_str("1") },
+
+    { njs_str("var o = null; o?.a"),
+      njs_str("undefined") },
+
+    { njs_str("undefined?.a"),
+      njs_str("undefined") },
+
+    { njs_str("var o = {a: {b: 2}}; o?.a.b"),
+      njs_str("2") },
+
+    { njs_str("var o = null; o?.a.b"),
+      njs_str("undefined") },
+
+    /* Optional chaining: bracket access. */
+
+    { njs_str("var o = {a: 1}; o?.['a']"),
+      njs_str("1") },
+
+    { njs_str("var o = null; o?.['a']"),
+      njs_str("undefined") },
+
+    /* Optional chaining: method call. */
+
+    { njs_str("var o = {f: function() {return 42}}; o?.f()"),
+      njs_str("42") },
+
+    { njs_str("var o = null; o?.f()"),
+      njs_str("undefined") },
+
+    { njs_str("var o = { b() { return this._b; }, _b: { c: 42 }};"
+              "o?.b().c"),
+      njs_str("42") },
+
+    { njs_str("var o = null;"
+              "o?.b().c"),
+      njs_str("undefined") },
+
+    /* Optional chaining: optional call. */
+
+    { njs_str("var f = function() {return 42}; f?.()"),
+      njs_str("42") },
+
+    { njs_str("var f = null; f?.()"),
+      njs_str("undefined") },
+
+    /* Optional chaining: nested. */
+
+    { njs_str("var o = {a: {b: 3}}; o?.a?.b"),
+      njs_str("3") },
+
+    { njs_str("var o = {a: null}; o?.a?.b"),
+      njs_str("undefined") },
+
+    { njs_str("var o = null; o?.a?.b"),
+      njs_str("undefined") },
+
+    /* Optional chaining: short-circuit side effects. */
+
+    { njs_str("var c = 0; var o = null; o?.a; c"),
+      njs_str("0") },
+
+    /* Optional chaining: delete semantics. */
+
+    { njs_str("var o = null; delete o?.a"),
+      njs_str("true") },
+
+    { njs_str("var o = null; delete o?.['a']"),
+      njs_str("true") },
+
+    { njs_str("var o = {a: 1}; delete o?.a; o.a"),
+      njs_str("undefined") },
+
+    { njs_str("var o = {a: 1}; delete o?.['a']; o.a"),
+      njs_str("undefined") },
+
+    /* Optional chaining with ??. */
+
+    { njs_str("var o = null; o?.a ?? 'default'"),
+      njs_str("default") },
+
+    { njs_str("var o = {a: 0}; o?.a ?? 'default'"),
+      njs_str("0") },
+
+    /* Optional chaining: advanced and corner cases. */
+
+    { njs_str("var i = 0; var o = null; o?.[i++]; i"),
+      njs_str("0") },
+
+    { njs_str("var i = 0; var o = null; o?.f(i++); i"),
+      njs_str("0") },
+
+    { njs_str("var o = {x: 7, m: function() {return this.x}}; o.m?.()"),
+      njs_str("7") },
+
+    { njs_str("var o = {x: 9, m: function() {return this.x}}; o?.m?.()"),
+      njs_str("9") },
+
+    { njs_str("var i = 0; var o = {m: null}; o.m?.(i++); i"),
+      njs_str("0") },
+
+    { njs_str("var o = null; (o?.a).b"),
+      njs_str("TypeError: cannot get property \"b\" of undefined") },
+
+    { njs_str("var o = {a: null}; o?.a.b"),
+      njs_str("TypeError: cannot get property \"b\" of null") },
+
+    { njs_str("var o = null; o?.().a"),
+      njs_str("undefined") },
+
+    { njs_str("var o = function() {return {a: 1}}; o?.().a"),
+      njs_str("1") },
+
+    { njs_str("var o = {}; o?.()"),
+      njs_str("TypeError: object is not a function") },
+
+    { njs_str("var o = {x: 2, m: function() {return this.x}}; (o.m)?.()"),
+      njs_str("2") },
+
+    { njs_str("var o = {x: 2, m: function() {return this.x}}; (o?.m)()"),
+      njs_str("2") },
+
+    { njs_str("var o = {a: {b: 1}}; delete o?.a?.b; o.a.b"),
+      njs_str("undefined") },
+
+    { njs_str("var o = null; delete o?.a?.b"),
+      njs_str("true") },
+
     { njs_str("var a = true; a = -~!a"),
       njs_str("1") },
 
