@@ -185,6 +185,7 @@ typedef struct {
 
 #define NGX_JS_COMMON_CTX                                                     \
     ngx_engine_t          *engine;                                            \
+    ngx_js_loc_conf_t     *conf;                                              \
     ngx_log_t             *log;                                               \
     njs_opaque_value_t     args[3];                                           \
     njs_opaque_value_t     retval;                                            \

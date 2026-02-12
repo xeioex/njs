@@ -1709,6 +1709,7 @@ ngx_http_js_init_vm(ngx_http_request_t *r, njs_int_t proto_id)
         }
 
         ngx_js_ctx_init((ngx_js_ctx_t *) ctx, r->connection->log);
+        ctx->conf = (ngx_js_loc_conf_t *) jlcf;
 
         ngx_http_set_ctx(r, ctx, ngx_http_js_module);
     }

@@ -1222,6 +1222,7 @@ ngx_stream_js_init_vm(ngx_stream_session_t *s, njs_int_t proto_id)
         }
 
         ngx_js_ctx_init((ngx_js_ctx_t *) ctx, s->connection->log);
+        ctx->conf = (ngx_js_loc_conf_t *) jscf;
 
         ngx_stream_set_ctx(s, ctx, ngx_stream_js_module);
     }

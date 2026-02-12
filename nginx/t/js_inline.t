@@ -24,7 +24,7 @@ use Test::Nginx;
 select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
-my $t = Test::Nginx->new()->has(qw/http rewrite/)->plan(14);
+my $t = Test::Nginx->new()->has(qw/http rewrite/)->plan(15);
 
 use constant TEMPLATE_CONF => <<'EOF';
 
@@ -45,6 +45,8 @@ http {
 
     js_set $expanded_uri '$uri';
     js_set $expanded_complex '$uri.toUpperCase() + "_" + ($arg_a || "none")';
+
+    js_set $runtime_bad '(o.a.a)';
 
     %%EXTRA_CONF%%
 
@@ -70,6 +72,10 @@ http {
 
         location /expanded {
             return 200 "uri=$expanded_uri complex=$expanded_complex";
+        }
+
+        location /runtime_bad {
+            return 200 "bad=$runtime_bad";
         }
     }
 }
@@ -111,6 +117,10 @@ like(http_get('/expanded'), qr/complex=\/EXPANDED_none/,
 	'expanded $var complex');
 like(http_get('/expanded?a=X'), qr/complex=\/EXPANDED_X/,
 	'expanded $var complex with arg');
+
+http_get('/runtime_bad');
+like($t->read_file('error.log'), qr/included at.*nginx\.conf:/s,
+	'runtime error location');
 
 $t->stop();
 

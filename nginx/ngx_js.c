@@ -691,6 +691,53 @@ ngx_js_inline_map(ngx_js_loc_conf_t *conf, u_char *start, size_t len)
 }
 
 
+static ngx_js_inline_t *
+ngx_js_inline_from_stack(ngx_js_loc_conf_t *conf, u_char *start, size_t len)
+{
+    u_char           *p, *end;
+    ngx_uint_t        index;
+    ngx_js_inline_t  *inl;
+
+    static const u_char  prefix[] = "__js_set_";
+
+    if (conf == NULL || conf->inlines == NGX_CONF_UNSET_PTR) {
+        return NULL;
+    }
+
+    end = start + len;
+    p = start;
+
+    while (p + (sizeof(prefix) - 1) <= end) {
+        if (ngx_strncmp(p, prefix, sizeof(prefix) - 1) == 0) {
+            p += sizeof(prefix) - 1;
+
+            if (p >= end || *p < '0' || *p > '9') {
+                return NULL;
+            }
+
+            index = 0;
+
+            while (p < end && *p >= '0' && *p <= '9') {
+                index = index * 10 + (*p - '0');
+                p++;
+            }
+
+            if (index >= conf->inlines->nelts) {
+                return NULL;
+            }
+
+            inl = conf->inlines->elts;
+
+            return &inl[index];
+        }
+
+        p++;
+    }
+
+    return NULL;
+}
+
+
 static ngx_int_t
 ngx_engine_njs_compile(ngx_js_loc_conf_t *conf, ngx_log_t *log, u_char *start,
     size_t size)
@@ -840,10 +887,12 @@ static ngx_int_t
 ngx_engine_njs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
     njs_opaque_value_t *args, njs_uint_t nargs)
 {
-    njs_vm_t        *vm;
-    njs_int_t        ret;
-    njs_str_t        name;
-    njs_function_t  *func;
+    njs_vm_t         *vm;
+    njs_int_t         ret;
+    njs_str_t         name, str;
+    ngx_str_t         s;
+    ngx_js_inline_t  *inl;
+    njs_function_t   *func;
 
     name.start = fname->data;
     name.length = fname->len;
@@ -860,7 +909,24 @@ ngx_engine_njs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
     ret = njs_vm_invoke(vm, func, njs_value_arg(args), nargs,
                         njs_value_arg(&ctx->retval));
     if (ret == NJS_ERROR) {
-        ngx_js_log_exception(vm, ctx->log, "exception");
+        if (njs_vm_exception_string(vm, &str) != NJS_OK) {
+            ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                          "js exception");
+            return NGX_ERROR;
+        }
+
+        s.data = str.start;
+        s.len = str.length;
+
+        inl = ngx_js_inline_from_stack(ctx->conf, s.data, s.len);
+        if (inl != NULL) {
+            ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                          "js exception: %V, included at %s:%ui",
+                          &s, inl->file, inl->line);
+        } else {
+            ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                          "js exception: %V", &s);
+        }
 
         return NGX_ERROR;
     }
@@ -1225,9 +1291,11 @@ static ngx_int_t
 ngx_engine_qjs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
     njs_opaque_value_t *args, njs_uint_t nargs)
 {
-    JSValue     fn, val;
-    ngx_int_t   rc;
-    JSContext  *cx;
+    JSValue           fn, val, exc;
+    ngx_int_t         rc;
+    ngx_str_t         s;
+    JSContext        *cx;
+    ngx_js_inline_t  *inl;
 
     cx = ctx->engine->u.qjs.ctx;
 
@@ -1243,7 +1311,24 @@ ngx_engine_qjs_call(ngx_js_ctx_t *ctx, ngx_str_t *fname,
     val = JS_Call(cx, fn, JS_UNDEFINED, nargs, &ngx_qjs_arg(args[0]));
     JS_FreeValue(cx, fn);
     if (JS_IsException(val)) {
-        ngx_qjs_log_exception(ctx->engine, ctx->log, "call exception");
+        exc = JS_GetException(cx);
+
+        if (ngx_qjs_dump_obj(ctx->engine, exc, &s) == NGX_OK) {
+            inl = ngx_js_inline_from_stack(ctx->conf, s.data, s.len);
+            if (inl != NULL) {
+                ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                              "js exception: %V, included at %s:%ui",
+                              &s, inl->file, inl->line);
+            } else {
+                ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
+                              "js exception: %V", &s);
+            }
+
+        } else {
+            ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "js exception");
+        }
+
+        JS_FreeValue(cx, exc);
 
         return NGX_ERROR;
     }
