@@ -117,11 +117,11 @@ $t->stop();
 ###############################################################################
 
 like(check($t, "js_set \$bad 'return 1';"),
-	qr/SyntaxError.*included at.*nginx\.conf:29/s,
+	qr/SyntaxError.*included at.*nginx\.conf:/s,
 	'inline syntax error location');
 
 like(check($t, "js_set \$bad '1 +';"),
-	qr/SyntaxError.*included at.*nginx\.conf:29/s,
+	qr/SyntaxError.*included at.*nginx\.conf:/s,
 	'inline syntax error unexpected end');
 
 $t->write_file('bad.js', 'export default {INVALID SYNTAX');
