@@ -1863,8 +1863,13 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var o = {x: 2, m: function() {return this.x}}; (o.m)?.()"),
       njs_str("2") },
 
-    { njs_str("var o = {m: function() {return 42}}; (o?.m)()"),
-      njs_str("42") },
+    { njs_str("var o = {x: 5, m: function() {return this.x}}; (o?.m)()"),
+      njs_str("5") },
+
+    { njs_str("var k = 'm';"
+              "var o = {x: 9, m: function() {return this.x}};"
+              "(o?.[k])()"),
+      njs_str("9") },
 
     { njs_str("var o = null; (o?.m)()"),
       njs_str("TypeError: undefined is not a function") },

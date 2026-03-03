@@ -40,6 +40,7 @@ enum {
     NJS_VMCODE_RETURN,
     NJS_VMCODE_FUNCTION_FRAME,
     NJS_VMCODE_METHOD_FRAME,
+    NJS_VMCODE_FUNCTION_FRAME_THIS,
     NJS_VMCODE_FUNCTION_CALL,
     NJS_VMCODE_PROPERTY_NEXT,
     NJS_VMCODE_ARGUMENTS,
@@ -300,6 +301,15 @@ typedef struct {
     njs_index_t                method;
     uint8_t                    ctor;       /* 1 bit  */
 } njs_vmcode_method_frame_t;
+
+
+typedef struct {
+    njs_vmcode_t               code;
+    njs_index_t                nargs;
+    njs_index_t                function;
+    njs_index_t                this_object;
+    uint8_t                    ctor;       /* 1 bit  */
+} njs_vmcode_function_frame_this_t;
 
 
 typedef struct {

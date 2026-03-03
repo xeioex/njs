@@ -53,6 +53,9 @@ static njs_code_name_t  code_names[] = {
 
     { NJS_VMCODE_FUNCTION_CALL, sizeof(njs_vmcode_function_call_t),
           njs_str("FUNCTION CALL   ") },
+    { NJS_VMCODE_FUNCTION_FRAME_THIS,
+          sizeof(njs_vmcode_function_frame_this_t),
+          njs_str("FUNCTION FRAME  ") },
     { NJS_VMCODE_RETURN, sizeof(njs_vmcode_return_t),
           njs_str("RETURN          ") },
     { NJS_VMCODE_STOP, sizeof(njs_vmcode_stop_t),
@@ -187,34 +190,35 @@ njs_disassembler(njs_vm_t *vm)
 void
 njs_disassemble(u_char *start, u_char *end, njs_int_t count, njs_arr_t *lines)
 {
-    u_char                       *p;
-    uint32_t                     line;
-    njs_str_t                    *name;
-    njs_uint_t                   n;
-    const char                   *type;
-    njs_vmcode_t                 operation;
-    njs_code_name_t              *code_name;
-    njs_vmcode_jump_t            *jump;
-    njs_vmcode_error_t           *error;
-    njs_vmcode_1addr_t           *code1;
-    njs_vmcode_2addr_t           *code2;
-    njs_vmcode_3addr_t           *code3;
-    njs_vmcode_array_t           *array;
-    njs_vmcode_catch_t           *catch;
-    njs_vmcode_import_t          *import;
-    njs_vmcode_finally_t         *finally;
-    njs_vmcode_try_end_t         *try_end;
-    njs_vmcode_try_start_t       *try_start;
-    njs_vmcode_cond_jump_t       *cond_jump;
-    njs_vmcode_test_jump_t       *test_jump;
-    njs_vmcode_prop_next_t       *prop_next;
-    njs_vmcode_try_return_t      *try_return;
-    njs_vmcode_equal_jump_t      *equal;
-    njs_vmcode_prop_foreach_t    *prop_foreach;
-    njs_vmcode_method_frame_t    *method;
-    njs_vmcode_prop_accessor_t   *prop_accessor;
-    njs_vmcode_try_trampoline_t  *try_tramp;
-    njs_vmcode_function_frame_t  *function;
+    u_char                           *p;
+    uint32_t                         line;
+    njs_str_t                        *name;
+    njs_uint_t                       n;
+    const char                       *type;
+    njs_vmcode_t                     operation;
+    njs_code_name_t                  *code_name;
+    njs_vmcode_jump_t                *jump;
+    njs_vmcode_error_t               *error;
+    njs_vmcode_1addr_t               *code1;
+    njs_vmcode_2addr_t               *code2;
+    njs_vmcode_3addr_t               *code3;
+    njs_vmcode_array_t               *array;
+    njs_vmcode_catch_t               *catch;
+    njs_vmcode_import_t               *import;
+    njs_vmcode_finally_t              *finally;
+    njs_vmcode_try_end_t              *try_end;
+    njs_vmcode_try_start_t            *try_start;
+    njs_vmcode_cond_jump_t            *cond_jump;
+    njs_vmcode_test_jump_t            *test_jump;
+    njs_vmcode_prop_next_t            *prop_next;
+    njs_vmcode_try_return_t           *try_return;
+    njs_vmcode_equal_jump_t           *equal;
+    njs_vmcode_prop_foreach_t         *prop_foreach;
+    njs_vmcode_method_frame_t         *method;
+    njs_vmcode_function_frame_t       *function;
+    njs_vmcode_prop_accessor_t        *prop_accessor;
+    njs_vmcode_try_trampoline_t       *try_tramp;
+    njs_vmcode_function_frame_this_t  *function_this;
 
     /*
      * On some 32-bit platform uintptr_t is int and compilers warn
@@ -359,6 +363,20 @@ njs_disassemble(u_char *start, u_char *end, njs_int_t count, njs_arr_t *lines)
                        method->ctor ? " CTOR" : "");
 
             p += sizeof(njs_vmcode_method_frame_t);
+            continue;
+        }
+
+        if (operation == NJS_VMCODE_FUNCTION_FRAME_THIS) {
+            function_this = (njs_vmcode_function_frame_this_t *) p;
+
+            njs_printf("%5uD | %05uz FUNCTION FRAME    %04Xz %04Xz %uz%s\n",
+                       line, p - start, (size_t) function_this->function,
+                       (size_t) function_this->this_object,
+                       function_this->nargs,
+                       function_this->ctor ? " CTOR" : "");
+
+            p += sizeof(njs_vmcode_function_frame_this_t);
+
             continue;
         }
 

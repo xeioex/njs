@@ -145,6 +145,13 @@ njs_generate_optional_chain_preserve(njs_parser_node_t *node)
 }
 
 
+njs_inline njs_parser_node_t *
+njs_generate_function_call_this(njs_parser_node_t *node)
+{
+    return node->u.object;
+}
+
+
 static u_char *njs_generate_reserve(njs_vm_t *vm, njs_generator_t *generator,
     size_t size);
 static njs_int_t njs_generate_code_map(njs_vm_t *vm, njs_generator_t *generator,
@@ -4299,7 +4306,6 @@ njs_generate_optional_chain_end(njs_vm_t *vm, njs_generator_t *generator,
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
         preserve = njs_generate_optional_method_call_preserve(call)->left;
-
         if (!njs_generate_is_property_lvalue(preserve)) {
             preserve = NULL;
         }
@@ -5066,14 +5072,23 @@ static njs_int_t
 njs_generate_function_call(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
-    njs_int_t       ret;
-    njs_variable_t  *var;
+    njs_int_t           ret;
+    njs_variable_t      *var;
+    njs_parser_node_t   *this_object;
 
     var = NULL;
+    this_object = njs_generate_function_call_this(node);
 
     if (node->left != NULL) {
         if (njs_generate_is_property_call_source(node->left)) {
             njs_internal_error(vm, "unexpected function call source");
+            return NJS_ERROR;
+        }
+
+        if (this_object != NULL
+            && node->left->token_type != NJS_TOKEN_OPTIONAL_CHAIN)
+        {
+            njs_internal_error(vm, "unexpected function call this");
             return NJS_ERROR;
         }
 
@@ -5100,23 +5115,36 @@ static njs_int_t
 njs_generate_function_call_arguments(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
-    njs_int_t                    ret;
-    njs_jump_off_t               func_offset;
-    njs_parser_node_t            *name;
-    njs_vmcode_function_frame_t  *func;
+    njs_int_t                         ret;
+    njs_jump_off_t                    func_offset;
+    njs_parser_node_t                 *name, *this_object;
+    njs_vmcode_function_frame_t       *func;
+    njs_vmcode_function_frame_this_t  *func_this;
 
     name = node;
+    this_object = njs_generate_function_call_this(node);
 
     if (node->left != NULL) {
         name = node->left;
     }
 
-    njs_generate_code(generator, njs_vmcode_function_frame_t, func,
-                      NJS_VMCODE_FUNCTION_FRAME, node);
-    func_offset = njs_code_offset(generator, func);
-    func->ctor = node->ctor;
-    func->name = name->index;
-    func->nargs = 0;
+    if (this_object != NULL) {
+        njs_generate_code(generator, njs_vmcode_function_frame_this_t,
+                          func_this, NJS_VMCODE_FUNCTION_FRAME_THIS, node);
+        func_offset = njs_code_offset(generator, func_this);
+        func_this->ctor = node->ctor;
+        func_this->function = name->index;
+        func_this->this_object = this_object->index;
+        func_this->nargs = 0;
+
+    } else {
+        njs_generate_code(generator, njs_vmcode_function_frame_t, func,
+                          NJS_VMCODE_FUNCTION_FRAME, node);
+        func_offset = njs_code_offset(generator, func);
+        func->ctor = node->ctor;
+        func->name = name->index;
+        func->nargs = 0;
+    }
 
     njs_generator_next(generator, njs_generate,
                        (node->right != NULL ? node->right->left : NULL));
@@ -5143,11 +5171,20 @@ static njs_int_t
 njs_generate_function_call_end(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
-    njs_int_t  ret;
+    njs_int_t           ret;
+    njs_parser_node_t   *this_object;
 
     ret = njs_generate_call(vm, generator, node);
     if (njs_fast_path(ret != NJS_OK)) {
         return ret;
+    }
+
+    this_object = njs_generate_function_call_this(node);
+    if (this_object != NULL && this_object->temporary) {
+        ret = njs_generate_index_release(vm, generator, this_object->index);
+        if (njs_slow_path(ret != NJS_OK)) {
+            return ret;
+        }
     }
 
     return njs_generator_stack_pop(vm, generator, generator->context);

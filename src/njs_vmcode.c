@@ -83,35 +83,37 @@ njs_int_t
 njs_vmcode_interpreter(njs_vm_t *vm, u_char *pc, njs_value_t *rval,
     void *promise_cap, void *async_ctx)
 {
-    u_char                       *catch;
-    double                       num, exponent;
-    int32_t                      i32;
-    uint32_t                     u32;
-    njs_str_t                    string;
-    njs_bool_t                   valid, lambda_call;
-    njs_value_t                  *retval, *value1, *value2;
-    njs_value_t                  *src, *s1, *s2, dst;
-    njs_value_t                  *function, name;
-    njs_value_t                  numeric1, numeric2, primitive1, primitive2;
-    njs_frame_t                  *frame;
-    njs_jump_off_t               ret;
-    njs_vmcode_1addr_t           *put_arg;
-    njs_vmcode_await_t           *await;
-    njs_native_frame_t           *previous, *native;
-    njs_property_next_t          *next;
-    njs_vmcode_import_t          *import;
-    njs_vmcode_generic_t         *vmcode;
-    njs_vmcode_variable_t        *var;
-    njs_vmcode_prop_get_t        *get;
-    njs_vmcode_prop_set_t        *set;
-    njs_vmcode_prop_next_t       *pnext;
-    njs_vmcode_test_jump_t       *test_jump;
-    njs_vmcode_equal_jump_t      *equal;
-    njs_vmcode_try_return_t      *try_return;
-    njs_vmcode_method_frame_t    *method_frame;
-    njs_vmcode_prop_accessor_t   *accessor;
-    njs_vmcode_try_trampoline_t  *try_trampoline;
-    njs_vmcode_function_frame_t  *function_frame;
+    u_char                            *catch;
+    double                            num, exponent;
+    int32_t                           i32;
+    uint32_t                          u32;
+    njs_str_t                         string;
+    njs_bool_t                        valid, lambda_call;
+    njs_value_t                       *retval, *value1, *value2;
+    njs_value_t                       *src, *s1, *s2, dst;
+    njs_value_t                       *function, name;
+    njs_value_t                       numeric1, numeric2, primitive1,
+                                      primitive2;
+    njs_frame_t                       *frame;
+    njs_jump_off_t                    ret;
+    njs_vmcode_1addr_t                *put_arg;
+    njs_vmcode_await_t                *await;
+    njs_native_frame_t                *previous, *native;
+    njs_property_next_t               *next;
+    njs_vmcode_import_t               *import;
+    njs_vmcode_generic_t              *vmcode;
+    njs_vmcode_variable_t             *var;
+    njs_vmcode_prop_get_t             *get;
+    njs_vmcode_prop_set_t             *set;
+    njs_vmcode_prop_next_t            *pnext;
+    njs_vmcode_test_jump_t            *test_jump;
+    njs_vmcode_equal_jump_t           *equal;
+    njs_vmcode_try_return_t           *try_return;
+    njs_vmcode_method_frame_t         *method_frame;
+    njs_vmcode_function_frame_t       *function_frame;
+    njs_vmcode_prop_accessor_t        *accessor;
+    njs_vmcode_try_trampoline_t       *try_trampoline;
+    njs_vmcode_function_frame_this_t  *function_frame_this;
 
     njs_vmcode_debug(vm, pc, "ENTER");
 
@@ -154,6 +156,7 @@ njs_vmcode_interpreter(njs_vm_t *vm, u_char *pc, njs_value_t *rval,
         NJS_GOTO_ROW(NJS_VMCODE_RETURN),
         NJS_GOTO_ROW(NJS_VMCODE_FUNCTION_FRAME),
         NJS_GOTO_ROW(NJS_VMCODE_METHOD_FRAME),
+        NJS_GOTO_ROW(NJS_VMCODE_FUNCTION_FRAME_THIS),
         NJS_GOTO_ROW(NJS_VMCODE_FUNCTION_CALL),
         NJS_GOTO_ROW(NJS_VMCODE_PROPERTY_NEXT),
         NJS_GOTO_ROW(NJS_VMCODE_ARGUMENTS),
@@ -1549,6 +1552,25 @@ NEXT_LBL;
         }
 
         ret = sizeof(njs_vmcode_method_frame_t);
+        BREAK;
+
+    CASE (NJS_VMCODE_FUNCTION_FRAME_THIS):
+        njs_vmcode_debug_opcode();
+
+        njs_vmcode_operand(vm, vmcode->operand3, value2);
+        njs_vmcode_operand(vm, vmcode->operand2, value1);
+
+        function_frame_this = (njs_vmcode_function_frame_this_t *) pc;
+
+        ret = njs_function_frame_create(vm, value1, value2,
+                                        function_frame_this->nargs,
+                                        function_frame_this->ctor);
+
+        if (njs_slow_path(ret != NJS_OK)) {
+            goto error;
+        }
+
+        ret = sizeof(njs_vmcode_function_frame_this_t);
         BREAK;
 
     CASE (NJS_VMCODE_FUNCTION_CALL):
