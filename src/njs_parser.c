@@ -107,6 +107,10 @@ static njs_parser_node_t *njs_parser_optional_chain_receiver(
     njs_parser_node_t *node);
 static njs_parser_node_t *njs_parser_optional_chain_call_this(
     njs_parser_node_t *node);
+static void njs_parser_set_call_this(njs_parser_node_t *node,
+    njs_parser_node_t *this_object);
+static void njs_parser_set_optional_method_call_preserve(
+    njs_parser_node_t *node, njs_parser_node_t *preserve);
 static njs_parser_node_t *njs_parser_optional_chain_target_property(
     njs_parser_node_t *node);
 static njs_parser_node_t *njs_parser_optional_chain_method_call(
@@ -2769,7 +2773,7 @@ njs_parser_create_call(njs_parser_t *parser, njs_parser_node_t *node,
     }
 
     func->ctor = ctor;
-    func->u.object = this_object;
+    njs_parser_set_call_this(func, this_object);
 
     return func;
 }
@@ -2833,6 +2837,22 @@ njs_parser_optional_chain_call_this(njs_parser_node_t *node)
 }
 
 
+static void
+njs_parser_set_call_this(njs_parser_node_t *node,
+    njs_parser_node_t *this_object)
+{
+    node->u.object = this_object;
+}
+
+
+static void
+njs_parser_set_optional_method_call_preserve(njs_parser_node_t *node,
+    njs_parser_node_t *preserve)
+{
+    node->u.object = preserve;
+}
+
+
 static njs_parser_node_t *
 njs_parser_optional_chain_target_property(njs_parser_node_t *node)
 {
@@ -2870,7 +2890,7 @@ njs_parser_optional_chain_method_call(njs_parser_t *parser,
         return NULL;
     }
 
-    func->u.object = src;
+    njs_parser_set_optional_method_call_preserve(func, src);
 
     return func;
 }
