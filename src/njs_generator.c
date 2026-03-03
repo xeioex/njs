@@ -138,6 +138,13 @@ njs_generate_optional_method_call_property(njs_parser_node_t *node)
 }
 
 
+njs_inline njs_parser_node_t *
+njs_generate_optional_chain_preserve(njs_parser_node_t *node)
+{
+    return node->u.object;
+}
+
+
 static u_char *njs_generate_reserve(njs_vm_t *vm, njs_generator_t *generator,
     size_t size);
 static njs_int_t njs_generate_code_map(njs_vm_t *vm, njs_generator_t *generator,
@@ -4257,8 +4264,8 @@ njs_generate_optional_chain_after(njs_vm_t *vm, njs_generator_t *generator,
         prop->right->index = njs_generate_optional_method_call_preserve(call)
                                  ->right->index;
 
-    } else if (node->u.object != NULL) {
-        node->u.object->index = node->left->index;
+    } else if (njs_generate_optional_chain_preserve(node) != NULL) {
+        njs_generate_optional_chain_preserve(node)->index = node->left->index;
     }
 
     njs_generator_next(generator, njs_generate, node->right);
