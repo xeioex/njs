@@ -691,6 +691,7 @@ njs_generate(njs_vm_t *vm, njs_generator_t *generator, njs_parser_node_t *node)
     case NJS_TOKEN_REMAINDER:
     case NJS_TOKEN_PROPERTY_DELETE:
     case NJS_TOKEN_PROPERTY:
+    case NJS_TOKEN_PROPERTY_REF:
         return njs_generate_3addr_operation(vm, generator, node, 0);
 
     case NJS_TOKEN_IN:
@@ -2218,7 +2219,9 @@ njs_generate_for_in_statement(njs_vm_t *vm, njs_generator_t *generator,
 
     foreach = node->left;
 
-    if (foreach->left->token_type != NJS_TOKEN_PROPERTY) {
+    if (foreach->left->token_type != NJS_TOKEN_PROPERTY
+        && foreach->left->token_type != NJS_TOKEN_PROPERTY_REF)
+    {
         name = foreach->left->right;
 
         if (name != NULL) {
@@ -4155,7 +4158,9 @@ njs_generate_optional_chain(njs_vm_t *vm, njs_generator_t *generator,
     if (call != NULL) {
         preserve = call->u.object->left;
 
-        if (preserve->token_type == NJS_TOKEN_PROPERTY) {
+        if (preserve->token_type == NJS_TOKEN_PROPERTY
+            || preserve->token_type == NJS_TOKEN_PROPERTY_REF)
+        {
             preserve->hoist = 1;
         }
     }
@@ -4233,7 +4238,9 @@ njs_generate_optional_chain_end(njs_vm_t *vm, njs_generator_t *generator,
     if (call != NULL) {
         preserve = call->u.object->left;
 
-        if (preserve->token_type != NJS_TOKEN_PROPERTY) {
+        if (preserve->token_type != NJS_TOKEN_PROPERTY
+            && preserve->token_type != NJS_TOKEN_PROPERTY_REF)
+        {
             preserve = NULL;
         }
     } else {

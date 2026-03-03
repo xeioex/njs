@@ -1869,6 +1869,10 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var o = null; (o?.m)()"),
       njs_str("TypeError: undefined is not a function") },
 
+    { njs_str("var o = {x: 7, t: function(s) {return this.x + s[0]}};"
+              "o.t`!`"),
+      njs_str("7!") },
+
     { njs_str("var o = {a: {b: 1}}; delete o?.a?.b; o.a.b"),
       njs_str("undefined") },
 
@@ -3335,6 +3339,9 @@ static njs_unit_test_t  njs_test[] =
 
     { njs_str("var a = []; for (var k in new Uint8Array([1,2,3])) { a.push(k); }; a"),
       njs_str("0,1,2") },
+
+    { njs_str("var dst = {}; for (dst.a in {x: 1}) {} dst.a"),
+      njs_str("x") },
 
     { njs_str("var i=0, a=[], r=[], d=[3,5];"
               "function ret_a() {r.push('ret_a'); return a};"
@@ -11393,6 +11400,9 @@ static njs_unit_test_t  njs_test[] =
       njs_str("10") },
 
     { njs_str("var o = { x: 1, f: function() { return this.x } }; o.f()"),
+      njs_str("1") },
+
+    { njs_str("var o = { x: 1, f: function() { return this.x } }; (o.f)()"),
       njs_str("1") },
 
     { njs_str("var o = { x: 1, f: function(a) { return this.x += a } };"
