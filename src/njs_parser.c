@@ -99,6 +99,10 @@ static njs_int_t njs_parser_right_link_pop(njs_parser_t *parser);
 static njs_parser_node_t *njs_parser_property_ref(njs_parser_node_t *node);
 static njs_parser_node_t *njs_parser_lvalue_ref(njs_parser_node_t *node);
 static njs_parser_node_t *njs_parser_call_receiver(njs_parser_node_t *node);
+static njs_parser_node_t *njs_parser_optional_chain_receiver(
+    njs_parser_node_t *node);
+static njs_parser_node_t *njs_parser_optional_chain_target_property(
+    njs_parser_node_t *node);
 static njs_parser_node_t *njs_parser_optional_chain_method_call(
     njs_parser_t *parser, njs_parser_node_t *node, uint32_t token_line);
 static njs_parser_node_t *njs_parser_optional_chain_call(
@@ -2759,22 +2763,16 @@ njs_parser_right_link_pop(njs_parser_t *parser)
 
 
 static njs_parser_node_t *
-njs_parser_optional_chain_property(njs_parser_node_t *node)
+njs_parser_optional_chain_receiver(njs_parser_node_t *node)
 {
-    if (node == NULL) {
-        return NULL;
-    }
-
-    if (node->token_type == NJS_TOKEN_PROPERTY
-        || node->token_type == NJS_TOKEN_PROPERTY_REF)
-    {
+    if (njs_parser_call_receiver(node) != NULL) {
         return node;
     }
 
-    if (node->token_type == NJS_TOKEN_OPTIONAL_CHAIN
+    if (node != NULL
+        && node->token_type == NJS_TOKEN_OPTIONAL_CHAIN
         && node->right != NULL
-        && (node->right->token_type == NJS_TOKEN_PROPERTY
-            || node->right->token_type == NJS_TOKEN_PROPERTY_REF))
+        && njs_parser_call_receiver(node->right) != NULL)
     {
         return node->right;
     }
@@ -2784,12 +2782,23 @@ njs_parser_optional_chain_property(njs_parser_node_t *node)
 
 
 static njs_parser_node_t *
+njs_parser_optional_chain_target_property(njs_parser_node_t *node)
+{
+    if (node == NULL || node->token_type != NJS_TOKEN_OPTIONAL_CHAIN) {
+        return NULL;
+    }
+
+    return njs_parser_property_ref(node->right);
+}
+
+
+static njs_parser_node_t *
 njs_parser_optional_chain_method_call(njs_parser_t *parser,
     njs_parser_node_t *node, uint32_t token_line)
 {
     njs_parser_node_t  *func, *prop, *src;
 
-    src = njs_parser_optional_chain_property(node);
+    src = njs_parser_optional_chain_receiver(node);
     if (src == NULL) {
         return NULL;
     }
@@ -3739,7 +3748,7 @@ njs_parser_unary_expression_next(njs_parser_t *parser,
             return njs_parser_stack_pop(parser);
 
         case NJS_TOKEN_OPTIONAL_CHAIN:
-            prop = njs_parser_optional_chain_property(node);
+            prop = njs_parser_optional_chain_target_property(node);
             if (prop != NULL) {
                 prop->token_type = NJS_TOKEN_PROPERTY_DELETE;
                 prop->u.operation = NJS_VMCODE_PROPERTY_DELETE;
