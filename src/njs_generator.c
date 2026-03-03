@@ -117,6 +117,13 @@ njs_generate_is_property_lvalue(njs_parser_node_t *node)
 }
 
 
+njs_inline njs_bool_t
+njs_generate_is_property_call_source(njs_parser_node_t *node)
+{
+    return node != NULL && node->token_type == NJS_TOKEN_PROPERTY_REF;
+}
+
+
 static u_char *njs_generate_reserve(njs_vm_t *vm, njs_generator_t *generator,
     size_t size);
 static njs_int_t njs_generate_code_map(njs_vm_t *vm, njs_generator_t *generator,
@@ -4147,16 +4154,35 @@ njs_generate_test_jump_expression_end(njs_vm_t *vm, njs_generator_t *generator,
 
 
 static njs_parser_node_t *
-njs_generate_optional_method_call(njs_parser_node_t *node)
+njs_generate_optional_method_call(njs_vm_t *vm, njs_parser_node_t *node)
 {
-    if (node != NULL
-        && node->token_type == NJS_TOKEN_METHOD_CALL
-        && node->u.object != NULL)
+    njs_parser_node_t  *preserve;
+
+    if (node == NULL
+        || node->token_type != NJS_TOKEN_METHOD_CALL
+        || node->u.object == NULL)
     {
-        return node;
+        return NULL;
     }
 
-    return NULL;
+    if (!njs_generate_is_property_call_source(node->left)) {
+        njs_internal_error(vm, "unexpected optional method call source");
+        return NULL;
+    }
+
+    preserve = node->u.object;
+
+    if (preserve->left == NULL || preserve->right == NULL) {
+        njs_internal_error(vm, "unexpected optional method call state");
+        return NULL;
+    }
+
+    if (!njs_generate_is_property_lvalue(preserve)) {
+        njs_internal_error(vm, "unexpected optional method call preserve");
+        return NULL;
+    }
+
+    return node;
 }
 
 
@@ -4169,7 +4195,7 @@ njs_generate_optional_chain(njs_vm_t *vm, njs_generator_t *generator,
 
     jump_offset = 0;
 
-    call = njs_generate_optional_method_call(node->right);
+    call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
         preserve = call->u.object->left;
 
@@ -4209,7 +4235,7 @@ njs_generate_optional_chain_after(njs_vm_t *vm, njs_generator_t *generator,
 
     test_jump->retval = node->index;
 
-    call = njs_generate_optional_method_call(node->right);
+    call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
         prop = call->left;
         prop->left->index = call->u.object->left->index;
@@ -4247,7 +4273,7 @@ njs_generate_optional_chain_end(njs_vm_t *vm, njs_generator_t *generator,
     njs_code_set_jump_offset(generator, njs_vmcode_test_jump_t,
                              *jump_offset);
 
-    call = njs_generate_optional_method_call(node->right);
+    call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
         preserve = call->u.object->left;
 
@@ -5023,6 +5049,11 @@ njs_generate_function_call(njs_vm_t *vm, njs_generator_t *generator,
     var = NULL;
 
     if (node->left != NULL) {
+        if (njs_generate_is_property_call_source(node->left)) {
+            njs_internal_error(vm, "unexpected function call source");
+            return NJS_ERROR;
+        }
+
         /* Generate function code in function expression. */
 
         njs_generator_next(generator, njs_generate, node->left);
@@ -5107,11 +5138,16 @@ njs_generate_method_call(njs_vm_t *vm, njs_generator_t *generator,
     njs_int_t          ret;
     njs_parser_node_t  *prop;
 
-    if (njs_generate_optional_method_call(node) != NULL) {
+    if (njs_generate_optional_method_call(vm, node) != NULL) {
         return njs_generate_method_call_arguments(vm, generator, node);
     }
 
     prop = node->left;
+
+    if (!njs_generate_is_property_call_source(prop)) {
+        njs_internal_error(vm, "unexpected method call source");
+        return NJS_ERROR;
+    }
 
     /* Object. */
 
@@ -5142,6 +5178,11 @@ njs_generate_method_call_arguments(njs_vm_t *vm, njs_generator_t *generator,
     njs_vmcode_method_frame_t  *method;
 
     prop = node->left;
+
+    if (!njs_generate_is_property_call_source(prop)) {
+        njs_internal_error(vm, "unexpected method call source");
+        return NJS_ERROR;
+    }
 
     njs_generate_code(generator, njs_vmcode_method_frame_t, method,
                       NJS_VMCODE_METHOD_FRAME, prop);

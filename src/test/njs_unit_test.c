@@ -11408,6 +11408,10 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var o = { x: 1, f: function() { return this.x } }; (o.f)()"),
       njs_str("1") },
 
+    { njs_str("var o = { x: 1, f: function() { return this.x } };"
+              "(0, o.f)()"),
+      njs_str("TypeError: cannot get property \"x\" of undefined") },
+
     { njs_str("var o = { x: 1, f: function(a) { return this.x += a } };"
                  "o.f(5) +' '+ o.x"),
       njs_str("6 6") },
