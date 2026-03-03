@@ -124,6 +124,20 @@ njs_generate_is_property_call_source(njs_parser_node_t *node)
 }
 
 
+njs_inline njs_parser_node_t *
+njs_generate_optional_method_call_preserve(njs_parser_node_t *node)
+{
+    return node->u.object;
+}
+
+
+njs_inline njs_parser_node_t *
+njs_generate_optional_method_call_property(njs_parser_node_t *node)
+{
+    return node->left;
+}
+
+
 static u_char *njs_generate_reserve(njs_vm_t *vm, njs_generator_t *generator,
     size_t size);
 static njs_int_t njs_generate_code_map(njs_vm_t *vm, njs_generator_t *generator,
@@ -4170,7 +4184,7 @@ njs_generate_optional_method_call(njs_vm_t *vm, njs_parser_node_t *node)
         return NULL;
     }
 
-    preserve = node->u.object;
+    preserve = njs_generate_optional_method_call_preserve(node);
 
     if (preserve->left == NULL || preserve->right == NULL) {
         njs_internal_error(vm, "unexpected optional method call state");
@@ -4197,7 +4211,7 @@ njs_generate_optional_chain(njs_vm_t *vm, njs_generator_t *generator,
 
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
-        preserve = call->u.object->left;
+        preserve = njs_generate_optional_method_call_preserve(call)->left;
 
         if (njs_generate_is_property_lvalue(preserve)) {
             preserve->hoist = 1;
@@ -4237,9 +4251,11 @@ njs_generate_optional_chain_after(njs_vm_t *vm, njs_generator_t *generator,
 
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
-        prop = call->left;
-        prop->left->index = call->u.object->left->index;
-        prop->right->index = call->u.object->right->index;
+        prop = njs_generate_optional_method_call_property(call);
+        prop->left->index = njs_generate_optional_method_call_preserve(call)
+                                ->left->index;
+        prop->right->index = njs_generate_optional_method_call_preserve(call)
+                                 ->right->index;
 
     } else if (node->u.object != NULL) {
         node->u.object->index = node->left->index;
@@ -4275,7 +4291,7 @@ njs_generate_optional_chain_end(njs_vm_t *vm, njs_generator_t *generator,
 
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
-        preserve = call->u.object->left;
+        preserve = njs_generate_optional_method_call_preserve(call)->left;
 
         if (!njs_generate_is_property_lvalue(preserve)) {
             preserve = NULL;
