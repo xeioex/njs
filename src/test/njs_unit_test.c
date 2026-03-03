@@ -1863,8 +1863,27 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var o = {x: 2, m: function() {return this.x}}; (o.m)?.()"),
       njs_str("2") },
 
+    { njs_str("var o = {m: function() {return {c: 42}}}; o?.m().c"),
+      njs_str("42") },
+
     { njs_str("var o = {x: 5, m: function() {return this.x}}; (o?.m)()"),
       njs_str("5") },
+
+    { njs_str("var o = {x: 3, m: function() {return {c: this.x}}};"
+              "o.m?.().c"),
+      njs_str("3") },
+
+    { njs_str("var o = {x: 4, m: function() {return {c: this.x}}};"
+              "(o.m)?.().c"),
+      njs_str("4") },
+
+    { njs_str("var o = {x: 6, m: function() {return {c: this.x}}};"
+              "o?.m?.().c"),
+      njs_str("6") },
+
+    { njs_str("var o = {x: 8, m: function() {return {c: this.x}}};"
+              "(o?.m)?.().c"),
+      njs_str("8") },
 
     { njs_str("var k = 'm';"
               "var o = {x: 9, m: function() {return this.x}};"
