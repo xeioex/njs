@@ -125,6 +125,35 @@ njs_generate_is_property_call_source(njs_parser_node_t *node)
 
 
 njs_inline njs_parser_node_t *
+njs_generate_wrapped_node(njs_parser_node_t *node)
+{
+    njs_assert(node->token_type == NJS_TOKEN_OBJECT_VALUE
+               || node->token_type == NJS_TOKEN_OPTIONAL_PRESERVE);
+
+    return node->u.object;
+}
+
+
+njs_inline njs_parser_node_t *
+njs_generate_object_value_parent(njs_parser_node_t *node)
+{
+    njs_assert(node->token_type == NJS_TOKEN_OBJECT_VALUE);
+
+    return njs_generate_wrapped_node(node);
+}
+
+
+njs_inline njs_bool_t
+njs_generate_is_object_literal_value(njs_parser_node_t *node)
+{
+    return node != NULL
+           && node->token_type == NJS_TOKEN_OBJECT_VALUE
+           && njs_generate_object_value_parent(node)->token_type
+              == NJS_TOKEN_OBJECT;
+}
+
+
+njs_inline njs_parser_node_t *
 njs_generate_optional_method_call_preserve(njs_parser_node_t *node)
 {
     njs_assert(node->token_type == NJS_TOKEN_METHOD_CALL);
@@ -816,7 +845,7 @@ njs_generate(njs_vm_t *vm, njs_generator_t *generator, njs_parser_node_t *node)
 
     case NJS_TOKEN_OBJECT_VALUE:
     case NJS_TOKEN_OPTIONAL_PRESERVE:
-        node->index = node->u.object->index;
+        node->index = njs_generate_wrapped_node(node)->index;
         return njs_generator_stack_pop(vm, generator, NULL);
 
     case NJS_TOKEN_OBJECT:
@@ -3494,8 +3523,7 @@ njs_generate_assignment_end(njs_vm_t *vm, njs_generator_t *generator,
     case NJS_TOKEN_PROPERTY_INIT:
 
         if ((object->token_type == NJS_TOKEN_OBJECT
-             || (object->token_type == NJS_TOKEN_OBJECT_VALUE
-                 && object->u.object->token_type == NJS_TOKEN_OBJECT))
+             || njs_generate_is_object_literal_value(object))
             && (expr->token_type == NJS_TOKEN_FUNCTION
                 || expr->token_type == NJS_TOKEN_FUNCTION_EXPRESSION
                 || expr->token_type == NJS_TOKEN_ASYNC_FUNCTION_EXPRESSION))
