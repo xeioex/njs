@@ -2704,7 +2704,7 @@ njs_parser_optional_chain_preserve(njs_parser_t *parser,
 {
     njs_parser_node_t  *ref;
 
-    ref = njs_parser_node_new(parser, NJS_TOKEN_OBJECT_VALUE);
+    ref = njs_parser_node_new(parser, NJS_TOKEN_OPTIONAL_PRESERVE);
     if (ref == NULL) {
         return NULL;
     }
@@ -2729,7 +2729,7 @@ njs_parser_set_optional_chain_preserve(njs_parser_node_t *node,
 static njs_parser_node_t *
 njs_parser_optional_chain_source(njs_parser_node_t *node)
 {
-    if (node != NULL && node->token_type == NJS_TOKEN_OBJECT_VALUE) {
+    if (node != NULL && node->token_type == NJS_TOKEN_OPTIONAL_PRESERVE) {
         return node->u.object;
     }
 
@@ -9833,6 +9833,7 @@ njs_parser_serialize_node(njs_chb_t *chain, njs_parser_node_t *node)
     njs_token_serialize(NJS_TOKEN_NAME);
     njs_token_serialize(NJS_TOKEN_OBJECT);
     njs_token_serialize(NJS_TOKEN_OBJECT_VALUE);
+    njs_token_serialize(NJS_TOKEN_OPTIONAL_PRESERVE);
     njs_token_serialize(NJS_TOKEN_ARRAY);
     njs_token_serialize(NJS_TOKEN_REGEXP);
 

@@ -815,6 +815,7 @@ njs_generate(njs_vm_t *vm, njs_generator_t *generator, njs_parser_node_t *node)
         return njs_generator_stack_pop(vm, generator, NULL);
 
     case NJS_TOKEN_OBJECT_VALUE:
+    case NJS_TOKEN_OPTIONAL_PRESERVE:
         node->index = node->u.object->index;
         return njs_generator_stack_pop(vm, generator, NULL);
 
