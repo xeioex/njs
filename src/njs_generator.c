@@ -127,6 +127,8 @@ njs_generate_is_property_call_source(njs_parser_node_t *node)
 njs_inline njs_parser_node_t *
 njs_generate_optional_method_call_preserve(njs_parser_node_t *node)
 {
+    njs_assert(node->token_type == NJS_TOKEN_METHOD_CALL);
+
     return node->u.object;
 }
 
@@ -141,6 +143,8 @@ njs_generate_optional_method_call_property(njs_parser_node_t *node)
 njs_inline njs_parser_node_t *
 njs_generate_optional_chain_preserve(njs_parser_node_t *node)
 {
+    njs_assert(node->token_type == NJS_TOKEN_OPTIONAL_CHAIN);
+
     return node->u.object;
 }
 
@@ -148,6 +152,8 @@ njs_generate_optional_chain_preserve(njs_parser_node_t *node)
 njs_inline njs_parser_node_t *
 njs_generate_function_call_this(njs_parser_node_t *node)
 {
+    njs_assert(node->token_type == NJS_TOKEN_FUNCTION_CALL);
+
     return node->u.object;
 }
 
@@ -4186,10 +4192,12 @@ njs_generate_optional_method_call(njs_vm_t *vm, njs_parser_node_t *node)
 {
     njs_parser_node_t  *preserve;
 
-    if (node == NULL
-        || node->token_type != NJS_TOKEN_METHOD_CALL
-        || node->u.object == NULL)
-    {
+    if (node == NULL || node->token_type != NJS_TOKEN_METHOD_CALL) {
+        return NULL;
+    }
+
+    preserve = njs_generate_optional_method_call_preserve(node);
+    if (preserve == NULL) {
         return NULL;
     }
 
@@ -4197,8 +4205,6 @@ njs_generate_optional_method_call(njs_vm_t *vm, njs_parser_node_t *node)
         njs_internal_error(vm, "unexpected optional method call source");
         return NULL;
     }
-
-    preserve = njs_generate_optional_method_call_preserve(node);
 
     if (preserve->left == NULL || preserve->right == NULL) {
         njs_internal_error(vm, "unexpected optional method call state");

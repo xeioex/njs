@@ -2716,6 +2716,16 @@ njs_parser_optional_chain_preserve(njs_parser_t *parser,
 }
 
 
+static void
+njs_parser_set_optional_chain_preserve(njs_parser_node_t *node,
+    njs_parser_node_t *preserve)
+{
+    njs_assert(node->token_type == NJS_TOKEN_OPTIONAL_CHAIN);
+
+    node->u.object = preserve;
+}
+
+
 static njs_parser_node_t *
 njs_parser_optional_chain_source(njs_parser_node_t *node)
 {
@@ -2841,6 +2851,8 @@ static void
 njs_parser_set_call_this(njs_parser_node_t *node,
     njs_parser_node_t *this_object)
 {
+    njs_assert(node->token_type == NJS_TOKEN_FUNCTION_CALL);
+
     node->u.object = this_object;
 }
 
@@ -2849,6 +2861,8 @@ static void
 njs_parser_set_optional_method_call_preserve(njs_parser_node_t *node,
     njs_parser_node_t *preserve)
 {
+    njs_assert(node->token_type == NJS_TOKEN_METHOD_CALL);
+
     node->u.object = preserve;
 }
 
@@ -3200,7 +3214,7 @@ njs_parser_optional_expression_after(njs_parser_t *parser,
         return NJS_ERROR;
     }
 
-    opt->u.object = ref;
+    njs_parser_set_optional_chain_preserve(opt, ref);
     parser->node = ref;
 
     njs_parser_next(parser, njs_parser_optional_chain);
