@@ -2721,6 +2721,7 @@ njs_parser_set_optional_chain_preserve(njs_parser_node_t *node,
     njs_parser_node_t *preserve)
 {
     njs_assert(node->token_type == NJS_TOKEN_OPTIONAL_CHAIN);
+    njs_assert(preserve->token_type == NJS_TOKEN_OPTIONAL_PRESERVE);
 
     node->u.object = preserve;
 }
@@ -2883,6 +2884,7 @@ njs_parser_set_optional_method_call_preserve(njs_parser_node_t *node,
     njs_parser_node_t *preserve)
 {
     njs_assert(node->token_type == NJS_TOKEN_METHOD_CALL);
+    njs_assert(njs_parser_call_receiver(preserve) != NULL);
 
     node->u.object = preserve;
 }
