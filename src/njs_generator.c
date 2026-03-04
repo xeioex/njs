@@ -141,6 +141,28 @@ njs_generate_optional_method_call_property(njs_parser_node_t *node)
 
 
 njs_inline njs_parser_node_t *
+njs_generate_optional_method_call_base(njs_parser_node_t *node)
+{
+    njs_parser_node_t  *preserve;
+
+    preserve = njs_generate_optional_method_call_preserve(node);
+
+    return (preserve != NULL) ? preserve->left : NULL;
+}
+
+
+njs_inline njs_parser_node_t *
+njs_generate_optional_method_call_key(njs_parser_node_t *node)
+{
+    njs_parser_node_t  *preserve;
+
+    preserve = njs_generate_optional_method_call_preserve(node);
+
+    return (preserve != NULL) ? preserve->right : NULL;
+}
+
+
+njs_inline njs_parser_node_t *
 njs_generate_optional_chain_preserve(njs_parser_node_t *node)
 {
     njs_assert(node->token_type == NJS_TOKEN_OPTIONAL_CHAIN);
@@ -4231,7 +4253,7 @@ njs_generate_optional_chain(njs_vm_t *vm, njs_generator_t *generator,
 
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
-        preserve = njs_generate_optional_method_call_preserve(call)->left;
+        preserve = njs_generate_optional_method_call_base(call);
 
         if (njs_generate_is_property_lvalue(preserve)) {
             preserve->hoist = 1;
@@ -4272,10 +4294,10 @@ njs_generate_optional_chain_after(njs_vm_t *vm, njs_generator_t *generator,
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
         prop = njs_generate_optional_method_call_property(call);
-        prop->left->index = njs_generate_optional_method_call_preserve(call)
-                                ->left->index;
-        prop->right->index = njs_generate_optional_method_call_preserve(call)
-                                 ->right->index;
+        prop->left->index = njs_generate_optional_method_call_base(call)
+                                ->index;
+        prop->right->index = njs_generate_optional_method_call_key(call)
+                                 ->index;
 
     } else if (njs_generate_optional_chain_preserve(node) != NULL) {
         njs_generate_optional_chain_preserve(node)->index = node->left->index;
@@ -4311,7 +4333,7 @@ njs_generate_optional_chain_end(njs_vm_t *vm, njs_generator_t *generator,
 
     call = njs_generate_optional_method_call(vm, node->right);
     if (call != NULL) {
-        preserve = njs_generate_optional_method_call_preserve(call)->left;
+        preserve = njs_generate_optional_method_call_base(call);
         if (!njs_generate_is_property_lvalue(preserve)) {
             preserve = NULL;
         }
