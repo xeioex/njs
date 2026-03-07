@@ -3488,6 +3488,15 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("for (in + j;;) {}"),
       njs_str("SyntaxError: Unexpected token \"in\"") },
 
+    { njs_str("for (var x = [1 in {}];;) break;"),
+      njs_str("undefined") },
+
+    { njs_str("for (var x = (1 in {});;) break;"),
+      njs_str("undefined") },
+
+    { njs_str("for (var x = true ? 1 in {} : 0;;) break;"),
+      njs_str("undefined") },
+
     { njs_str("for (true ? 0 in {}: 0; false; ) ;"),
       njs_str("undefined") },
 
@@ -3529,6 +3538,21 @@ static njs_unit_test_t  njs_test[] =
 
     { njs_str("for(i;;)for(-new+3;;)break;"),
       njs_str("SyntaxError: Unexpected token \"+\"") },
+
+    { njs_str("for(function(){r({/a/;0;1)1"),
+      njs_str("SyntaxError:") },
+
+    { njs_str("for(async function(){r({/a/;0;1)1"),
+      njs_str("SyntaxError:") },
+
+    { njs_str("for(function(){r({/a/;0;1);1"),
+      njs_str("SyntaxError:") },
+
+    { njs_str("for(function(){r({/a/;0;1)11"),
+      njs_str("SyntaxError:") },
+
+    { njs_str("for(function(){r({/a/;0;1)1;"),
+      njs_str("SyntaxError:") },
 
     /* switch. */
 

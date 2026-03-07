@@ -329,9 +329,6 @@ static njs_int_t njs_parser_iteration_statement_for(njs_parser_t *parser,
 static njs_int_t njs_parser_for_expression_map_continue(
     njs_parser_t *parser, njs_lexer_token_t *token,
     njs_queue_link_t *current);
-static njs_int_t njs_parser_for_expression_map_reparse(
-    njs_parser_t *parser, njs_lexer_token_t *token,
-    njs_queue_link_t *current);
 static njs_int_t njs_parser_expression_continue_op(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
 static njs_int_t njs_parser_expression_continue_assign_comma(
@@ -5802,26 +5799,6 @@ njs_parser_iteration_statement_for(njs_parser_t *parser,
 
 
 static njs_int_t
-njs_parser_for_expression_map_reparse(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    if (parser->ret != NJS_OK && parser->node != NULL) {
-        return njs_parser_failed(parser);
-    }
-
-    if (parser->node == NULL) {
-        njs_lexer_in_fail_set(parser->lexer, 1);
-
-        njs_parser_next(parser, njs_parser_expression);
-
-        return NJS_OK;
-    }
-
-    return njs_parser_stack_pop(parser);
-}
-
-
-static njs_int_t
 njs_parser_for_expression_map_continue(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current)
 {
@@ -6047,11 +6024,6 @@ njs_parser_iteration_statement_for_map(njs_parser_t *parser,
 
         goto expression_after;
 
-    case NJS_TOKEN_AWAIT:
-        njs_parser_next(parser, njs_parser_expression);
-
-        goto expression_after;
-
     default:
         ret = njs_parser_match_arrow_expression(parser, token);
         if (ret == NJS_OK) {
@@ -6060,6 +6032,28 @@ njs_parser_iteration_statement_for_map(njs_parser_t *parser,
             goto expression_after;
         } else if (ret == NJS_ERROR) {
             return NJS_ERROR;
+        }
+
+        switch (token->type) {
+        case NJS_TOKEN_DELETE:
+        case NJS_TOKEN_VOID:
+        case NJS_TOKEN_TYPEOF:
+        case NJS_TOKEN_AWAIT:
+        case NJS_TOKEN_ADDITION:
+        case NJS_TOKEN_SUBTRACTION:
+        case NJS_TOKEN_BITWISE_NOT:
+        case NJS_TOKEN_LOGICAL_NOT:
+        case NJS_TOKEN_INCREMENT:
+        case NJS_TOKEN_DECREMENT:
+        case NJS_TOKEN_FUNCTION:
+        case NJS_TOKEN_ASYNC:
+            njs_lexer_in_fail_set(parser->lexer, 1);
+            parser->target = NULL;
+            njs_parser_next(parser, njs_parser_expression);
+            goto expression_after;
+
+        default:
+            break;
         }
 
         parser->target = NULL;
@@ -6076,12 +6070,6 @@ njs_parser_iteration_statement_for_map(njs_parser_t *parser,
         }
 
         *text = token->text;
-
-        ret = njs_parser_after(parser, current, text, 0,
-                               njs_parser_for_expression_map_reparse);
-        if (ret != NJS_OK) {
-            return NJS_ERROR;
-        }
 
         return njs_parser_after(parser, current, text, 1,
                                 njs_parser_for_expression_map_continue);
