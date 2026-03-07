@@ -80,6 +80,9 @@ struct njs_parser_s {
     njs_int_t                       ret;
 
     uint8_t                         use_lhs;
+    uint8_t                         allow_in;
+    njs_int_t                       expr_depth;
+    njs_int_t                       for_init_depth;
 
     uint8_t                         module;
 
