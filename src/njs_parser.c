@@ -4265,7 +4265,8 @@ njs_parser_relational_expression_match(njs_parser_t *parser,
         if (!parser->allow_in && parser->expr_depth == parser->for_init_depth)
         {
             njs_parser_syntax_error(parser,
-                                    "Invalid left-hand side in for-loop");
+                                    "Unexpected token \"in\" in for-loop"
+                                    " initializer");
             return NJS_ERROR;
         }
         operation = NJS_VMCODE_PROPERTY_IN;

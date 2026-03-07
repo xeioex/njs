@@ -3451,10 +3451,10 @@ static njs_unit_test_t  njs_test[] =
       njs_str("b") },
 
     { njs_str("for (var x = x in [1,2]; ; ) {break};"),
-      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+      njs_str("SyntaxError: Unexpected token \"in\" in for-loop initializer") },
 
     { njs_str("for (x = x in [1,2]; ; ) {break};"),
-      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+      njs_str("SyntaxError: Unexpected token \"in\" in for-loop initializer") },
 
     { njs_str("for (var x = (x in [1,2]); ; ) {break}; x;"),
       njs_str("false") },
@@ -3463,14 +3463,14 @@ static njs_unit_test_t  njs_test[] =
       njs_str("false") },
 
     { njs_str("for (++a in {}; ; ) {break}"),
-      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+      njs_str("SyntaxError: Unexpected token \"in\" in for-loop initializer") },
 
     { njs_str("var a, b, c, d = 1; for (a + b, c = d; ; ){break}; c"),
       njs_str("1") },
 
     { njs_str("var x = 1, y, z = 'a', u = {a:1};"
               "for (var a = x, y = z in u; ; ) {break}; y"),
-      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+      njs_str("SyntaxError: Unexpected token \"in\" in for-loop initializer") },
 
     { njs_str("var x = 1, y, z = 'a', u = {a:1};"
               "for (var a = x, y= (z in u) ; ; ) {break}; y"),
@@ -3501,7 +3501,7 @@ static njs_unit_test_t  njs_test[] =
       njs_str("undefined") },
 
     { njs_str("for (true ? 0 : 0 in {}; false; ) ;"),
-      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+      njs_str("SyntaxError: Unexpected token \"in\" in for-loop initializer") },
 
     { njs_str("for ((a in b)) {}"),
       njs_str("SyntaxError: Unexpected token \")\"") },
