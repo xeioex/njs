@@ -8715,6 +8715,23 @@ static njs_unit_test_t  njs_test[] =
                  "String.prototype.concat.apply(s, a.slice(1))"),
       njs_str("RangeError: invalid string length") },
 
+    /* Adversarial regex replace must throw RangeError, not OOM-kill. */
+    { njs_str("var s = 'x'.repeat(1 << 18);"
+                 "var r = '$1'.repeat(1 << 14);"
+                 "s.replace(/(.+)/g, r)"),
+      njs_str("RangeError: invalid string length") },
+
+    /* Plain String.prototype.replace with $&-style expansion. */
+    { njs_str("var s = 'x'.repeat(1 << 18);"
+                 "var r = '$&'.repeat(1 << 14);"
+                 "s.replace(s, r)"),
+      njs_str("RangeError: invalid string length") },
+
+    /* Array.prototype.join hitting the string size cap. */
+    { njs_str("var s = 'x'.repeat(1 << 16);"
+                 "Array(1 << 16).fill(s).join('')"),
+      njs_str("RangeError: invalid string length") },
+
     { njs_str("var a = 'abcdefgh'; a.substr(3, 15)"),
       njs_str("defgh") },
 

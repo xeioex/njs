@@ -1081,7 +1081,8 @@ njs_json_stringify_iterator(njs_json_stringify_t *stringify,
         goto memory_error;
     }
 
-    NJS_CHB_MP_INIT(&chain, njs_vm_memory_pool(stringify->vm));
+    NJS_CHB_MP_INIT_MAX(&chain, njs_vm_memory_pool(stringify->vm),
+                        NJS_STRING_MAX_LENGTH);
 
     for ( ;; ) {
         if (state->index == 0) {
