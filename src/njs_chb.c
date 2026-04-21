@@ -15,12 +15,14 @@ void
 njs_chb_init(njs_chb_t *chain, void *pool, njs_chb_alloc_t alloc,
     njs_chb_free_t free)
 {
-    chain->error = 0;
+    chain->error = NJS_CHB_ERR_NONE;
     chain->pool = pool;
     chain->alloc = alloc;
     chain->free = free;
     chain->nodes = NULL;
     chain->last = NULL;
+    chain->total_size = 0;
+    chain->max_size = 0;
 }
 
 
@@ -47,6 +49,13 @@ njs_chb_reserve(njs_chb_t *chain, size_t size)
 {
     njs_chb_node_t  *n;
 
+    if (njs_slow_path(chain->max_size != 0
+                      && chain->total_size + size > chain->max_size))
+    {
+        chain->error = NJS_CHB_ERR_OVERFLOW;
+        return NULL;
+    }
+
     n = chain->last;
 
     if (njs_fast_path(n != NULL && njs_chb_node_room(n) >= size)) {
@@ -59,7 +68,7 @@ njs_chb_reserve(njs_chb_t *chain, size_t size)
 
     n = chain->alloc(chain->pool, sizeof(njs_chb_node_t) + size);
     if (njs_slow_path(n == NULL)) {
-        chain->error = 1;
+        chain->error = NJS_CHB_ERR_NOMEM;
         return NULL;
     }
 
@@ -116,17 +125,22 @@ njs_chb_sprintf(njs_chb_t *chain, size_t size, const char* fmt, ...)
 void
 njs_chb_drain(njs_chb_t *chain, size_t drain)
 {
+    size_t          node_size;
     njs_chb_node_t  *n;
 
     n = chain->nodes;
 
     while (n != NULL) {
-        if (njs_chb_node_size(n) > drain) {
+        node_size = njs_chb_node_size(n);
+
+        if (node_size > drain) {
             n->start += drain;
+            chain->total_size -= drain;
             return;
         }
 
-        drain -= njs_chb_node_size(n);
+        drain -= node_size;
+        chain->total_size -= node_size;
         chain->nodes = n->next;
 
         if (chain->free != NULL) {
@@ -157,15 +171,25 @@ njs_chb_drop(njs_chb_t *chain, size_t drop)
 
     if (njs_fast_path(n != NULL && (njs_chb_node_size(n) > drop))) {
         n->pos -= drop;
+        chain->total_size -= drop;
         return;
     }
 
     n = chain->nodes;
-    size = (uint64_t) njs_chb_size(chain);
+    size = chain->total_size;
 
     if (drop >= size) {
         njs_chb_destroy(chain);
-        njs_chb_init(chain, chain->pool, chain->alloc, chain->free);
+
+        /*
+         * Full-chain reset.  Preserve pool, alloc, free, and max_size;
+         * njs_chb_init() would clear max_size and silently uncap a
+         * capped chain.
+         */
+        chain->error = NJS_CHB_ERR_NONE;
+        chain->nodes = NULL;
+        chain->last = NULL;
+        chain->total_size = 0;
         return;
     }
 
@@ -194,6 +218,8 @@ njs_chb_drop(njs_chb_t *chain, size_t drop)
 
         n = next;
     }
+
+    chain->total_size -= drop;
 }
 
 

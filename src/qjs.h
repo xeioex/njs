@@ -22,6 +22,14 @@
 #include <quickjs_compat.h>
 
 
+/*
+ * Maximum length of a QuickJS string.  Mirrors JS_STRING_LEN_MAX in
+ * quickjs.c, which is not exposed through quickjs.h.  Keep in sync
+ * with the vendored QuickJS source.
+ */
+#define QJS_STRING_LEN_MAX  ((1 << 30) - 1)
+
+
 enum {
     QJS_CORE_CLASS_ID_BUFFER = 64,
     QJS_CORE_CLASS_ID_UINT8_ARRAY_CTOR,
