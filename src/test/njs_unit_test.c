@@ -3437,7 +3437,22 @@ static njs_unit_test_t  njs_test[] =
       njs_str("x") },
 
     { njs_str("for (var a, b in []);"),
-      njs_str("SyntaxError: Unexpected token \"in\"") },
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (var x = 0 in o);"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    /* [+In] is restored past the initializer. */
+
+    { njs_str("var b = 'a', c = {a:1}, n = 0;"
+              "for (var k in b in c) { n++ } n"),
+      njs_str("0") },
+
+    { njs_str("var a = 0; for (; 1 in [1]; 1 in [1]) break; a"),
+      njs_str("0") },
+
+    { njs_str("var a = 0; for (a < 1 in {};;) break; a"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
 
     { njs_str("var s = ''; for (var p in [1,2]) {s += p}; s"),
       njs_str("01") },

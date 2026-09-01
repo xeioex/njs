@@ -326,14 +326,6 @@ static njs_int_t njs_parser_while_after(njs_parser_t *parser,
 
 static njs_int_t njs_parser_iteration_statement_for(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_for_expression_map_continue(
-    njs_parser_t *parser, njs_lexer_token_t *token,
-    njs_queue_link_t *current);
-static njs_int_t njs_parser_expression_continue_op(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_expression_continue_assign_comma(
-    njs_parser_t *parser, njs_lexer_token_t *token,
-    njs_queue_link_t *current);
 static njs_int_t njs_parser_for_in_statement_statement(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
 static njs_int_t njs_parser_iteration_statement_for_map(njs_parser_t *parser,
@@ -346,8 +338,6 @@ static njs_int_t njs_parser_for_var_in_statement(njs_parser_t *parser,
 static njs_int_t njs_parser_for_var_in_statement_after(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
 static njs_int_t njs_parser_for_var_in_of_expression(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_for_in_statement(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
 static njs_int_t njs_parser_for_in_statement_after(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
@@ -4209,9 +4199,9 @@ njs_parser_relational_expression_match(njs_parser_t *parser,
 
     case NJS_TOKEN_IN:
         if (!parser->allow_in) {
-            njs_parser_syntax_error(parser, "Invalid left-hand side in for-loop");
-            return NJS_ERROR;
+            return njs_parser_stack_pop(parser);
         }
+
         operation = NJS_VMCODE_PROPERTY_IN;
         break;
 
@@ -5796,161 +5786,10 @@ njs_parser_iteration_statement_for(njs_parser_t *parser,
 
 
 static njs_int_t
-njs_parser_for_expression_map_continue(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    njs_int_t          operation;
-    njs_str_t          *text;
-    njs_parser_node_t  *node;
-
-    if (token->type != NJS_TOKEN_IN) {
-        parser->allow_in = 0;
-
-        /* Continue parsing of expr1 in "for (expr1;[expr2];[expr3])". */
-
-        njs_parser_next(parser, njs_parser_expression_continue_op);
-
-        /*
-         * Here we pass not a node, but a token, this is important.
-         * This is necessary for correct error output.
-         */
-
-        text = njs_mp_alloc(parser->vm->mem_pool, sizeof(njs_str_t));
-        if (text == NULL) {
-            return NJS_ERROR;
-        }
-
-        *text = token->text;
-
-        return njs_parser_after(parser, current, text, 1,
-                                njs_parser_for_var_in_of_expression);
-
-    } else {
-
-        /* for-in */
-
-        if (!njs_parser_is_lvalue(parser->node)) {
-            text = (njs_str_t *) parser->target;
-
-            njs_mp_free(parser->vm->mem_pool, text);
-
-            njs_parser_syntax_error(parser,
-                                    "Invalid left-hand side in for-loop");
-
-            return NJS_ERROR;
-        }
-
-        parser->node = njs_parser_lvalue_ref(parser->node);
-        if (parser->node == NULL) {
-            return NJS_ERROR;
-        }
-
-        operation = NJS_VMCODE_PROPERTY_IN;
-
-        node = njs_parser_node_new(parser, token->type);
-        if (node == NULL) {
-            return NJS_ERROR;
-        }
-
-        node->token_line = token->line;
-        node->u.operation = operation;
-        node->left = parser->node;
-        node->left->dest = node;
-
-        njs_lexer_consume_token(parser->lexer, 1);
-
-        njs_parser_next(parser, njs_parser_expression);
-
-        return njs_parser_after(parser, current, node, 0,
-                                njs_parser_for_in_statement_statement);
-    }
-}
-
-
-static njs_int_t
-njs_parser_after_expr(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    return njs_parser_right_link_pop(parser);
-}
-
-
-static njs_int_t
-njs_parser_comma_expression_comma(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    njs_parser_node_t  *node;
-
-    if (parser->target != NULL) {
-        parser->target->right = parser->node;
-        parser->target->right->dest = parser->target;
-        parser->node = parser->target;
-    }
-
-    if (token->type != NJS_TOKEN_COMMA) {
-        return njs_parser_stack_pop(parser);
-    }
-
-    node = njs_parser_node_new(parser, NJS_TOKEN_COMMA);
-    if (node == NULL) {
-        return NJS_ERROR;
-    }
-
-    node->token_line = token->line;
-    node->u.operation = 0;
-    node->left = parser->node;
-    node->left->dest = node;
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    njs_parser_next(parser, njs_parser_expression);
-
-    return njs_parser_after(parser, current, node, 1, njs_parser_after_expr);
-}
-
-
-static njs_int_t
-njs_parser_expression_continue_op(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    if (token->type == NJS_TOKEN_CONDITIONAL) {
-        njs_parser_next(parser, njs_parser_conditional_question_mark);
-        return njs_parser_after(parser, current, NULL, 0,
-                                njs_parser_expression_continue_assign_comma);
-    } else {
-        parser->target = NULL;
-
-        parser->use_lhs = 1;
-
-        njs_parser_next(parser, njs_parser_expression);
-
-        return njs_parser_after(parser, current, NULL, 1,
-                                njs_parser_comma_expression_comma);
-    }
-}
-
-
-static njs_int_t
-njs_parser_expression_continue_assign_comma(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    if (parser->ret != NJS_OK) {
-        return njs_parser_failed(parser);
-    }
-
-    njs_parser_next(parser, njs_parser_assignment_expression_after);
-
-    return njs_parser_after(parser, current, NULL, 1,
-                            njs_parser_expression_comma);
-}
-
-
-static njs_int_t
 njs_parser_iteration_statement_for_map(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current)
 {
     njs_int_t         ret;
-    njs_str_t         *text;
     njs_token_type_t  token_type;
 
     /*
@@ -6022,76 +5861,17 @@ njs_parser_iteration_statement_for_map(njs_parser_t *parser,
         goto expression_after;
 
     default:
-        ret = njs_parser_match_arrow_expression(parser, token);
-        if (ret == NJS_OK) {
-            parser->allow_in = 0;
-
-            parser->target = NULL;
-            njs_parser_next(parser, njs_parser_expression);
-
-            goto expression_after;
-        } else if (ret == NJS_ERROR) {
-            return NJS_ERROR;
-        }
-
-        /* The speculative parse below has no way back, see the log. */
-
-        switch (token->type) {
-        case NJS_TOKEN_DELETE:
-        case NJS_TOKEN_VOID:
-        case NJS_TOKEN_TYPEOF:
-        case NJS_TOKEN_AWAIT:
-        case NJS_TOKEN_ADDITION:
-        case NJS_TOKEN_SUBTRACTION:
-        case NJS_TOKEN_BITWISE_NOT:
-        case NJS_TOKEN_LOGICAL_NOT:
-        case NJS_TOKEN_INCREMENT:
-        case NJS_TOKEN_DECREMENT:
-            parser->allow_in = 0;
-
-            parser->target = NULL;
-            njs_parser_next(parser, njs_parser_expression);
-
-            goto expression_after;
-
-        default:
-            break;
-        }
-
+        parser->allow_in = 0;
         parser->target = NULL;
-        njs_parser_next(parser, njs_parser_left_hand_side_expression);
 
-        /*
-         * Here we pass not a node, but a token, this is important.
-         * This is necessary for correct error output.
-         */
+        njs_parser_next(parser, njs_parser_expression);
 
-        text = njs_mp_alloc(parser->vm->mem_pool, sizeof(njs_str_t));
-        if (text == NULL) {
-            return NJS_ERROR;
-        }
-
-        *text = token->text;
-
-        return njs_parser_after(parser, current, text, 1,
-                                njs_parser_for_expression_map_continue);
+        goto expression_after;
     }
 
 expression_after:
 
-    /*
-     * Here we pass not a node, but a token, this is important.
-     * This is necessary for correct error output.
-     */
-
-    text = njs_mp_alloc(parser->vm->mem_pool, sizeof(njs_str_t));
-    if (text == NULL) {
-        return NJS_ERROR;
-    }
-
-    *text = token->text;
-
-    return njs_parser_after(parser, current, text, 1,
+    return njs_parser_after(parser, current, NULL, 1,
                             njs_parser_for_var_in_of_expression);
 }
 
@@ -6245,7 +6025,6 @@ static njs_int_t
 njs_parser_for_var_in_of_expression(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current)
 {
-    njs_str_t          *text;
     njs_parser_node_t  *node;
 
     /*
@@ -6253,41 +6032,6 @@ njs_parser_for_var_in_of_expression(njs_parser_t *parser,
      * "in" <Expression> ")" <Statement>
      * "of" <AssignmentExpression> ")" <Statement>
      */
-
-    if (token->type != NJS_TOKEN_SEMICOLON &&
-        token->type != NJS_TOKEN_CLOSE_PARENTHESIS &&
-        parser->node != NULL && parser->node->token_type == NJS_TOKEN_IN)
-    {
-        node = parser->node->left;
-
-        if (!njs_parser_is_lvalue(node)) {
-
-            text = (njs_str_t *) parser->target;
-
-            njs_parser_ref_error(parser, "Invalid left-hand side \"%V\" "
-                                 "in for-in statement", text);
-
-            njs_mp_free(parser->vm->mem_pool, text);
-
-            return NJS_DONE;
-        }
-
-        node = njs_parser_lvalue_ref(node);
-        if (node == NULL) {
-            return NJS_ERROR;
-        }
-
-        parser->node->left = node;
-
-        njs_parser_next(parser, njs_parser_for_in_statement);
-        return NJS_OK;
-    }
-
-    if (parser->target != NULL) {
-        text = (njs_str_t *) parser->target;
-
-        njs_mp_free(parser->vm->mem_pool, text);
-    }
 
     switch (token->type) {
     case NJS_TOKEN_SEMICOLON:
@@ -6317,46 +6061,43 @@ njs_parser_for_var_in_of_expression(njs_parser_t *parser,
 
         return NJS_OK;
 
+    case NJS_TOKEN_IN:
+        if (!njs_parser_is_lvalue(parser->node)) {
+            njs_parser_syntax_error(parser,
+                                    "Invalid left-hand side in for-loop");
+            return NJS_ERROR;
+        }
+
+        parser->node = njs_parser_lvalue_ref(parser->node);
+        if (parser->node == NULL) {
+            return NJS_ERROR;
+        }
+
+        node = njs_parser_node_new(parser, token->type);
+        if (node == NULL) {
+            return NJS_ERROR;
+        }
+
+        node->token_line = token->line;
+        node->u.operation = NJS_VMCODE_PROPERTY_IN;
+        node->left = parser->node;
+        node->left->dest = node;
+
+        njs_lexer_consume_token(parser->lexer, 1);
+
+        parser->allow_in = 1;
+
+        njs_parser_next(parser, njs_parser_expression);
+
+        return njs_parser_after(parser, current, node, 0,
+                                njs_parser_for_in_statement_statement);
+
     case NJS_TOKEN_OF:
         return njs_parser_not_supported(parser, token);
 
     default:
         return njs_parser_failed(parser);
     }
-}
-
-
-static njs_int_t
-njs_parser_for_in_statement(njs_parser_t *parser, njs_lexer_token_t *token,
-    njs_queue_link_t *current)
-{
-    njs_parser_node_t  *node, *forin;
-
-    if (token->type != NJS_TOKEN_CLOSE_PARENTHESIS) {
-        return njs_parser_failed(parser);
-    }
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    node = parser->node;
-
-    if (node->right != NULL && node->right->token_type == NJS_TOKEN_VAR) {
-        return NJS_ERROR;
-    }
-
-    forin = njs_parser_node_new(parser, NJS_TOKEN_FOR_IN);
-    if (forin == NULL) {
-        return NJS_ERROR;
-    }
-
-    forin->left = parser->node;
-
-    parser->node = NULL;
-
-    njs_parser_next(parser, njs_parser_statement_wo_node);
-
-    return njs_parser_after(parser, current, forin, 1,
-                            njs_parser_for_in_statement_after);
 }
 
 
