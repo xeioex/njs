@@ -160,6 +160,14 @@ njs_int_t njs_parser_serialize_ast(njs_parser_node_t *node, njs_chb_t *chain);
      || (node)->token_type == NJS_TOKEN_PROPERTY_REF)
 
 
+#define njs_parser_is_declaration(node)                                       \
+    ((node) != NULL && (node)->token_type == NJS_TOKEN_STATEMENT              \
+     && (node)->right != NULL                                                 \
+     && ((node)->right->token_type == NJS_TOKEN_VAR                           \
+         || (node)->right->token_type == NJS_TOKEN_LET                        \
+         || (node)->right->token_type == NJS_TOKEN_CONST))
+
+
 #define njs_parser_is_primitive(node)                                         \
     ((node)->token_type >= NJS_TOKEN_NULL                                     \
      && (node)->token_type <= NJS_TOKEN_STRING)

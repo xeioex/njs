@@ -3463,6 +3463,26 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var s = ''; for (var p in {a:1, b:2}) {s += p}; s"),
       njs_str("ab") },
 
+    /*
+     * A declaration header is parsed once, under [~In], and classified by the
+     * token it stopped at, like an expression header.
+     */
+
+    { njs_str("for (let a, b in []);"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (let a = 0 in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (const a = 0 in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (var a = 0, b in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("var s = ''; for (const k in {a:1, b:2}) {s += k}; s"),
+      njs_str("ab") },
+
     /* The three for-in target routes, each observed over two iterations. */
 
     { njs_str("var r = []; for (let k in {a:1, b:2}) {r.push(() => k)};"
