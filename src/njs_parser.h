@@ -79,6 +79,9 @@ struct njs_parser_s {
     njs_variable_type_t             var_type;
     njs_int_t                       ret;
 
+    /* The ECMAScript [In] grammar parameter. */
+    uint8_t                         allow_in;
+
     uint8_t                         use_lhs;
 
     uint8_t                         module;
@@ -94,7 +97,8 @@ typedef struct {
 
     njs_parser_node_t               *node;
 
-    njs_bool_t                      optional;
+    uint8_t                         allow_in;
+    uint8_t                         optional;
 } njs_parser_stack_entry_t;
 
 
@@ -301,6 +305,7 @@ njs_parser_stack_pop(njs_parser_t *parser)
     njs_parser_next(parser, entry->state);
 
     parser->target = entry->node;
+    parser->allow_in = entry->allow_in;
 
     njs_mp_free(parser->vm->mem_pool, entry);
 
@@ -326,6 +331,11 @@ njs_parser_stack_pop(njs_parser_t *parser)
 
 #endif
 
+
+#define njs_parser_after_in(_p, _l, _n, _opt, _state)                         \
+    njs_parser_allow_in(_p, njs_parser_after(_p, _l, _n, _opt, _state))
+
+
 njs_inline njs_int_t
 _njs_parser_after(njs_parser_t *parser, njs_queue_link_t *link, void *node,
     njs_bool_t is_optional, njs_parser_state_func_t state)
@@ -340,9 +350,25 @@ _njs_parser_after(njs_parser_t *parser, njs_queue_link_t *link, void *node,
 
     entry->state = state;
     entry->node = node;
+    entry->allow_in = parser->allow_in;
     entry->optional = is_optional;
 
     njs_queue_insert_before(link, &entry->link);
+
+    return NJS_OK;
+}
+
+
+/* Opens a [+In] region; the frame must already carry the enclosing value. */
+
+njs_inline njs_int_t
+njs_parser_allow_in(njs_parser_t *parser, njs_int_t ret)
+{
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    parser->allow_in = 1;
 
     return NJS_OK;
 }

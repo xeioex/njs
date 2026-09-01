@@ -3494,6 +3494,50 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("for (var x = true ? 1 in {} : 0;;) break;"),
       njs_str("undefined") },
 
+    /*
+     * A delimiter in the conditional consequent used to desynchronize the
+     * [In] parameter from the parser position.
+     */
+
+    { njs_str("for (a ? (b) : c in d; false;);"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (a ? b : c in d; false;);"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("var a=1,b=2,c=3; for (a ? (b) : c; false;) break; a"),
+      njs_str("1") },
+
+    /* [+In] regions, past the speculative left-hand side parse. */
+
+    { njs_str("var a=1; for (a, (1 in {});;) break; a"),
+      njs_str("1") },
+
+    { njs_str("var a=1; for (a, `${1 in {}}`;;) break; a"),
+      njs_str("1") },
+
+    { njs_str("var a=1; for (a, function(){ return 1 in {} };;) break; a"),
+      njs_str("1") },
+
+    /* ... and [~In] must be restored after each of them. */
+
+    { njs_str("for (a, [1], b in c;;) break;"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (a, `${1}`, b in c;;) break;"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    /* An arrow concise body inherits [In], an arrow block body does not. */
+
+    { njs_str("for (x => 1 in {};;) break;"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (x => x, 1 in {};;) break;"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("var a=1; for (x => { return 1 in {} };;) break; a"),
+      njs_str("1") },
+
     { njs_str("for (true ? 0 in {}: 0; false; ) ;"),
       njs_str("undefined") },
 
