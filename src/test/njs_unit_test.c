@@ -3488,6 +3488,12 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("for (in + j;;) {}"),
       njs_str("SyntaxError: Unexpected token \"in\"") },
 
+    { njs_str("for (var x = [1 in {}];;) break;"),
+      njs_str("undefined") },
+
+    { njs_str("for (var x = true ? 1 in {} : 0;;) break;"),
+      njs_str("undefined") },
+
     { njs_str("for (true ? 0 in {}: 0; false; ) ;"),
       njs_str("undefined") },
 
@@ -3529,6 +3535,39 @@ static njs_unit_test_t  njs_test[] =
 
     { njs_str("for(i;;)for(-new+3;;)break;"),
       njs_str("SyntaxError: Unexpected token \"+\"") },
+
+    { njs_str("for(function(){r({/a/;0;1)1"),
+      njs_str("SyntaxError: Unexpected token \"/\"") },
+
+    { njs_str("for(a(function(){r({/a/;0;1)1"),
+      njs_str("SyntaxError: Unexpected token \"/\"") },
+
+    { njs_str("for(async function(){r({/a/;0;1)1"),
+      njs_str("SyntaxError: Unexpected token \"/\"") },
+
+    { njs_str("for({/a/;0;1)1"),
+      njs_str("SyntaxError: Unexpected token \"/\"") },
+
+    { njs_str("for(function f(){}.x in {a:1}); 1"),
+      njs_str("1") },
+
+    { njs_str("var o={}; for(function(){return o}().x in {a:1,b:2}); o.x"),
+      njs_str("b") },
+
+    { njs_str("async function f(){for(await p in o;;)break;} f()"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("var a=0; for(-a;;)break; a"),
+      njs_str("0") },
+
+    { njs_str("var a=0; for(typeof a;;)break; a"),
+      njs_str("0") },
+
+    { njs_str("var a=0; for(++a;;)break; a"),
+      njs_str("1") },
+
+    { njs_str("var a={b:0}; for(delete a.b;;)break; a.b"),
+      njs_str("undefined") },
 
     /* switch. */
 
@@ -21753,6 +21792,16 @@ static njs_unit_test_t  njs_externals_test[] =
               "}"
               "f().then($r.retval)"),
       njs_str("X:4") },
+
+    { njs_str("async function f() {"
+              "    var r = [];"
+              "    for (var k in await Promise.resolve({a:1, b:2})) {"
+              "        r.push(k);"
+              "    }"
+              "    return r.join(':');"
+              "}"
+              "f().then($r.retval)"),
+      njs_str("a:b") },
 
     { njs_str("async function f() {"
               "    return ((...a) => a[1] + ':' + a[2] + ':' + a[0].length)"
