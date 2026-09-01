@@ -26,14 +26,6 @@ static njs_int_t njs_parser_template_literal_string(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
 static njs_int_t njs_parser_template_literal_expression(
     njs_parser_t *parser, njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_cover_parenthesized_expression(
-    njs_parser_t *parser, njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_binding_identifier_pattern(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_cover_parenthesized_expression_after(
-    njs_parser_t *parser, njs_lexer_token_t *token, njs_queue_link_t *current);
-static njs_int_t njs_parser_cover_parenthesized_expression_end(
-    njs_parser_t *parser, njs_lexer_token_t *token, njs_queue_link_t *current);
 
 static njs_int_t njs_parser_array_literal(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
@@ -1182,9 +1174,6 @@ njs_parser_primary_expression_test(njs_parser_t *parser,
     case NJS_TOKEN_OPEN_PARENTHESIS:
         njs_lexer_consume_token(parser->lexer, 1);
 
-        /* TODO: By specification. */
-        (void) njs_parser_cover_parenthesized_expression;
-
         parser->node = NULL;
 
         njs_parser_next(parser, njs_parser_expression);
@@ -1491,145 +1480,6 @@ njs_parser_template_literal_expression(njs_parser_t *parser,
     token->text.start += 1;
 
     return NJS_OK;
-}
-
-
-static njs_int_t
-njs_parser_cover_parenthesized_expression(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    switch (token->type) {
-    case NJS_TOKEN_CLOSE_PARENTHESIS:
-        (void) njs_parser_stack_pop(parser);
-        break;
-
-    case NJS_TOKEN_ELLIPSIS:
-        njs_parser_next(parser, njs_parser_binding_identifier_pattern);
-        break;
-
-    default:
-        parser->node = NULL;
-
-        njs_parser_next(parser, njs_parser_expression);
-
-        return njs_parser_after(parser, current, NULL, 0,
-                               njs_parser_cover_parenthesized_expression_after);
-    }
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    return NJS_OK;
-}
-
-
-static njs_int_t
-njs_parser_binding_identifier_pattern(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    /*
-     * BindingIdentifier )
-     * BindingPattern )
-     */
-
-    switch (token->type) {
-
-    /* BindingIdentifier */
-    case NJS_TOKEN_NAME:
-        njs_parser_next(parser, njs_parser_cover_parenthesized_expression_end);
-        break;
-
-    case NJS_TOKEN_YIELD:
-        njs_parser_next(parser, njs_parser_cover_parenthesized_expression_end);
-        break;
-
-    case NJS_TOKEN_AWAIT:
-        njs_parser_next(parser, njs_parser_cover_parenthesized_expression_end);
-        break;
-
-    /* BindingPattern */
-    case NJS_TOKEN_OPEN_BRACKET:
-        njs_parser_next(parser, njs_parser_array_binding_pattern);
-
-        njs_lexer_consume_token(parser->lexer, 1);
-        return njs_parser_after(parser, current, NULL, 0,
-                                njs_parser_cover_parenthesized_expression_end);
-
-    case NJS_TOKEN_OPEN_BRACE:
-        njs_parser_next(parser, njs_parser_object_binding_pattern);
-
-        njs_lexer_consume_token(parser->lexer, 1);
-        return njs_parser_after(parser, current, NULL, 0,
-                                njs_parser_cover_parenthesized_expression_end);
-
-    default:
-        return NJS_ERROR;
-    }
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    return NJS_OK;
-}
-
-
-static njs_int_t
-njs_parser_cover_parenthesized_expression_after(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    /*
-     * )
-     * ,)
-     * , ... BindingIdentifier )
-     * , ... BindingPattern )
-     */
-
-    if (token->type == NJS_TOKEN_CLOSE_PARENTHESIS) {
-        goto shift_stack;
-    }
-
-    if (token->type != NJS_TOKEN_COMMA) {
-        return njs_parser_failed(parser);
-    }
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    token = njs_lexer_token(parser->lexer, 0);
-    if (njs_slow_path(token == NULL)) {
-        return NJS_ERROR;
-    }
-
-    if (token->type == NJS_TOKEN_CLOSE_PARENTHESIS) {
-        goto shift_stack;
-    }
-
-    if(token->type != NJS_TOKEN_ELLIPSIS) {
-        return njs_parser_failed(parser);
-    }
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    njs_parser_next(parser, njs_parser_binding_identifier_pattern);
-
-    return NJS_OK;
-
-shift_stack:
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    return njs_parser_stack_pop(parser);
-}
-
-
-static njs_int_t
-njs_parser_cover_parenthesized_expression_end(njs_parser_t *parser,
-    njs_lexer_token_t *token, njs_queue_link_t *current)
-{
-    if (token->type != NJS_TOKEN_CLOSE_PARENTHESIS) {
-        return njs_parser_failed(parser);
-    }
-
-    njs_lexer_consume_token(parser->lexer, 1);
-
-    return njs_parser_stack_pop(parser);
 }
 
 
