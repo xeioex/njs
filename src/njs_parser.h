@@ -82,8 +82,6 @@ struct njs_parser_s {
     /* The ECMAScript [In] grammar parameter. */
     uint8_t                         allow_in;
 
-    uint8_t                         use_lhs;
-
     uint8_t                         module;
 
     njs_str_t                       file;

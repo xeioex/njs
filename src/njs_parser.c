@@ -560,8 +560,6 @@ njs_parser_init(njs_vm_t *vm, njs_parser_t *parser, njs_parser_scope_t *scope,
     lexer = &parser->lexer0;
     parser->lexer = lexer;
 
-    parser->use_lhs = 0;
-
     return njs_lexer_init(vm, lexer, file, start, end);
 }
 
@@ -3913,17 +3911,11 @@ njs_parser_exponentiation_expression(njs_parser_t *parser,
 {
     parser->target = NULL;
 
-    if (parser->use_lhs == 0) {
-        njs_parser_next(parser, njs_parser_unary_expression);
+    njs_parser_next(parser, njs_parser_unary_expression);
 
-        /* For UpdateExpression, see njs_parser_unary_expression_after. */
+    /* For UpdateExpression, see njs_parser_unary_expression_after. */
 
-        return NJS_OK;
-    } else {
-        parser->use_lhs = 0;
-
-        return njs_parser_update_expression_post(parser, token, current);
-    }
+    return NJS_OK;
 }
 
 
@@ -4576,16 +4568,14 @@ njs_parser_assignment_expression(njs_parser_t *parser,
 {
     njs_int_t  ret;
 
-    if (!parser->use_lhs) {
-        ret = njs_parser_match_arrow_expression(parser, token);
-        if (ret == NJS_OK) {
-            njs_parser_next(parser, njs_parser_arrow_function);
+    ret = njs_parser_match_arrow_expression(parser, token);
+    if (ret == NJS_OK) {
+        njs_parser_next(parser, njs_parser_arrow_function);
 
-            return NJS_OK;
+        return NJS_OK;
 
-        } else if (ret == NJS_ERROR) {
-            return NJS_ERROR;
-        }
+    } else if (ret == NJS_ERROR) {
+        return NJS_ERROR;
     }
 
     njs_parser_next(parser, njs_parser_conditional_expression);
