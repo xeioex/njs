@@ -5832,12 +5832,12 @@ njs_parser_for_expression_map_continue(njs_parser_t *parser,
         if (!njs_parser_is_lvalue(parser->node)) {
             text = (njs_str_t *) parser->target;
 
-            njs_parser_ref_error(parser, "Invalid left-hand side \"%V\" "
-                                 "in for-in statement", text);
-
             njs_mp_free(parser->vm->mem_pool, text);
 
-            return NJS_DONE;
+            njs_parser_syntax_error(parser,
+                                    "Invalid left-hand side in for-loop");
+
+            return NJS_ERROR;
         }
 
         parser->node = njs_parser_lvalue_ref(parser->node);

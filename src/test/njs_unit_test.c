@@ -3403,8 +3403,38 @@ static njs_unit_test_t  njs_test[] =
 
     /* for in. */
 
+    /* An invalid for-in target is a SyntaxError, parenthesized or not. */
+
     { njs_str("for (null in undefined);"),
-      njs_str("ReferenceError: Invalid left-hand side \"null\" in for-in statement") },
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for ((null) in undefined);"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (1 in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (this in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for (function(){} in x);"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for ((a = 1) in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("for ((x => x) in {});"),
+      njs_str("SyntaxError: Invalid left-hand side in for-loop") },
+
+    { njs_str("var r; try { Function('for (null in undefined);') }"
+              "catch (e) { r = e.name } r"),
+      njs_str("SyntaxError") },
+
+    { njs_str("var d = {}; for (d.a in {x:1}); d.a"),
+      njs_str("x") },
+
+    { njs_str("var d = {}; for ((d.a) in {x:1}); d.a"),
+      njs_str("x") },
 
     { njs_str("for (var a, b in []);"),
       njs_str("SyntaxError: Unexpected token \"in\"") },
