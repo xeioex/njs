@@ -3463,6 +3463,26 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var s = ''; for (var p in {a:1, b:2}) {s += p}; s"),
       njs_str("ab") },
 
+    /* The three for-in target routes, each observed over two iterations. */
+
+    { njs_str("var r = []; for (let k in {a:1, b:2}) {r.push(() => k)};"
+              "r[0]() + ',' + r[1]()"),
+      njs_str("a,b") },
+
+    { njs_str("var r = []; for (var k in {a:1, b:2}) {r.push(() => k)};"
+              "r[0]() + ',' + r[1]()"),
+      njs_str("b,b") },
+
+    { njs_str("var k, s = ''; for (k in {a:1, b:2}) {s += k}; s + k"),
+      njs_str("abb") },
+
+    { njs_str("var o = {}, s = ''; for (o.p in {a:1, b:2}) {s += o.p};"
+              "s + o.p"),
+      njs_str("abb") },
+
+    { njs_str("var s = 'x'; for (let k in {}) {s = 'y'}; s"),
+      njs_str("x") },
+
     { njs_str("var s = '';"
                  "var o = Object.defineProperty({}, 'x', {value:1});"
                  "Object.defineProperty(o, 'y', {value:2, enumerable:true});"

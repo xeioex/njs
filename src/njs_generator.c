@@ -295,8 +295,6 @@ static njs_int_t njs_generate_for_in_object_left_hand_expr(njs_vm_t *vm,
     njs_generator_t *generator, njs_parser_node_t *node);
 static njs_int_t njs_generate_for_in_body(njs_vm_t *vm,
     njs_generator_t *generator, njs_parser_node_t *node);
-static njs_int_t njs_generate_for_in_body_wo_decl(njs_vm_t *vm,
-    njs_generator_t *generator, njs_parser_node_t *node);
 static njs_int_t njs_generate_for_in_body_left_hand_expr(njs_vm_t *vm,
     njs_generator_t *generator, njs_parser_node_t *node);
 static njs_int_t njs_generate_start_block(njs_vm_t *vm,
@@ -2199,64 +2197,6 @@ njs_generate_for_in_name_assign(njs_vm_t *vm, njs_generator_t *generator,
 
 
 static njs_int_t
-njs_generate_for_in_body_wo_decl(njs_vm_t *vm, njs_generator_t *generator,
-    njs_parser_node_t *node)
-{
-    njs_int_t                 ret;
-    njs_jump_off_t            prop_offset;
-    njs_parser_node_t         *foreach, *name;
-    njs_vmcode_prop_next_t    *prop_next;
-    njs_generator_loop_ctx_t  *ctx;
-
-    ctx = generator->context;
-
-    foreach = node->left;
-    name = foreach->left->right;
-
-    /* The loop iterator. */
-
-    if (name != NULL) {
-        ret = njs_generate_for_let_update(vm, generator, foreach->left);
-        if (njs_slow_path(ret != NJS_OK)) {
-            return ret;
-        }
-    }
-
-    njs_generate_patch_block(vm, generator, generator->block,
-                             NJS_GENERATOR_CONTINUATION);
-
-    njs_code_set_jump_offset(generator, njs_vmcode_prop_foreach_t,
-                             ctx->jump_offset);
-
-    njs_generate_code(generator, njs_vmcode_prop_next_t, prop_next,
-                      NJS_VMCODE_PROPERTY_NEXT, node->left->left);
-    prop_offset = njs_code_offset(generator, prop_next);
-    prop_next->retval = ctx->index_next_value;
-    prop_next->object = foreach->right->index;
-    prop_next->next = ctx->index;
-    prop_next->offset = ctx->loop_offset - prop_offset;
-
-    njs_generate_patch_block_exit(vm, generator);
-
-    /*
-     * Release object and iterator indexes: an object can be a function result
-     * or a property of another object and an iterator can be given with "let".
-     */
-    ret = njs_generate_children_indexes_release(vm, generator, foreach);
-    if (njs_slow_path(ret != NJS_OK)) {
-        return ret;
-    }
-
-    ret = njs_generate_index_release(vm, generator, ctx->index);
-    if (njs_slow_path(ret != NJS_OK)) {
-        return ret;
-    }
-
-    return njs_generator_stack_pop(vm, generator, ctx);
-}
-
-
-static njs_int_t
 njs_generate_for_in_object_wo_decl(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
@@ -2299,7 +2239,7 @@ njs_generate_for_in_object_wo_decl(njs_vm_t *vm, njs_generator_t *generator,
 
     ret = njs_generator_after(vm, generator,
                                njs_queue_first(&generator->stack), node,
-                               njs_generate_for_in_body_wo_decl, ctx, 0);
+                               njs_generate_for_in_body, ctx, 0);
     if (ret != NJS_OK) {
         return ret;
     }
@@ -2352,7 +2292,7 @@ njs_generate_for_in_statement(njs_vm_t *vm, njs_generator_t *generator,
                 return NJS_ERROR;
             }
 
-            foreach->left->index = name->index;
+            ctx.index_next_value = name->index;
 
             njs_generator_next(generator, njs_generate, foreach->right);
 
@@ -2605,7 +2545,7 @@ njs_generate_for_in_body(njs_vm_t *vm, njs_generator_t *generator,
     njs_generate_code(generator, njs_vmcode_prop_next_t, prop_next,
                       NJS_VMCODE_PROPERTY_NEXT, node->left->left);
     prop_offset = njs_code_offset(generator, prop_next);
-    prop_next->retval = foreach->left->index;
+    prop_next->retval = ctx->index_next_value;
     prop_next->object = foreach->right->index;
     prop_next->next = ctx->index;
     prop_next->offset = ctx->loop_offset - prop_offset;
