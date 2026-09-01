@@ -3500,6 +3500,13 @@ static njs_unit_test_t  njs_test[] =
               "s + o.p"),
       njs_str("abb") },
 
+    { njs_str("var o = [], s = ''; for (o[0] in {a:1, b:2}) {s += o[0]};"
+              "s + o[0]"),
+      njs_str("abb") },
+
+    { njs_str("var k, s = ''; for ((k) in {a:1, b:2}) {s += k}; s + k"),
+      njs_str("abb") },
+
     { njs_str("var s = 'x'; for (let k in {}) {s = 'y'}; s"),
       njs_str("x") },
 

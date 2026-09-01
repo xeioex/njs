@@ -5815,7 +5815,7 @@ njs_parser_for_var_in_of_expression(njs_parser_t *parser,
             }
 
             node->token_line = token->line;
-            node->left = parser->node;
+            node->left = parser->node->right;
 
         } else {
             if (!njs_parser_is_lvalue(parser->node)) {
