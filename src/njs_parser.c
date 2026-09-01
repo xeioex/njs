@@ -530,6 +530,7 @@ njs_parser_reject(njs_parser_t *parser)
             njs_parser_next(parser, entry->state);
             parser->target = entry->node;
             parser->allow_in = entry->allow_in;
+            parser->var_type = entry->var_type;
 
             return NJS_DECLINED;
         }

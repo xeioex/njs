@@ -20691,6 +20691,49 @@ static njs_unit_test_t  njs_test[] =
               "} res"),
       njs_str("0,0,0,0,0") },
 
+    /*
+     * A declaration nested in a declarator initializer must not change the
+     * kind of the declarators that follow it.
+     */
+
+    { njs_str("let out = [];"
+              "for (let a = function() { var z; }, b = 0; b < 2; b++) {"
+              "    out.push(() => b);"
+              "} out[0]() + ',' + out[1]()"),
+      njs_str("0,1") },
+
+    { njs_str("let out = [];"
+              "for (let a = 1, b = function() { var z; }, c = 0; c < 2; c++) {"
+              "    out.push(() => c);"
+              "} out[0]() + ',' + out[1]()"),
+      njs_str("0,1") },
+
+    { njs_str("let out = [];"
+              "for (var a = function() { let z; }, b = 0; b < 2; b++) {"
+              "    out.push(() => b);"
+              "} out[0]() + ',' + out[1]()"),
+      njs_str("2,2") },
+
+    { njs_str("var r;"
+              "for (const a = function() { var z; }, b = 2; b > 0;) {"
+              "    try { b = 3 } catch (e) { r = e.name } break"
+              "} r"),
+      njs_str("TypeError") },
+
+    /* The same state serves an ordinary declaration list. */
+
+    { njs_str("var r;"
+              "const a = function() { var z; }, b = 2;"
+              "try { b = 3 } catch (e) { r = e.name } r"),
+      njs_str("TypeError") },
+
+    { njs_str("let a = function() { var z; }, b = 0;"
+              "for (; b < 2; b++) {} b"),
+      njs_str("2") },
+
+    { njs_str("let a = function() { var ; }, b = 0;"),
+      njs_str("SyntaxError: Unexpected token \";\"") },
+
     { njs_str("let arr = [], res = [];"
               "for (let i = 0; arr.push(() => i), i < 10; i++) {}"
               "for (let k = 0; k < 10; k++) {res.push(arr[k]())}"

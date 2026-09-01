@@ -95,6 +95,7 @@ typedef struct {
 
     njs_parser_node_t               *node;
 
+    njs_variable_type_t             var_type;
     uint8_t                         allow_in;
     uint8_t                         optional;
 } njs_parser_stack_entry_t;
@@ -304,6 +305,7 @@ njs_parser_stack_pop(njs_parser_t *parser)
 
     parser->target = entry->node;
     parser->allow_in = entry->allow_in;
+    parser->var_type = entry->var_type;
 
     njs_mp_free(parser->vm->mem_pool, entry);
 
@@ -349,6 +351,7 @@ _njs_parser_after(njs_parser_t *parser, njs_queue_link_t *link, void *node,
     entry->state = state;
     entry->node = node;
     entry->allow_in = parser->allow_in;
+    entry->var_type = parser->var_type;
     entry->optional = is_optional;
 
     njs_queue_insert_before(link, &entry->link);
