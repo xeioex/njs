@@ -10138,6 +10138,57 @@ static njs_unit_test_t  njs_test[] =
               "'abc'.replaceAll(re, '@$1|$2|$3|$4|$99|$100|@')"),
       njs_str("@|X||Y|Z|0|@") },
 
+    { njs_str("var n = 0, s = 'αβγ';"
+              "var re = {global: false, flags: '', exec: () =>"
+              "  n++ ? null : {0: 'y'.repeat(100), index: 0}};"
+              "RegExp.prototype[Symbol.replace].call(re, s, \"[$']\")"),
+      njs_str("[]") },
+
+    { njs_str("var n = 0, s = 'αβγδε';"
+              "var re = {global: false, flags: '', exec: () =>"
+              "  n++ ? null : {0: 'y'.repeat(1000), index: 2}};"
+              "RegExp.prototype[Symbol.replace].call(re, s, \"<$'>\")"),
+      njs_str("αβ<>") },
+
+    { njs_str("var n = 0, s = 'αβγ';"
+              "var re = {global: false, flags: '', exec: () =>"
+              "  n++ ? null : {0: 'y', index: 0}};"
+              "RegExp.prototype[Symbol.replace].call(re, s, '')"),
+      njs_str("βγ") },
+
+    { njs_str("var n = 0, s = 'αβγ';"
+              "var re = {global: false, flags: '', exec: () =>"
+              "  n++ ? null : {0: 'y', index: 1e9}};"
+              "RegExp.prototype[Symbol.replace].call(re, s, '[$`]')"),
+      njs_str("αβγ[αβγ]") },
+
+    { njs_str("var n = 0, s = 'αβγδ';"
+              "var re = {global: false, flags: '', exec: () =>"
+              "  n++ ? null : {0: 'αβ', index: 1}};"
+              "RegExp.prototype[Symbol.replace].call(re, s, \"[$&|$`|$']\")"),
+      njs_str("α[αβ|α|δ]δ") },
+
+    { njs_str("var n = 0, s = 'αβγδεζ';"
+              "var a = [{0: 'y', index: 5}, {0: 'y', index: 0}];"
+              "var re = {global: true, flags: 'g',"
+              "          exec: () => n < a.length ? a[n++] : null};"
+              "RegExp.prototype[Symbol.replace].call(re, s, '<$&>')"),
+      njs_str("αβγδε<y>") },
+
+    { njs_str("var n = 0;"
+              "var a = [{0: 'yyyy', index: 0}, {0: 'z', index: 3}];"
+              "var re = {global: true, flags: 'g',"
+              "          exec: () => n < a.length ? a[n++] : null};"
+              "RegExp.prototype[Symbol.replace].call(re, 'abc', '[1]')"),
+      njs_str("[1]") },
+
+    { njs_str("var n = 0;"
+              "var re = {global: false, flags: '', exec: () =>"
+              "  n++ ? null : {0: 'yyyyyyyyy', index: 1}};"
+              "RegExp.prototype[Symbol.replace].call(re, 'abcdef',"
+              "                                      \"[$&|$`|$']\")"),
+      njs_str("a[yyyyyyyyy|a|]") },
+
     { njs_str("var a = [];"
               "Object.defineProperty(a, 32768, {});"
               "var re = /any_regexp/;"
