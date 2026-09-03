@@ -3696,10 +3696,6 @@ njs_parser_unary_expression_next(njs_parser_t *parser,
         }
     }
 
-    if (type == NJS_TOKEN_TYPEOF && node->token_type == NJS_TOKEN_NAME) {
-        node->u.reference.type = NJS_TYPEOF;
-    }
-
     parser->target->left = parser->node;
     parser->target->left->dest = parser->target;
     parser->node = parser->target;
@@ -8986,7 +8982,6 @@ njs_parser_variable_reference(njs_parser_t *parser, njs_parser_scope_t *scope,
     vr = &node->u.reference;
 
     vr->atom_id = atom_id;
-    vr->type = type;
 
     parse_node.key = atom_id;
 
