@@ -164,8 +164,8 @@ void njs_parser_lexer_error(njs_parser_t *parser,
 void njs_parser_node_error(njs_vm_t *vm, njs_object_type_t type,
     njs_parser_node_t *node, njs_str_t *file, const char *fmt, ...);
 
-njs_int_t njs_parser_traverse(njs_vm_t *vm, njs_parser_node_t *root,
-    void *ctx, njs_parser_traverse_cb_t cb);
+njs_int_t njs_parser_traverse(njs_vm_t *vm, njs_mp_t *mem_pool,
+    njs_parser_node_t *root, void *ctx, njs_parser_traverse_cb_t cb);
 njs_int_t njs_parser_serialize_ast(njs_parser_node_t *node, njs_chb_t *chain);
 
 

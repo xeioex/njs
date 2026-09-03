@@ -259,7 +259,8 @@ njs_vm_compile(njs_vm_t *vm, u_char **start, u_char *end)
     *start = parser.lexer->start;
     scope = parser.scope;
 
-    ret = njs_generator_init(&generator, &vm->options.file, 0, 0);
+    ret = njs_generator_init(&generator, parser.mem_pool, &vm->options.file,
+                             0, 0);
     if (njs_slow_path(ret != NJS_OK)) {
         njs_internal_error(vm, "njs_generator_init() failed");
         njs_parser_destroy(&parser);
@@ -355,7 +356,7 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
 
     *start = parser.lexer->start;
 
-    ret = njs_generator_init(&generator, &module->name, 0, 0);
+    ret = njs_generator_init(&generator, parser.mem_pool, &module->name, 0, 0);
     if (njs_slow_path(ret != NJS_OK)) {
         njs_internal_error(vm, "njs_generator_init() failed");
         njs_parser_destroy(&parser);

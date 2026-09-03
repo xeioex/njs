@@ -9112,8 +9112,8 @@ njs_parser_node_error(njs_vm_t *vm, njs_object_type_t type,
 
 
 njs_int_t
-njs_parser_traverse(njs_vm_t *vm, njs_parser_node_t *root, void *ctx,
-    njs_parser_traverse_cb_t cb)
+njs_parser_traverse(njs_vm_t *vm, njs_mp_t *mem_pool, njs_parser_node_t *root,
+    void *ctx, njs_parser_traverse_cb_t cb)
 {
     uint32_t                 i;
     njs_int_t                ret;
@@ -9125,7 +9125,7 @@ njs_parser_traverse(njs_vm_t *vm, njs_parser_node_t *root, void *ctx,
         return NJS_OK;
     }
 
-    stack = njs_arr_create(vm->mem_pool, 8, sizeof(njs_parser_node_t *));
+    stack = njs_arr_create(mem_pool, 8, sizeof(njs_parser_node_t *));
     if (njs_slow_path(stack == NULL)) {
         return NJS_ERROR;
 
