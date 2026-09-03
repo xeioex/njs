@@ -15395,6 +15395,11 @@ static njs_unit_test_t  njs_test[] =
               "sum(2, 4);"),
       njs_str("6") },
 
+    { njs_str("(new Function('a',"
+              " 'return function(b) { return function(c) {"
+              " return a + b + c; }; };'))(1)(2)(3)"),
+      njs_str("6") },
+
     { njs_str("var sum = new Function('a, b', 'c', 'return a + b + c');"
               "sum(2, 4, 4);"),
       njs_str("10") },

@@ -94,6 +94,7 @@ struct njs_parser_s {
     njs_parser_node_t               *node;
     njs_parser_node_t               *target;
     njs_parser_scope_t              *scope;
+    njs_parser_scope_t              *persistent_scope;
     njs_rbtree_t                    labels;
     njs_variable_type_t             var_type;
     njs_int_t                       ret;
@@ -102,6 +103,7 @@ struct njs_parser_s {
     uint8_t                         allow_in;
 
     uint8_t                         module;
+    uint8_t                         persistent_global;
 
     njs_str_t                       file;
     uint32_t                        line;
@@ -144,7 +146,8 @@ njs_int_t njs_parser_failed_state(njs_parser_t *parser,
 intptr_t njs_parser_scope_rbtree_compare(njs_rbtree_node_t *node1,
     njs_rbtree_node_t *node2);
 njs_int_t njs_parser_init(njs_vm_t *vm, njs_parser_t *parser,
-    njs_parser_scope_t *scope, njs_str_t *file, u_char *start, u_char *end);
+    njs_parser_scope_t *scope, njs_bool_t persistent_global, njs_str_t *file,
+    u_char *start, u_char *end);
 void njs_parser_destroy(njs_parser_t *parser);
 njs_int_t njs_parser(njs_vm_t *vm, njs_parser_t *parser);
 
