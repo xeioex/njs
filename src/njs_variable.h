@@ -43,11 +43,8 @@ typedef enum {
 
 
 typedef struct {
-    njs_reference_type_t  type;
     uintptr_t             atom_id;
     njs_variable_t        *variable;
-    njs_parser_scope_t    *scope;
-    njs_bool_t            not_defined;
 } njs_variable_reference_t;
 
 

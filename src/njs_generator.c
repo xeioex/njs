@@ -6360,7 +6360,9 @@ njs_generate_reference_error(njs_vm_t *vm, njs_generator_t *generator,
     njs_str_t           entry;
     njs_vmcode_error_t  *ref_err;
 
-    if (njs_slow_path(!node->u.reference.not_defined)) {
+    entry = njs_str_value("unknown");
+
+    if (njs_slow_path(!node->not_defined)) {
         njs_internal_error(vm, "variable is not defined but not_defined "
                                "is not set");
         return NJS_ERROR;

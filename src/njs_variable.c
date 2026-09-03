@@ -514,14 +514,13 @@ njs_variable_reference(njs_vm_t *vm, njs_parser_node_t *node)
     if (ref->variable == NULL) {
         ref->variable = njs_variable_resolve(vm, node);
         if (njs_slow_path(ref->variable == NULL)) {
-            ref->not_defined = 1;
+            node->not_defined = 1;
 
             return NULL;
         }
     }
 
     closure = njs_variable_closure_test(node->scope, ref->variable->scope);
-    ref->scope = node->scope;
 
     ref_node.key = ref->atom_id;
 
