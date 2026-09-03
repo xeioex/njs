@@ -241,11 +241,13 @@ njs_vm_compile(njs_vm_t *vm, u_char **start, u_char *end)
         NJS_CHB_MP_INIT(&chain, njs_vm_memory_pool(vm));
         ret = njs_parser_serialize_ast(parser.node, &chain);
         if (njs_slow_path(ret == NJS_ERROR)) {
+            njs_chb_destroy(&chain);
             njs_parser_destroy(&parser);
             return ret;
         }
 
         if (njs_slow_path(njs_chb_join(&chain, &ast) != NJS_OK)) {
+            njs_chb_destroy(&chain);
             njs_parser_destroy(&parser);
             return NJS_ERROR;
         }
