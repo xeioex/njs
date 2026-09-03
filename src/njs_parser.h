@@ -58,12 +58,11 @@ struct njs_parser_node_s {
         } array;
         njs_variable_reference_t    reference;
         njs_value_t                 value;
+        uintptr_t                   label;
         njs_vmcode_t                operation;
         njs_parser_node_t           *object;
         njs_mod_t                   *module;
     } u;
-
-    njs_str_t                       name;
 
     njs_index_t                     index;
 
