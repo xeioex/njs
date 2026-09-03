@@ -326,12 +326,17 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
     u_char *end)
 {
     njs_int_t              ret;
+    njs_uint_t             code_index;
     njs_mod_t              *module;
     njs_parser_t           parser;
     njs_vm_code_t          *code;
     njs_generator_t        generator;
     njs_parser_scope_t     *scope;
     njs_function_lambda_t  *lambda;
+
+    parser.mem_pool = NULL;
+    lambda = NULL;
+    code_index = (vm->codes != NULL) ? vm->codes->items : 0;
 
     module = njs_module_find(vm, name, 1);
     if (module != NULL) {
@@ -345,15 +350,14 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
 
     ret = njs_parser_init(vm, &parser, NULL, 0, &module->name, *start, end);
     if (njs_slow_path(ret != NJS_OK)) {
-        return NULL;
+        goto failed;
     }
 
     parser.module = 1;
 
     ret = njs_parser(vm, &parser);
     if (njs_slow_path(ret != NJS_OK)) {
-        njs_parser_destroy(&parser);
-        return NULL;
+        goto failed;
     }
 
     *start = parser.lexer->start;
@@ -361,23 +365,20 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
     ret = njs_generator_init(&generator, parser.mem_pool, &module->name, 0, 0);
     if (njs_slow_path(ret != NJS_OK)) {
         njs_internal_error(vm, "njs_generator_init() failed");
-        njs_parser_destroy(&parser);
-        return NULL;
+        goto failed;
     }
 
     code = njs_generate_scope(vm, &generator, parser.scope, &njs_entry_module);
     if (njs_slow_path(code == NULL)) {
         njs_internal_error(vm, "njs_generate_scope() failed");
 
-        njs_parser_destroy(&parser);
-        return NULL;
+        goto failed;
     }
 
     lambda = njs_mp_zalloc(vm->mem_pool, sizeof(njs_function_lambda_t));
     if (njs_fast_path(lambda == NULL)) {
         njs_memory_error(vm);
-        njs_parser_destroy(&parser);
-        return NULL;
+        goto failed;
     }
 
     scope = parser.scope;
@@ -390,6 +391,21 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
     njs_parser_destroy(&parser);
 
     return module;
+
+failed:
+
+    if (parser.mem_pool != NULL) {
+        njs_parser_destroy(&parser);
+    }
+
+    if (lambda != NULL) {
+        njs_mp_free(vm->mem_pool, lambda);
+    }
+
+    njs_generator_cleanup(vm, code_index);
+    njs_module_remove(vm, module);
+
+    return NULL;
 }
 
 

@@ -4981,6 +4981,8 @@ njs_generate_scope(njs_vm_t *vm, njs_generator_t *generator,
         return NULL;
     }
 
+    code->start = NULL;
+    code->end = NULL;
     code->lines = NULL;
 
     if (vm->options.backtrace) {
@@ -5074,6 +5076,29 @@ njs_generate_scope(njs_vm_t *vm, njs_generator_t *generator,
     scope->top = NULL;
 
     return code;
+}
+
+
+void
+njs_generator_cleanup(njs_vm_t *vm, njs_uint_t code_index)
+{
+    njs_vm_code_t  *code;
+
+    if (vm->codes == NULL) {
+        return;
+    }
+
+    while (vm->codes->items > code_index) {
+        code = njs_arr_remove_last(vm->codes);
+
+        if (code->start != NULL) {
+            njs_mp_free(vm->mem_pool, code->start);
+        }
+
+        if (code->lines != NULL) {
+            njs_arr_destroy(code->lines);
+        }
+    }
 }
 
 
