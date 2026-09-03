@@ -21,11 +21,11 @@ typedef struct {
     uintptr_t             atom_id;
 
     njs_variable_type_t   type:8;    /* 3 bits */
-    njs_bool_t            argument;
-    njs_bool_t            arguments_object;
-    njs_bool_t            self;
-    njs_bool_t            init;
-    njs_bool_t            closure;
+    uint8_t               argument;
+    uint8_t               arguments_object;
+    uint8_t               self;
+    uint8_t               init;
+    uint8_t               closure;
 
     njs_parser_scope_t    *scope;
     njs_parser_scope_t    *original;
