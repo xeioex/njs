@@ -301,59 +301,41 @@ memory_error:
 }
 
 
-njs_variable_t *
-njs_label_add(njs_vm_t *vm, njs_parser_scope_t *scope, uintptr_t atom_id)
+njs_int_t
+njs_label_add(njs_parser_t *parser, uintptr_t atom_id)
 {
-    njs_variable_t       *label;
-    njs_rbtree_node_t    *node;
-    njs_variable_node_t  var_node, *var_node_new;
+    njs_parser_label_t  *label;
 
-    var_node.key = atom_id;
-
-    node = njs_rbtree_find(&scope->labels, &var_node.node);
-
-    if (node != NULL) {
-        return ((njs_variable_node_t *) node)->variable;
-    }
-
-    label = njs_variable_alloc(vm, atom_id, NJS_VARIABLE_CONST);
+    label = njs_mp_alloc(parser->vm->mem_pool, sizeof(njs_parser_label_t));
     if (njs_slow_path(label == NULL)) {
-        goto memory_error;
+        njs_memory_error(parser->vm);
+        return NJS_ERROR;
     }
 
-    var_node_new = njs_variable_node_alloc(vm, label, atom_id);
-    if (njs_slow_path(var_node_new == NULL)) {
-        goto memory_error;
-    }
+    label->key = atom_id;
 
-    njs_rbtree_insert(&scope->labels, &var_node_new->node);
+    njs_rbtree_insert(&parser->labels, &label->node);
 
-    return label;
-
-memory_error:
-
-    njs_memory_error(vm);
-
-    return NULL;
+    return NJS_OK;
 }
 
 
 njs_int_t
-njs_label_remove(njs_vm_t *vm, njs_parser_scope_t *scope, uintptr_t atom_id)
+njs_label_remove(njs_parser_t *parser, uintptr_t atom_id)
 {
-    njs_rbtree_node_t    *node;
-    njs_variable_node_t  var_node;
+    njs_rbtree_node_t   *node;
+    njs_parser_label_t  label;
 
-    var_node.key = atom_id;
+    label.key = atom_id;
 
-    node = njs_rbtree_find(&scope->labels, &var_node.node);
+    node = njs_rbtree_find(&parser->labels, &label.node);
     if (njs_slow_path(node == NULL)) {
-        njs_internal_error(vm, "failed to find label while removing");
+        njs_internal_error(parser->vm, "failed to find label while removing");
         return NJS_ERROR;
     }
 
-    njs_rbtree_delete(&scope->labels, (njs_rbtree_part_t *) node);
-    njs_variable_node_free(vm, (njs_variable_node_t *) node);
+    njs_rbtree_delete(&parser->labels, (njs_rbtree_part_t *) node);
+    njs_mp_free(parser->vm->mem_pool, node);
 
     return NJS_OK;
 }
@@ -554,26 +536,14 @@ njs_variable_reference(njs_vm_t *vm, njs_parser_node_t *node)
 }
 
 
-njs_variable_t *
-njs_label_find(njs_vm_t *vm, njs_parser_scope_t *scope, uintptr_t atom_id)
+njs_bool_t
+njs_label_find(njs_parser_t *parser, uintptr_t atom_id)
 {
-    njs_rbtree_node_t    *node;
-    njs_variable_node_t  var_node;
+    njs_parser_label_t  label;
 
-    var_node.key = atom_id;
+    label.key = atom_id;
 
-    do {
-        node = njs_rbtree_find(&scope->labels, &var_node.node);
-
-        if (node != NULL) {
-            return ((njs_variable_node_t *) node)->variable;
-        }
-
-        scope = scope->parent;
-
-    } while (scope != NULL);
-
-    return NULL;
+    return njs_rbtree_find(&parser->labels, &label.node) != NULL;
 }
 
 

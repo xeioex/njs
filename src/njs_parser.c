@@ -549,6 +549,8 @@ njs_parser_init(njs_vm_t *vm, njs_parser_t *parser, njs_parser_scope_t *scope,
     lexer = &parser->lexer0;
     parser->lexer = lexer;
 
+    njs_rbtree_init(&parser->labels, njs_parser_scope_rbtree_compare);
+
     return njs_lexer_init(vm, lexer, file, start, end);
 }
 
@@ -672,7 +674,6 @@ njs_parser_scope_begin(njs_parser_t *parser, njs_scope_t type,
     scope->type = type;
 
     njs_rbtree_init(&scope->variables, njs_parser_scope_rbtree_compare);
-    njs_rbtree_init(&scope->labels, njs_parser_scope_rbtree_compare);
     njs_rbtree_init(&scope->references, njs_parser_scope_rbtree_compare);
 
     parent = parser->scope;
@@ -6036,8 +6037,7 @@ njs_parser_break_continue(njs_parser_t *parser, njs_lexer_token_t *token,
                 return njs_parser_stack_pop(parser);
             }
 
-            if (njs_label_find(parser->vm, parser->scope, token->atom_id)
-                == NULL)
+            if (!njs_label_find(parser, token->atom_id))
             {
                 njs_parser_syntax_error(parser, "Undefined label \"%V\"",
                                         &token->text);
@@ -6445,19 +6445,16 @@ njs_parser_labelled_statement(njs_parser_t *parser, njs_lexer_token_t *token,
     njs_queue_link_t *current)
 {
     uintptr_t       atom_id;
-    njs_variable_t  *label;
 
     atom_id = token->atom_id;
 
-    label = njs_label_find(parser->vm, parser->scope, atom_id);
-    if (label != NULL) {
+    if (njs_label_find(parser, atom_id)) {
         njs_parser_syntax_error(parser, "Label \"%V\" "
                                 "has already been declared", &token->text);
         return NJS_DONE;
     }
 
-    label = njs_label_add(parser->vm, parser->scope, atom_id);
-    if (label == NULL) {
+    if (njs_label_add(parser, atom_id) != NJS_OK) {
         return NJS_ERROR;
     }
 
@@ -6514,7 +6511,7 @@ njs_parser_labelled_statement_after(njs_parser_t *parser,
         return NJS_ERROR;
     }
 
-    ret = njs_label_remove(parser->vm, parser->scope, atom_id);
+    ret = njs_label_remove(parser, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -6917,7 +6914,7 @@ njs_parser_function_declaration_after(njs_parser_t *parser,
     njs_value_null_set(&parser->node->u.value);
 
     ret = njs_parser_variable_reference(parser, parser->scope, parser->node,
-                                        atom_id, NJS_DECLARATION);
+                                        atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -6994,8 +6991,7 @@ njs_parser_function_expression(njs_parser_t *parser, njs_lexer_token_t *token,
     var->self = 1;
 
     ret = njs_parser_variable_reference(parser, parser->scope,
-                                        parser->node->left, atom_id,
-                                        NJS_DECLARATION);
+                                        parser->node->left, atom_id);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -7224,7 +7220,7 @@ njs_parser_arrow_function(njs_parser_t *parser, njs_lexer_token_t *token,
     }
 
     ret = njs_parser_variable_reference(parser, parser->scope, node->left,
-                                        NJS_ATOM_STRING_empty, NJS_DECLARATION);
+                                        NJS_ATOM_STRING_empty);
     if (ret != NJS_OK) {
         return NJS_ERROR;
     }
@@ -8113,8 +8109,7 @@ njs_parser_variable_node(njs_parser_t *parser, uintptr_t atom_id,
         return NULL;
     }
 
-    ret = njs_parser_variable_reference(parser, parser->scope, node, atom_id,
-                                        NJS_DECLARATION);
+    ret = njs_parser_variable_reference(parser, parser->scope, node, atom_id);
     if (njs_slow_path(ret != NJS_OK)) {
         return NULL;
     }
@@ -8171,7 +8166,7 @@ njs_parser_reference(njs_parser_t *parser, njs_lexer_token_t *token)
         node->token_line = token->line;
 
         ret = njs_parser_variable_reference(parser, parser->scope, node,
-                                            token->atom_id, NJS_REFERENCE);
+                                            token->atom_id);
         if (njs_slow_path(ret != NJS_OK)) {
             return NULL;
         }
@@ -8196,7 +8191,7 @@ njs_parser_reference(njs_parser_t *parser, njs_lexer_token_t *token)
         node->token_line = token->line;
 
         ret = njs_parser_variable_reference(parser, parser->scope, node,
-                                            token->atom_id, NJS_REFERENCE);
+                                            token->atom_id);
         if (njs_slow_path(ret != NJS_OK)) {
             return NULL;
         }
@@ -8224,7 +8219,7 @@ njs_parser_reference(njs_parser_t *parser, njs_lexer_token_t *token)
             node->token_line = token->line;
 
             ret = njs_parser_variable_reference(parser, parser->scope, node,
-                                               token->atom_id, NJS_REFERENCE);
+                                                token->atom_id);
             if (njs_slow_path(ret != NJS_OK)) {
                 return NULL;
             }
@@ -8973,7 +8968,7 @@ njs_parser_has_side_effect(njs_parser_node_t *node)
 
 njs_int_t
 njs_parser_variable_reference(njs_parser_t *parser, njs_parser_scope_t *scope,
-    njs_parser_node_t *node, uintptr_t atom_id, njs_reference_type_t type)
+    njs_parser_node_t *node, uintptr_t atom_id)
 {
     njs_rbtree_node_t         *rb_node;
     njs_variable_reference_t  *vr;
