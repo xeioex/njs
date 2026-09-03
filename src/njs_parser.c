@@ -540,7 +540,7 @@ njs_parser_reject(njs_parser_t *parser)
 
 njs_int_t
 njs_parser_init(njs_vm_t *vm, njs_parser_t *parser, njs_parser_scope_t *scope,
-    njs_str_t *file, u_char *start, u_char *end)
+    njs_bool_t persistent_global, njs_str_t *file, u_char *start, u_char *end)
 {
     njs_int_t    ret;
     njs_lexer_t  *lexer;
@@ -548,6 +548,8 @@ njs_parser_init(njs_vm_t *vm, njs_parser_t *parser, njs_parser_scope_t *scope,
     njs_memzero(parser, sizeof(njs_parser_t));
 
     parser->scope = scope;
+    parser->persistent_scope = scope;
+    parser->persistent_global = persistent_global;
 
     parser->mem_pool = njs_mp_fast_create(2 * njs_pagesize(), 128, 512, 16);
     if (njs_slow_path(parser->mem_pool == NULL)) {
@@ -573,10 +575,36 @@ njs_parser_init(njs_vm_t *vm, njs_parser_t *parser, njs_parser_scope_t *scope,
 void
 njs_parser_destroy(njs_parser_t *parser)
 {
-    njs_parser_scope_t  *scope;
+    njs_variable_t       *var;
+    njs_rbtree_node_t    *node;
+    njs_parser_scope_t   *scope;
+    njs_variable_node_t  *var_node;
 
     for (scope = parser->scope; scope != NULL; scope = scope->parent) {
         scope->top = NULL;
+    }
+
+    if (parser->persistent_scope != NULL) {
+        node = njs_rbtree_min(&parser->persistent_scope->variables);
+
+        while (njs_rbtree_is_there_successor(
+                   &parser->persistent_scope->variables, node))
+        {
+            var_node = (njs_variable_node_t *) node;
+            var = var_node->variable;
+
+            if (var->original != parser->persistent_scope) {
+                var->original = NULL;
+            }
+
+            node = njs_rbtree_node_successor(
+                       &parser->persistent_scope->variables, node);
+        }
+
+        njs_rbtree_init(&parser->persistent_scope->references,
+                        njs_parser_scope_rbtree_compare);
+        parser->persistent_scope->closures = NULL;
+        parser->persistent_scope->declarations = NULL;
     }
 
     if (parser->mem_pool != NULL) {
@@ -697,7 +725,13 @@ njs_parser_scope_begin(njs_parser_t *parser, njs_scope_t type,
     njs_variable_t      *var;
     njs_parser_scope_t  *scope, *parent;
 
-    scope = njs_mp_zalloc(parser->vm->mem_pool, sizeof(njs_parser_scope_t));
+    if (parser->scope == NULL && parser->persistent_global) {
+        scope = njs_mp_zalloc(parser->vm->mem_pool,
+                              sizeof(njs_parser_scope_t));
+
+    } else {
+        scope = njs_mp_zalloc(parser->mem_pool, sizeof(njs_parser_scope_t));
+    }
     if (njs_slow_path(scope == NULL)) {
         return NJS_ERROR;
     }
@@ -710,6 +744,10 @@ njs_parser_scope_begin(njs_parser_t *parser, njs_scope_t type,
     parent = parser->scope;
     scope->parent = parent;
     parser->scope = scope;
+
+    if (parent == NULL && parser->persistent_global) {
+        parser->persistent_scope = scope;
+    }
 
     if (type == NJS_SCOPE_FUNCTION || type == NJS_SCOPE_GLOBAL) {
         if (init_this) {
@@ -9025,7 +9063,7 @@ njs_parser_variable_reference(njs_parser_t *parser, njs_parser_scope_t *scope,
         return NJS_OK;
     }
 
-    rb_parse_node = njs_mp_alloc(parser->vm->mem_pool,
+    rb_parse_node = njs_mp_alloc(parser->mem_pool,
                                  sizeof(njs_parser_rbtree_node_t));
     if (njs_slow_path(rb_parse_node == NULL)) {
         return NJS_ERROR;

@@ -1056,7 +1056,7 @@ njs_function_constructor(njs_vm_t *vm, njs_value_t *args, njs_uint_t nargs,
 
     file = njs_str_value("runtime");
 
-    ret = njs_parser_init(vm, &parser, NULL, &file, str.start,
+    ret = njs_parser_init(vm, &parser, NULL, 0, &file, str.start,
                           str.start + str.length);
     if (njs_slow_path(ret != NJS_OK)) {
         goto done;

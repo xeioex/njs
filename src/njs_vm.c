@@ -225,8 +225,8 @@ njs_vm_compile(njs_vm_t *vm, u_char **start, u_char *end)
 
     global_items = (vm->global_scope != NULL) ? vm->global_scope->items : 0;
 
-    ret = njs_parser_init(vm, &parser, vm->global_scope, &vm->options.file,
-                          *start, end);
+    ret = njs_parser_init(vm, &parser, vm->global_scope, 1,
+                          &vm->options.file, *start, end);
     if (njs_slow_path(ret != NJS_OK)) {
         return NJS_ERROR;
     }
@@ -341,7 +341,7 @@ njs_vm_compile_module(njs_vm_t *vm, njs_str_t *name, u_char **start,
         return NULL;
     }
 
-    ret = njs_parser_init(vm, &parser, NULL, &module->name, *start, end);
+    ret = njs_parser_init(vm, &parser, NULL, 0, &module->name, *start, end);
     if (njs_slow_path(ret != NJS_OK)) {
         return NULL;
     }
