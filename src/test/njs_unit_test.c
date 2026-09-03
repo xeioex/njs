@@ -3973,6 +3973,18 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("a : var n = 0; b :++n"),
       njs_str("1") },
 
+    { njs_str("var r = 0; outer: for (;;) { inner: break outer; r++ } r"),
+      njs_str("0") },
+
+    { njs_str("var r = 0; outer: for (; r < 3; r++) {"
+                  "inner: continue outer } r"),
+      njs_str("3") },
+
+    { njs_str("var x = 0, f = () => ++x;"
+                  "a: x = 1; b: x++; c: f(); d: [1,2].length;"
+                  "e: 's'; g: typeof x; x"),
+      njs_str("3") },
+
     { njs_str("a:{a:1}"),
       njs_str("SyntaxError: Label \"a\" has already been declared") },
 

@@ -381,6 +381,8 @@ static njs_int_t njs_parser_labelled_statement(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
 static njs_int_t njs_parser_labelled_statement_after(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
+static void njs_parser_statement_label(njs_parser_node_t *node,
+    uintptr_t atom_id);
 
 static njs_int_t njs_parser_throw_statement(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current);
@@ -6015,8 +6017,6 @@ static njs_int_t
 njs_parser_break_continue(njs_parser_t *parser, njs_lexer_token_t *token,
     njs_token_type_t type)
 {
-    njs_int_t  ret;
-
     parser->node = njs_parser_node_new(parser, type);
     if (parser->node == NULL) {
         return NJS_ERROR;
@@ -6044,10 +6044,7 @@ njs_parser_break_continue(njs_parser_t *parser, njs_lexer_token_t *token,
                 return NJS_DONE;
             }
 
-            ret = njs_name_copy(parser->vm, &parser->node->name, &token->text);
-            if (ret != NJS_OK) {
-                return NJS_ERROR;
-            }
+            parser->node->u.label = token->atom_id;
 
             break;
         }
@@ -6486,7 +6483,6 @@ njs_parser_labelled_statement_after(njs_parser_t *parser,
     njs_lexer_token_t *token, njs_queue_link_t *current)
 {
     njs_int_t          ret;
-    njs_str_t          str;
     uintptr_t          atom_id;
     njs_parser_node_t  *node;
 
@@ -6504,12 +6500,7 @@ njs_parser_labelled_statement_after(njs_parser_t *parser,
 
     atom_id = (uint32_t) (uintptr_t) parser->target;
 
-    njs_atom_string_get(parser->vm, atom_id, &str);
-
-    ret = njs_name_copy(parser->vm, &parser->node->name, &str);
-    if (ret != NJS_OK) {
-        return NJS_ERROR;
-    }
+    njs_parser_statement_label(parser->node, atom_id);
 
     ret = njs_label_remove(parser, atom_id);
     if (ret != NJS_OK) {
@@ -6517,6 +6508,26 @@ njs_parser_labelled_statement_after(njs_parser_t *parser,
     }
 
     return njs_parser_stack_pop(parser);
+}
+
+
+static void
+njs_parser_statement_label(njs_parser_node_t *node, uintptr_t atom_id)
+{
+    switch (node->token_type) {
+    case NJS_TOKEN_BLOCK:
+    case NJS_TOKEN_IF:
+    case NJS_TOKEN_SWITCH:
+    case NJS_TOKEN_WHILE:
+    case NJS_TOKEN_DO:
+    case NJS_TOKEN_FOR:
+    case NJS_TOKEN_FOR_IN:
+        node->u.label = atom_id;
+        break;
+
+    default:
+        break;
+    }
 }
 
 
