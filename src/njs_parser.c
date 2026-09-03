@@ -542,18 +542,47 @@ njs_int_t
 njs_parser_init(njs_vm_t *vm, njs_parser_t *parser, njs_parser_scope_t *scope,
     njs_str_t *file, u_char *start, u_char *end)
 {
+    njs_int_t    ret;
     njs_lexer_t  *lexer;
 
     njs_memzero(parser, sizeof(njs_parser_t));
 
     parser->scope = scope;
 
+    parser->mem_pool = njs_mp_fast_create(2 * njs_pagesize(), 128, 512, 16);
+    if (njs_slow_path(parser->mem_pool == NULL)) {
+        njs_memory_error(vm);
+        return NJS_ERROR;
+    }
+
     lexer = &parser->lexer0;
     parser->lexer = lexer;
 
     njs_rbtree_init(&parser->labels, njs_parser_scope_rbtree_compare);
 
-    return njs_lexer_init(vm, lexer, file, start, end);
+    ret = njs_lexer_init(vm, parser->mem_pool, lexer, file, start, end);
+    if (njs_slow_path(ret != NJS_OK)) {
+        njs_mp_destroy(parser->mem_pool);
+        parser->mem_pool = NULL;
+    }
+
+    return ret;
+}
+
+
+void
+njs_parser_destroy(njs_parser_t *parser)
+{
+    njs_parser_scope_t  *scope;
+
+    for (scope = parser->scope; scope != NULL; scope = scope->parent) {
+        scope->top = NULL;
+    }
+
+    if (parser->mem_pool != NULL) {
+        njs_mp_destroy(parser->mem_pool);
+        parser->mem_pool = NULL;
+    }
 }
 
 
@@ -8387,7 +8416,7 @@ njs_parser_array_item(njs_parser_t *parser, njs_parser_node_t *array,
     items = array->u.array.items;
 
     if (items == NULL) {
-        items = njs_arr_create(parser->vm->mem_pool, 4,
+        items = njs_arr_create(parser->mem_pool, 4,
                                sizeof(njs_parser_array_item_t));
         if (njs_slow_path(items == NULL)) {
             return NJS_ERROR;

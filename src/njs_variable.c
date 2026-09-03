@@ -306,7 +306,7 @@ njs_label_add(njs_parser_t *parser, uintptr_t atom_id)
 {
     njs_parser_label_t  *label;
 
-    label = njs_mp_alloc(parser->vm->mem_pool, sizeof(njs_parser_label_t));
+    label = njs_mp_alloc(parser->mem_pool, sizeof(njs_parser_label_t));
     if (njs_slow_path(label == NULL)) {
         njs_memory_error(parser->vm);
         return NJS_ERROR;
@@ -335,7 +335,7 @@ njs_label_remove(njs_parser_t *parser, uintptr_t atom_id)
     }
 
     njs_rbtree_delete(&parser->labels, (njs_rbtree_part_t *) node);
-    njs_mp_free(parser->vm->mem_pool, node);
+    njs_mp_free(parser->mem_pool, node);
 
     return NJS_OK;
 }
