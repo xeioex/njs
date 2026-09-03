@@ -72,6 +72,12 @@ typedef struct {
 
 
 typedef struct {
+    njs_parser_node_t           *array;
+    uint32_t                    item;
+} njs_generator_array_ctx_t;
+
+
+typedef struct {
     njs_generator_patch_t       *patch;
     njs_generator_patch_t       **last;
     njs_vmcode_jump_t           *jump;
@@ -401,6 +407,8 @@ static njs_int_t njs_generate_property_accessor_end(njs_vm_t *vm,
     njs_generator_t *generator, njs_parser_node_t *node);
 static njs_int_t njs_generate_array(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node);
+static njs_int_t njs_generate_array_item(njs_vm_t *vm,
+    njs_generator_t *generator, njs_parser_node_t *node);
 static njs_int_t njs_generate_function_expression(njs_vm_t *vm,
     njs_generator_t *generator, njs_parser_node_t *node);
 static njs_int_t njs_generate_function(njs_vm_t *vm, njs_generator_t *generator,
@@ -3972,9 +3980,18 @@ static njs_int_t
 njs_generate_array(njs_vm_t *vm, njs_generator_t *generator,
     njs_parser_node_t *node)
 {
-    njs_vmcode_array_t  *array;
+    njs_int_t                  ret;
+    njs_parser_array_item_t    *item;
+    njs_vmcode_array_t         *array;
+    njs_generator_array_ctx_t  ctx;
 
-    node->index = njs_generate_object_dest_index(vm, generator, node);
+    if (node->u.array.items == NULL) {
+        node->index = njs_generate_object_dest_index(vm, generator, node);
+
+    } else {
+        node->index = njs_generate_node_temp_index_get(vm, generator, node);
+    }
+
     if (njs_slow_path(node->index == NJS_INDEX_ERROR)) {
         return NJS_ERROR;
     }
@@ -3982,16 +3999,66 @@ njs_generate_array(njs_vm_t *vm, njs_generator_t *generator,
     njs_generate_code(generator, njs_vmcode_array_t, array,
                       NJS_VMCODE_ARRAY, node);
     array->ctor = node->ctor;
+    array->flat = node->array_flat;
     array->retval = node->index;
-    array->length = node->u.length;
+    array->length = node->u.array.length;
 
-    /* Initialize array. */
+    if (node->u.array.items == NULL) {
+        return njs_generator_stack_pop(vm, generator, NULL);
+    }
 
-    njs_generator_next(generator, njs_generate, node->left);
+    ctx.array = node;
+    ctx.item = 0;
+    item = njs_arr_item(node->u.array.items, 0);
+
+    njs_generator_next(generator, njs_generate, item->value);
+
+    ret = njs_generator_after(vm, generator,
+                              njs_queue_first(&generator->stack), node,
+                              njs_generate_array_item, &ctx, sizeof(ctx));
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    return NJS_OK;
+}
+
+
+static njs_int_t
+njs_generate_array_item(njs_vm_t *vm, njs_generator_t *generator,
+    njs_parser_node_t *node)
+{
+    njs_int_t                  ret;
+    njs_parser_array_item_t    *item;
+    njs_vmcode_array_init_t    *init;
+    njs_generator_array_ctx_t  *ctx;
+
+    ctx = generator->context;
+    item = njs_arr_item(ctx->array->u.array.items, ctx->item);
+
+    njs_generate_code(generator, njs_vmcode_array_init_t, init,
+                      NJS_VMCODE_ARRAY_INIT, item->value);
+    init->value = item->value->index;
+    init->array = ctx->array->index;
+    init->index = item->index;
+
+    ret = njs_generate_node_index_release(vm, generator, item->value);
+    if (njs_slow_path(ret != NJS_OK)) {
+        return ret;
+    }
+
+    ctx->item++;
+
+    if (ctx->item == ctx->array->u.array.items->items) {
+        return njs_generator_stack_pop(vm, generator, ctx);
+    }
+
+    item = njs_arr_item(ctx->array->u.array.items, ctx->item);
+    njs_generator_next(generator, njs_generate, item->value);
 
     return njs_generator_after(vm, generator,
                                njs_queue_first(&generator->stack),
-                               NULL, njs_generator_pop, NULL, 0);
+                               node, njs_generate_array_item, ctx, 0);
 }
 
 
