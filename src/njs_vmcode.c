@@ -2075,6 +2075,17 @@ njs_vmcode_property_init(njs_vm_t *vm, njs_value_t *value, njs_value_t *key,
         index = (uint32_t) num;
         array = value->data.u.array;
 
+        if (njs_slow_path(!array->object.fast_array)) {
+            prop = njs_object_property_add(vm, value, njs_number_atom(index),
+                                           0);
+            if (njs_slow_path(prop == NULL)) {
+                return NJS_ERROR;
+            }
+
+            njs_value_assign(njs_prop_value(prop), init);
+            break;
+        }
+
         if (index >= array->length) {
             size = index - array->length;
 

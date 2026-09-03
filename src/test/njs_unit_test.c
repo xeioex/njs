@@ -5001,6 +5001,11 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("[1,2].length"),
       njs_str("2") },
 
+    { njs_str("var src = 'return [' + '1,'.repeat(32760) + '1]';"
+              "var a = Function(src)();"
+              "[a.length, a[0], a[32760], Object.keys(a).length]"),
+      njs_str("32761,1,1,32761") },
+
     { njs_str("var a = [1,2]; a.length"),
       njs_str("2") },
 
