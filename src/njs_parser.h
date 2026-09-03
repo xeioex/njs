@@ -90,6 +90,7 @@ struct njs_parser_s {
     njs_lexer_t                     lexer0;
     njs_lexer_t                     *lexer;
     njs_vm_t                        *vm;
+    njs_mp_t                        *mem_pool;
     njs_parser_node_t               *node;
     njs_parser_node_t               *target;
     njs_parser_scope_t              *scope;
@@ -144,6 +145,7 @@ intptr_t njs_parser_scope_rbtree_compare(njs_rbtree_node_t *node1,
     njs_rbtree_node_t *node2);
 njs_int_t njs_parser_init(njs_vm_t *vm, njs_parser_t *parser,
     njs_parser_scope_t *scope, njs_str_t *file, u_char *start, u_char *end);
+void njs_parser_destroy(njs_parser_t *parser);
 njs_int_t njs_parser(njs_vm_t *vm, njs_parser_t *parser);
 
 njs_bool_t njs_variable_closure_test(njs_parser_scope_t *root,
@@ -205,7 +207,7 @@ njs_parser_node_new(njs_parser_t *parser, njs_token_type_t type)
 {
     njs_parser_node_t  *node;
 
-    node = njs_mp_zalloc(parser->vm->mem_pool, sizeof(njs_parser_node_t));
+    node = njs_mp_zalloc(parser->mem_pool, sizeof(njs_parser_node_t));
 
     if (njs_fast_path(node != NULL)) {
         node->token_type = type;
@@ -219,7 +221,7 @@ njs_parser_node_new(njs_parser_t *parser, njs_token_type_t type)
 njs_inline void
 njs_parser_node_free(njs_parser_t *parser, njs_parser_node_t *node)
 {
-    njs_mp_free(parser->vm->mem_pool, node);
+    njs_mp_free(parser->mem_pool, node);
 }
 
 
@@ -332,7 +334,7 @@ njs_parser_stack_pop(njs_parser_t *parser)
     parser->allow_in = entry->allow_in;
     parser->var_type = entry->var_type;
 
-    njs_mp_free(parser->vm->mem_pool, entry);
+    njs_mp_free(parser->mem_pool, entry);
 
     return NJS_OK;
 }
@@ -367,8 +369,7 @@ _njs_parser_after(njs_parser_t *parser, njs_queue_link_t *link, void *node,
 {
     njs_parser_stack_entry_t  *entry;
 
-    entry = njs_mp_alloc(parser->vm->mem_pool,
-                         sizeof(njs_parser_stack_entry_t));
+    entry = njs_mp_alloc(parser->mem_pool, sizeof(njs_parser_stack_entry_t));
     if (njs_slow_path(entry == NULL)) {
         return NJS_ERROR;
     }

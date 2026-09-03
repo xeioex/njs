@@ -5044,6 +5044,7 @@ njs_generate_scope(njs_vm_t *vm, njs_generator_t *generator,
     code->name = *name;
 
     generator->code_size = generator->code_end - generator->code_start;
+    scope->top = NULL;
 
     return code;
 }
