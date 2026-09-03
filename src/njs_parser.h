@@ -14,7 +14,6 @@ struct njs_parser_scope_s {
 
     njs_parser_scope_t              *parent;
     njs_rbtree_t                    variables;
-    njs_rbtree_t                    labels;
     njs_rbtree_t                    references;
 
     njs_arr_t                       *closures;
@@ -33,6 +32,14 @@ typedef struct {
     njs_parser_node_t               *value;
     uint32_t                        index;
 } njs_parser_array_item_t;
+
+
+typedef struct njs_parser_label_s  njs_parser_label_t;
+
+struct njs_parser_label_s {
+    NJS_RBTREE_NODE                 (node);
+    uintptr_t                       key;
+};
 
 
 struct njs_parser_node_s {
@@ -87,6 +94,7 @@ struct njs_parser_s {
     njs_parser_node_t               *node;
     njs_parser_node_t               *target;
     njs_parser_scope_t              *scope;
+    njs_rbtree_t                    labels;
     njs_variable_type_t             var_type;
     njs_int_t                       ret;
 
@@ -145,8 +153,7 @@ njs_variable_t *njs_variable_resolve(njs_vm_t *vm, njs_parser_node_t *node);
 njs_index_t njs_variable_index(njs_vm_t *vm, njs_parser_node_t *node);
 njs_bool_t njs_parser_has_side_effect(njs_parser_node_t *node);
 njs_int_t njs_parser_variable_reference(njs_parser_t *parser,
-    njs_parser_scope_t *scope, njs_parser_node_t *node, uintptr_t atom_id,
-    njs_reference_type_t type);
+    njs_parser_scope_t *scope, njs_parser_node_t *node, uintptr_t atom_id);
 njs_token_type_t njs_parser_unexpected_token(njs_vm_t *vm, njs_parser_t *parser,
     njs_str_t *name, njs_token_type_t type);
 njs_int_t njs_parser_string_create(njs_vm_t *vm, njs_lexer_token_t *token,

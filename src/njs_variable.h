@@ -59,12 +59,9 @@ njs_variable_t *njs_variable_add(njs_parser_t *parser,
     njs_parser_scope_t *scope, uintptr_t atom_id, njs_variable_type_t type);
 njs_variable_t *njs_variable_function_add(njs_parser_t *parser,
     njs_parser_scope_t *scope, uintptr_t atom_id);
-njs_variable_t * njs_label_add(njs_vm_t *vm, njs_parser_scope_t *scope,
-    uintptr_t atom_id);
-njs_variable_t *njs_label_find(njs_vm_t *vm, njs_parser_scope_t *scope,
-    uintptr_t atom_id);
-njs_int_t njs_label_remove(njs_vm_t *vm, njs_parser_scope_t *scope,
-    uintptr_t atom_id);
+njs_int_t njs_label_add(njs_parser_t *parser, uintptr_t atom_id);
+njs_bool_t njs_label_find(njs_parser_t *parser, uintptr_t atom_id);
+njs_int_t njs_label_remove(njs_parser_t *parser, uintptr_t atom_id);
 njs_variable_t *njs_variable_reference(njs_vm_t *vm, njs_parser_node_t *node);
 njs_variable_t *njs_variable_scope_add(njs_parser_t *parser,
     njs_parser_scope_t *scope, njs_parser_scope_t *original,
