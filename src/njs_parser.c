@@ -1336,6 +1336,7 @@ njs_parser_template_literal(njs_parser_t *parser, njs_lexer_token_t *token,
     }
 
     array->token_line = token->line;
+    array->array_flat = 1;
 
     template = parser->node;
 
@@ -1517,7 +1518,7 @@ njs_parser_array_element_list(njs_parser_t *parser, njs_lexer_token_t *token,
         njs_lexer_consume_token(parser->lexer, 1);
 
         array->ctor = 1;
-        array->u.length++;
+        array->u.array.length++;
 
         return NJS_OK;
 
@@ -8250,8 +8251,7 @@ njs_parser_object_value(njs_parser_t *parser, njs_parser_node_t *parent,
 {
     njs_parser_node_t  *object;
 
-    njs_assert(parent->token_type == NJS_TOKEN_OBJECT
-               || parent->token_type == NJS_TOKEN_ARRAY);
+    njs_assert(parent->token_type == NJS_TOKEN_OBJECT);
 
     object = njs_parser_node_new(parser, NJS_TOKEN_OBJECT_VALUE);
     if (njs_slow_path(object == NULL)) {
@@ -8379,25 +8379,31 @@ static njs_int_t
 njs_parser_array_item(njs_parser_t *parser, njs_parser_node_t *array,
     njs_parser_node_t *value)
 {
-    njs_int_t          ret;
-    njs_parser_node_t  *number;
+    njs_arr_t                *items;
+    njs_parser_array_item_t  *item;
 
-    number = njs_parser_node_new(parser, NJS_TOKEN_NUMBER);
-    if (njs_slow_path(number == NULL)) {
+    items = array->u.array.items;
+
+    if (items == NULL) {
+        items = njs_arr_create(parser->vm->mem_pool, 4,
+                               sizeof(njs_parser_array_item_t));
+        if (njs_slow_path(items == NULL)) {
+            return NJS_ERROR;
+        }
+
+        array->u.array.items = items;
+    }
+
+    item = njs_arr_add(items);
+    if (njs_slow_path(item == NULL)) {
         return NJS_ERROR;
     }
 
-    njs_set_number(&number->u.value, array->u.length);
-
-    number->token_line = value->token_line;
-
-    ret = njs_parser_object_property(parser, array, number, value, 0);
-    if (njs_slow_path(ret != NJS_OK)) {
-        return NJS_ERROR;
-    }
+    item->value = value;
+    item->index = array->u.array.length;
 
     array->ctor = 0;
-    array->u.length++;
+    array->u.array.length++;
 
     return NJS_OK;
 }
@@ -8927,7 +8933,9 @@ invalid:
 njs_bool_t
 njs_parser_has_side_effect(njs_parser_node_t *node)
 {
-    njs_bool_t  side_effect;
+    uint32_t                 i;
+    njs_bool_t               side_effect;
+    njs_parser_array_item_t  *item;
 
     if (node == NULL) {
         return 0;
@@ -8943,6 +8951,18 @@ njs_parser_has_side_effect(njs_parser_node_t *node)
         || node->token_type == NJS_TOKEN_METHOD_CALL)
     {
         return 1;
+    }
+
+    if (node->token_type == NJS_TOKEN_ARRAY && node->u.array.items != NULL) {
+        for (i = 0; i < node->u.array.items->items; i++) {
+            item = njs_arr_item(node->u.array.items, i);
+
+            if (njs_parser_has_side_effect(item->value)) {
+                return 1;
+            }
+        }
+
+        return 0;
     }
 
     side_effect = njs_parser_has_side_effect(node->left);
@@ -9065,9 +9085,11 @@ njs_int_t
 njs_parser_traverse(njs_vm_t *vm, njs_parser_node_t *root, void *ctx,
     njs_parser_traverse_cb_t cb)
 {
-    njs_int_t          ret;
-    njs_arr_t          *stack;
-    njs_parser_node_t  *node, **ref;
+    uint32_t                 i;
+    njs_int_t                ret;
+    njs_arr_t                *stack;
+    njs_parser_node_t        *node, **ref;
+    njs_parser_array_item_t  *item;
 
     if (root == NULL) {
         return NJS_OK;
@@ -9097,6 +9119,22 @@ njs_parser_traverse(njs_vm_t *vm, njs_parser_node_t *root, void *ctx,
         ret = cb(vm, node, ctx);
         if (njs_slow_path(ret != NJS_OK)) {
             goto failed;
+        }
+
+        if (node->token_type == NJS_TOKEN_ARRAY
+            && node->u.array.items != NULL)
+        {
+            i = node->u.array.items->items;
+
+            while (i != 0) {
+                item = njs_arr_item(node->u.array.items, --i);
+                ref = njs_arr_add(stack);
+                if (njs_slow_path(ref == NULL)) {
+                    goto failed;
+                }
+
+                *ref = item->value;
+            }
         }
 
         if (node->left != NULL) {
@@ -9159,7 +9197,9 @@ static void
 njs_parser_serialize_tree(njs_chb_t *chain, njs_parser_node_t *node,
     njs_int_t *ret, size_t indent)
 {
-    njs_str_t  str;
+    uint32_t                 i;
+    njs_str_t                str;
+    njs_parser_array_item_t  *item;
 
     njs_chb_append_literal(chain, "{\"name\": \"");
 
@@ -9205,6 +9245,24 @@ njs_parser_serialize_tree(njs_chb_t *chain, njs_parser_node_t *node,
 
     default:
         break;
+    }
+
+    if (node->token_type == NJS_TOKEN_ARRAY && node->u.array.items != NULL) {
+        njs_chb_append_literal(chain, ",\n");
+        njs_parser_serialize_indent(chain, indent);
+        njs_chb_append_literal(chain, " \"items\": [");
+
+        for (i = 0; i < node->u.array.items->items; i++) {
+            item = njs_arr_item(node->u.array.items, i);
+
+            if (i != 0) {
+                njs_chb_append_literal(chain, ", ");
+            }
+
+            njs_parser_serialize_tree(chain, item->value, ret, indent + 1);
+        }
+
+        njs_chb_append_literal(chain, "]");
     }
 
     if (node->left != NULL) {

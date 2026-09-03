@@ -29,15 +29,25 @@ struct njs_parser_scope_s {
 };
 
 
+typedef struct {
+    njs_parser_node_t               *value;
+    uint32_t                        index;
+} njs_parser_array_item_t;
+
+
 struct njs_parser_node_s {
     njs_token_type_t                token_type:16;
     uint8_t                         ctor:1;
     uint8_t                         hoist:1;
+    uint8_t                         array_flat:1;
     uint8_t                         temporary;    /* 1 bit  */
     uint32_t                        token_line;
 
     union {
-        uint32_t                    length;
+        struct {
+            njs_arr_t               *items;
+            uint32_t                length;
+        } array;
         njs_variable_reference_t    reference;
         njs_value_t                 value;
         njs_vmcode_t                operation;

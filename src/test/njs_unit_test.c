@@ -4902,6 +4902,25 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var n = 1, a = [ n += 1 ]; a"),
       njs_str("2") },
 
+    { njs_str("var a = 1; a = [a, 2]"),
+      njs_str("1,2") },
+
+    { njs_str("var a; a = [(a = 1, 2)]"),
+      njs_str("2") },
+
+    { njs_str("var i = 0; [i++, i++, i++]"),
+      njs_str("0,1,2") },
+
+    { njs_str("var a = [, 1, , 2, ,];"
+              "[a.length, Object.keys(a).length, 0 in a, 4 in a]"),
+      njs_str("5,2,false,false") },
+
+    { njs_str("njs.dump([1, [2, [3, 4]], 5])"),
+      njs_str("[1,[2,[3,4]],5]") },
+
+    { njs_str("var a = 1; a += [(a = 5, 1)][0]; a"),
+      njs_str("2") },
+
     { njs_str("var a = [ 1, 2; 3 ]; a[0] + a[1] + a[2]"),
       njs_str("SyntaxError: Unexpected token \";\"") },
 
