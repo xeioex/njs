@@ -8999,51 +8999,6 @@ invalid:
 }
 
 
-njs_bool_t
-njs_parser_has_side_effect(njs_parser_node_t *node)
-{
-    uint32_t                 i;
-    njs_bool_t               side_effect;
-    njs_parser_array_item_t  *item;
-
-    if (node == NULL) {
-        return 0;
-    }
-
-    if (node->token_type >= NJS_TOKEN_ASSIGNMENT
-        && node->token_type <= NJS_TOKEN_LAST_ASSIGNMENT)
-    {
-        return 1;
-    }
-
-    if (node->token_type == NJS_TOKEN_FUNCTION_CALL
-        || node->token_type == NJS_TOKEN_METHOD_CALL)
-    {
-        return 1;
-    }
-
-    if (node->token_type == NJS_TOKEN_ARRAY && node->u.array.items != NULL) {
-        for (i = 0; i < node->u.array.items->items; i++) {
-            item = njs_arr_item(node->u.array.items, i);
-
-            if (njs_parser_has_side_effect(item->value)) {
-                return 1;
-            }
-        }
-
-        return 0;
-    }
-
-    side_effect = njs_parser_has_side_effect(node->left);
-
-    if (njs_fast_path(!side_effect)) {
-        return njs_parser_has_side_effect(node->right);
-    }
-
-    return side_effect;
-}
-
-
 njs_int_t
 njs_parser_variable_reference(njs_parser_t *parser, njs_parser_scope_t *scope,
     njs_parser_node_t *node, uintptr_t atom_id)
