@@ -1158,6 +1158,22 @@ static njs_unit_test_t  njs_test[] =
     { njs_str("var a = 1; function f(x) { a = x; return 2 }; a += f(5)"),
       njs_str("3") },
 
+    { njs_str("var src = 'var a=1;return a+' + '('.repeat(256)"
+              "+ '0+'.repeat(256) + '(a=2)' + ')'.repeat(256);"
+              "(new Function(src))()"),
+      njs_str("3") },
+
+    { njs_str("var src = 'var a=1;a+=' + '('.repeat(256)"
+              "+ '0+'.repeat(256) + '(a=2)' + ')'.repeat(256) + ';return a';"
+              "(new Function(src))()"),
+      njs_str("3") },
+
+    { njs_str("var src = 'var i=0,a=[];a[i]=' + '['.repeat(256)"
+              "+ '(i=1)' + ']'.repeat(256)"
+              "+ ';return a[0] !== undefined && a[1] === undefined';"
+              "(new Function(src))()"),
+      njs_str("true") },
+
     { njs_str("var x; x in (x = 1, [1, 2, 3])"),
       njs_str("false") },
 

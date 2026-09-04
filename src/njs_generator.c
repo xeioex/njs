@@ -11,6 +11,7 @@
 
 
 #define NJS_FUNCTION_MAX_DEPTH  128
+#define NJS_PRESERVATION_MAX_DEPTH  128
 
 
 typedef struct njs_generator_patch_s   njs_generator_patch_t;
@@ -221,6 +222,67 @@ njs_generate_function_call_this(njs_parser_node_t *node)
     njs_assert(node->token_type == NJS_TOKEN_FUNCTION_CALL);
 
     return node->u.object;
+}
+
+
+static njs_bool_t
+njs_generate_expr_requires_preservation_depth(njs_parser_node_t *node,
+    uint32_t depth)
+{
+    uint32_t                 i;
+    njs_bool_t               preserve;
+    njs_parser_array_item_t  *item;
+
+    if (node == NULL) {
+        return 0;
+    }
+
+    if (depth >= NJS_PRESERVATION_MAX_DEPTH) {
+        return 1;
+    }
+
+    if (node->token_type >= NJS_TOKEN_ASSIGNMENT
+        && node->token_type <= NJS_TOKEN_LAST_ASSIGNMENT)
+    {
+        return 1;
+    }
+
+    if (node->token_type == NJS_TOKEN_FUNCTION_CALL
+        || node->token_type == NJS_TOKEN_METHOD_CALL)
+    {
+        return 1;
+    }
+
+    if (node->token_type == NJS_TOKEN_ARRAY && node->u.array.items != NULL) {
+        for (i = 0; i < node->u.array.items->items; i++) {
+            item = njs_arr_item(node->u.array.items, i);
+
+            if (njs_generate_expr_requires_preservation_depth(item->value,
+                                                              depth + 1))
+            {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    preserve = njs_generate_expr_requires_preservation_depth(node->left,
+                                                             depth + 1);
+
+    if (njs_fast_path(!preserve)) {
+        return njs_generate_expr_requires_preservation_depth(node->right,
+                                                             depth + 1);
+    }
+
+    return preserve;
+}
+
+
+static njs_bool_t
+njs_generate_expr_requires_preservation(njs_parser_node_t *node)
+{
+    return njs_generate_expr_requires_preservation_depth(node, 0);
 }
 
 
@@ -3238,7 +3300,7 @@ njs_generate_preserve_property_lvalue(njs_vm_t *vm,
     njs_parser_node_t  *object, *property;
     njs_vmcode_move_t  *move;
 
-    if (!njs_slow_path(njs_parser_has_side_effect(expr))) {
+    if (!njs_slow_path(njs_generate_expr_requires_preservation(expr))) {
         return NJS_OK;
     }
 
@@ -3634,7 +3696,7 @@ njs_generate_operation_assignment(njs_vm_t *vm, njs_generator_t *generator,
         index = lvalue->index;
         expr = node->right;
 
-        if (njs_slow_path(njs_parser_has_side_effect(expr))) {
+        if (njs_slow_path(njs_generate_expr_requires_preservation(expr))) {
             /* Preserve variable value if it may be changed by expression. */
 
             njs_generate_code(generator, njs_vmcode_move_t, move,
@@ -4498,7 +4560,8 @@ njs_generate_3addr_operation_name(njs_vm_t *vm, njs_generator_t *generator,
 
     left = node->left;
 
-    if (njs_slow_path(njs_parser_has_side_effect(node->right))) {
+    if (njs_slow_path(njs_generate_expr_requires_preservation(node->right)))
+    {
         njs_generate_code(generator, njs_vmcode_move_t, move,
                           NJS_VMCODE_MOVE, node);
         move->src = left->index;
