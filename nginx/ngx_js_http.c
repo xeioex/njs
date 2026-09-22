@@ -1882,8 +1882,14 @@ ngx_js_check_header_name(u_char *name, size_t len)
 }
 
 
+/*
+ * The value is copied to an HTTP/1.x request line as a single field.  SP and
+ * CTL bytes would split the field or the line.  Bytes above 0x7f are not
+ * checked on purpose.
+ */
+
 ngx_int_t
-ngx_js_check_request_line_component(u_char *value, size_t len)
+ngx_js_check_no_space_or_ctrl_chars(u_char *value, size_t len)
 {
     u_char  *p, *end;
 
