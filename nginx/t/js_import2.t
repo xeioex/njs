@@ -22,7 +22,7 @@ use Test::Nginx;
 select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
-my $t = Test::Nginx->new()->has(qw/http proxy rewrite/)
+my $t = Test::Nginx->new()->has(qw/http --with-debug proxy rewrite/)
 	->write_file_expand('nginx.conf', <<'EOF');
 
 %%TEST_GLOBALS%%
@@ -124,37 +124,39 @@ $t->write_file('main.js', <<EOF);
 
 EOF
 
-$t->try_run('no njs available');
+$t->try_run('no njs available')->plan(14);
 
 ###############################################################################
 
 my ($mainid) = http_get('/test_foo') =~ /MAIN-TEST:(\d+)/s;
-
-plan(skip_all => 'ngx.engine_id requires --with-debug')
-    unless defined $mainid;
-
-$t->plan(5);
+ok(defined $mainid, 'main.js engine ID');
 
 my ($barid) = http_get('/test_bar') =~ /MAIN-TEST:(\d+)/s;
+ok(defined $barid, 'main.js bar engine ID');
 
-ok($barid == $mainid, 'same context for main.js');
+is($barid, $mainid, 'same context for main.js');
 
 my ($libid) = http_get('/test_lib') =~ /LIB-TEST:(\d+)/s;
+ok(defined $libid, 'lib.js engine ID');
 
-ok($libid != $mainid, 'different context for lib.js');
+isnt($libid, $mainid, 'different context for lib.js');
 
 my ($funid) = http_get('/test_fun') =~ /FUN-TEST:(\d+)/s;
+ok(defined $funid, 'fun.js engine ID');
 
-ok($funid != $mainid && $funid != $libid,
-   'different context for fun.js');
+isnt($funid, $mainid, 'fun.js differs from main.js');
+isnt($funid, $libid, 'fun.js differs from lib.js');
 
 my ($pfunid) = http_get('/proxy/test_fun') =~ /FUN-TEST:(\d+)/s;
+ok(defined $pfunid, 'proxied fun.js engine ID');
 
-ok($pfunid != $funid && $pfunid != $mainid && $pfunid != $libid,
-   'different context for fun.js in proxy');
+isnt($pfunid, $funid, 'proxied fun.js differs from fun.js');
+isnt($pfunid, $mainid, 'proxied fun.js differs from main.js');
+isnt($pfunid, $libid, 'proxied fun.js differs from lib.js');
 
 my ($varid) = http_get('/test_var') =~ /P-TEST:(\d+)/s;
+ok(defined $varid, 'main.js variable engine ID');
 
-ok($varid == $mainid, 'variable from main.js');
+is($varid, $mainid, 'variable from main.js');
 
 ###############################################################################

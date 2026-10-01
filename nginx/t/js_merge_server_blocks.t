@@ -22,7 +22,7 @@ use Test::Nginx;
 select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
-my $t = Test::Nginx->new()->has(qw/http/)
+my $t = Test::Nginx->new()->has(qw/http --with-debug/)
 	->write_file_expand('nginx.conf', <<'EOF');
 
 %%TEST_GLOBALS%%
@@ -81,22 +81,18 @@ $t->write_file('main.js', <<EOF);
 
 EOF
 
-$t->try_run('no njs available');
+$t->try_run('no njs available')->plan(5);
 
 ###############################################################################
 
 my %ids;
 for my $port (port(8080), port(8081), port(8082), port(8083)) {
-	http("GET / HTTP/1.0\nHost: localhost\n\n",
+	my ($id) = http("GET / HTTP/1.0\nHost: localhost\n\n",
 		PeerAddr => "127.0.0.1:$port")
 		=~ /\x0d\x0a\x0d\x0a(\d+)/ms;
-	$ids{$1} = 1 if defined $1;
+	ok(defined $id, "engine ID on port $port");
+	$ids{$id} = 1 if defined $id;
 }
-
-plan(skip_all => 'ngx.engine_id requires --with-debug')
-    unless scalar keys %ids;
-
-$t->plan(1);
 
 is(scalar keys %ids, 1, 'http js block imported once');
 

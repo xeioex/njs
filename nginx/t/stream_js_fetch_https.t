@@ -24,7 +24,8 @@ select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
 my $t = Test::Nginx->new()
-	->has(qw/http http_ssl rewrite stream stream_return socket_ssl/)
+	->has(qw/http http_ssl rewrite stream stream_return/)
+	->has(qw/stream_ssl_preread socket_ssl/)
 	->has_daemon('openssl')
 	->write_file_expand('nginx.conf', <<'EOF');
 
