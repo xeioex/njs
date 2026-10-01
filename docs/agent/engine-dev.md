@@ -127,8 +127,9 @@ Before submitting a change:
 2. `make unit_test` and `make lib_test` pass.
 3. If you touched `src/`, also run `make js_test` and `make test262`.
 4. If you touched `nginx/`, run `prove -I <TESTS_LIB> nginx/t/`,
-   once with the default engine and once with
-   `TEST_NGINX_GLOBALS_HTTP='js_engine qjs;'`.
+   once with njs and once with QuickJS. Set both
+   `TEST_NGINX_GLOBALS_HTTP` and `TEST_NGINX_GLOBALS_STREAM` to
+   `js_engine njs;` or `js_engine qjs;`, with a separate `TMPDIR` per run.
 5. New source files: update `auto/sources` (njs core),
    `auto/modules` (njs external modules), or
    `auto/qjs_modules` (QuickJS external modules).

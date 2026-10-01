@@ -37,13 +37,17 @@ events {
 http {
     %%TEST_GLOBALS_HTTP%%
 
-    js_engine qjs;
     js_context_reuse 4;
     js_context_reuse_max_size 64m;
 
     server {
         listen       127.0.0.1:8080;
         server_name  localhost;
+
+        location = /engine {
+            js_import handler from source.js;
+            js_content handler.engine;
+        }
 
         location = /source {
             js_import handler from source.js;
@@ -62,6 +66,10 @@ EOF
 $t->write_file('source.js', <<'EOF');
     let visits = 0;
 
+    function engine(r) {
+        r.return(200, njs.engine);
+    }
+
     function content(r) {
         visits++;
 
@@ -73,7 +81,7 @@ $t->write_file('source.js', <<'EOF');
         r.return(200, `source:${visits}`);
     }
 
-    export default { content };
+    export default { engine, content };
 
 EOF
 
@@ -89,7 +97,12 @@ $t->write_file('destination.js', <<'EOF');
 
 EOF
 
-$t->try_run('no njs available')->plan(4);
+$t->try_run('no njs available');
+
+plan(skip_all => 'QuickJS context reuse test')
+    unless http_get('/engine') =~ /QuickJS$/m;
+
+$t->plan(4);
 
 ###############################################################################
 

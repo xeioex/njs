@@ -35,6 +35,50 @@ events {
 http {
     %%TEST_GLOBALS_HTTP%%
 
+    js_import engine.js;
+
+    server {
+        listen       127.0.0.1:8080;
+        server_name  localhost;
+
+        location /engine {
+            js_content engine.engine;
+        }
+    }
+}
+
+EOF
+
+$t->write_file('engine.js', <<'EOF');
+    function engine(r) {
+        r.return(200, njs.engine);
+    }
+
+    export default {engine};
+
+EOF
+
+# The njs engine cannot load the test modules, so probe it separately.
+
+$t->try_run('no njs available');
+
+plan(skip_all => 'QuickJS top-level await test')
+	unless http_get('/engine') =~ /QuickJS$/m;
+
+$t->stop();
+
+$t->write_file_expand('nginx.conf', <<'EOF');
+
+%%TEST_GLOBALS%%
+
+daemon off;
+
+events {
+}
+
+http {
+    %%TEST_GLOBALS_HTTP%%
+
     js_import test.js;
     js_import fulfilled_test.js;
 
@@ -80,7 +124,7 @@ $t->write_file('fulfilled_test.js', <<'EOF');
 
 EOF
 
-$t->try_run('no top-level await support')->plan(2);
+$t->run()->plan(2);
 
 ###############################################################################
 

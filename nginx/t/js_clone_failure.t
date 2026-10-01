@@ -35,7 +35,6 @@ events {
 http {
     %%TEST_GLOBALS_HTTP%%
 
-    js_engine njs;
     js_import test.js;
 
     server {

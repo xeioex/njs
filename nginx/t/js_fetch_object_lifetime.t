@@ -36,12 +36,15 @@ events {
 http {
     %%TEST_GLOBALS_HTTP%%
 
-    js_engine qjs;
     js_import test.js;
 
     server {
         listen       127.0.0.1:8080;
         server_name  localhost;
+
+        location /engine {
+            js_content test.engine;
+        }
 
         location /reuse {
             js_context_reuse 1;
@@ -66,6 +69,10 @@ my $p0 = port(8080);
 
 $t->write_file('test.js', <<EOF);
     var retained;
+
+    function engine(r) {
+        r.return(200, njs.engine);
+    }
 
     async function reuse(r) {
         var result = 'ok';
@@ -131,10 +138,15 @@ $t->write_file('test.js', <<EOF);
         r.return(200, 'ok');
     }
 
-    export default {reuse, no_reuse};
+    export default {engine, reuse, no_reuse};
 EOF
 
-$t->try_run('no QuickJS support')->plan(11);
+$t->try_run('no njs available');
+
+plan(skip_all => 'QuickJS Fetch object finalization test')
+    unless http_get('/engine') =~ /QuickJS$/m;
+
+$t->plan(11);
 
 ###############################################################################
 

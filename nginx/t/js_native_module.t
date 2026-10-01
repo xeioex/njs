@@ -44,6 +44,50 @@ my $t = Test::Nginx->new()->has(qw/http/)
 
 %%TEST_GLOBALS%%
 
+daemon off;
+
+events {
+}
+
+http {
+    %%TEST_GLOBALS_HTTP%%
+
+    js_import engine.js;
+
+    server {
+        listen       127.0.0.1:8080;
+        server_name  localhost;
+
+        location /engine {
+            js_content engine.engine;
+        }
+    }
+}
+
+EOF
+
+$t->write_file('engine.js', <<'EOF');
+    function engine(r) {
+        r.return(200, njs.engine);
+    }
+
+    export default {engine};
+
+EOF
+
+# The njs engine cannot load native modules, so probe it separately.
+
+$t->try_run('no njs available');
+
+plan(skip_all => 'QuickJS native module test')
+	unless http_get('/engine') =~ /QuickJS$/m;
+
+$t->stop();
+
+$t->write_file_expand('nginx.conf', <<'EOF');
+
+%%TEST_GLOBALS%%
+
 js_load_http_native_module %%TESTDIR%%/test.so;
 js_load_http_native_module %%TESTDIR%%/test.so as test;
 
@@ -201,7 +245,7 @@ EOF
 system("$cc -fPIC $m32 -O $quickjs_inc -shared -o $d/test.so $d/test.c") == 0
 	or die "failed to build QuickJS native module: $!\n";
 
-$t->try_run('no QuickJS native module support')->plan(2);
+$t->run()->plan(2);
 
 ###############################################################################
 

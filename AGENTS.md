@@ -70,6 +70,26 @@ Everything else — full integration-point semantics, `nginx.conf` wiring
 the deprecated njs engine, also see
 [docs/agent/js-dev-njs.md](docs/agent/js-dev-njs.md).
 
+## 3. NGINX integration tests for both engines
+
+- Prefer tests that pass on both njs and QuickJS. Run them twice, setting
+  both `TEST_NGINX_GLOBALS_HTTP` and `TEST_NGINX_GLOBALS_STREAM` to
+  `js_engine njs;` or `js_engine qjs;`, with a separate `TMPDIR` per run.
+- Let the harness select the engine; top-level `js_engine` directives
+  duplicate environment injection. Engine-selection tests may override
+  it in nested scopes.
+- For engine-specific tests, probe `njs.engine` in each tested context
+  (HTTP and/or Stream). Use `plan(skip_all => '<reason>')` before
+  `$t->plan(...)`, or `SKIP` for individual assertions. Keep probes loadable
+  on both engines. See `js_preload_object.t` and `js_console.t` in `nginx/t/`.
+- Declare capabilities with `has()` and commands with `has_daemon()`,
+  following nginx-tests; check Perl dependencies too. The verification
+  environment must provide the prerequisites so target tests execute.
+- `try_run()` masks any startup failure as a skip. Diagnose unexpected
+  skips from retained configurations and `error.log`.
+- Confirm tests execute on their target engine and skip explicitly on the
+  other. Check alerts and sanitizer output using an instrumented binary.
+
 ## Resources
 
 - [njs official documentation](https://nginx.org/en/docs/njs/)

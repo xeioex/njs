@@ -36,13 +36,16 @@ events {
 http {
     %%TEST_GLOBALS_HTTP%%
 
-    js_engine qjs;
     js_context_reuse 0;
     js_import test.js;
 
     server {
         listen       127.0.0.1:8080;
         server_name  localhost;
+
+        location /engine {
+            js_content test.engine;
+        }
 
         location /cycle {
             js_content test.http_cycle;
@@ -65,9 +68,14 @@ http {
 stream {
     %%TEST_GLOBALS_STREAM%%
 
-    js_engine qjs;
     js_context_reuse 0;
     js_import test.js;
+
+    server {
+        listen      127.0.0.1:8082;
+        js_set      $engine test.stream_engine;
+        return      $engine;
+    }
 
     server {
         listen      127.0.0.1:8081;
@@ -79,6 +87,14 @@ stream {
 EOF
 
 $t->write_file('test.js', <<'EOF');
+    function engine(r) {
+        r.return(200, njs.engine);
+    }
+
+    function stream_engine(s) {
+        return njs.engine;
+    }
+
     function http_cycle(r) {
         r.args.request = r;
         r.return(200, 'ok');
@@ -107,11 +123,19 @@ $t->write_file('test.js', <<'EOF');
         });
     }
 
-    export default {http_cycle, request_body_cycle, response_body_cycle,
-                    stream_cycle};
+    export default {engine, http_cycle, request_body_cycle, response_body_cycle,
+                    stream_cycle, stream_engine};
 EOF
 
-$t->try_run('no QuickJS support')->plan(4);
+$t->try_run('no njs available');
+
+plan(skip_all => 'QuickJS wrapper garbage collection test')
+    unless http_get('/engine') =~ /QuickJS$/m;
+
+plan(skip_all => 'QuickJS stream wrapper garbage collection test')
+    unless stream('127.0.0.1:' . port(8082))->read() =~ /QuickJS$/m;
+
+$t->plan(4);
 
 ###############################################################################
 
