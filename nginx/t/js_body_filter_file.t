@@ -37,7 +37,7 @@ http {
 
     js_import test.js;
 
-    proxy_cache_path /tmp/one levels=1 keys_zone=one:1m;
+    proxy_cache_path %%TESTDIR%%/cache levels=1 keys_zone=one:1m;
 
     server {
         listen       127.0.0.1:8080;
